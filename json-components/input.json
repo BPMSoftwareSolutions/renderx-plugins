@@ -1,0 +1,208 @@
+{
+  "metadata": {
+    "type": "input",
+    "name": "Input",
+    "version": "1.0.0",
+    "author": "RenderX Team",
+    "description": "Text input component with validation and focus handling - JSON replacement for built-in input",
+    "category": "basic",
+    "tags": ["input", "form", "text", "ui"],
+    "replaces": "input"
+  },
+  "ui": {
+    "template": "<input class=\"rx-input rx-input--{{variant}}\" type=\"{{inputType}}\" placeholder=\"{{placeholder}}\" value=\"{{value}}\" {{#if disabled}}disabled{{/if}} {{#if required}}required{{/if}} />",
+    "styles": {
+      "css": ".rx-input { background-color: var(--bg-color); color: var(--text-color); border: var(--border); padding: var(--padding); border-radius: var(--border-radius); font-size: var(--font-size); font-family: inherit; transition: all 0.2s ease; width: 100%; box-sizing: border-box; } .rx-input:focus { outline: none; border-color: var(--focus-border); box-shadow: 0 0 0 2px var(--focus-shadow); } .rx-input:disabled { opacity: 0.6; cursor: not-allowed; background-color: var(--disabled-bg); } .rx-input::placeholder { color: var(--placeholder-color); opacity: 0.7; } .rx-input--default { --bg-color: #ffffff; --text-color: #333333; --border: 1px solid #d1d5db; --focus-border: #007bff; --focus-shadow: rgba(0, 123, 255, 0.25); --disabled-bg: #f9fafb; --placeholder-color: #6b7280; } .rx-input--error { --bg-color: #ffffff; --text-color: #333333; --border: 1px solid #dc3545; --focus-border: #dc3545; --focus-shadow: rgba(220, 53, 69, 0.25); } .rx-input--success { --bg-color: #ffffff; --text-color: #333333; --border: 1px solid #28a745; --focus-border: #28a745; --focus-shadow: rgba(40, 167, 69, 0.25); }",
+      "variables": {
+        "bg-color": "#ffffff",
+        "text-color": "#333333",
+        "border": "1px solid #d1d5db",
+        "focus-border": "#007bff",
+        "focus-shadow": "rgba(0, 123, 255, 0.25)",
+        "padding": "8px 12px",
+        "border-radius": "4px",
+        "font-size": "14px",
+        "placeholder-color": "#6b7280",
+        "disabled-bg": "#f9fafb"
+      }
+    }
+  },
+  "integration": {
+    "properties": {
+      "schema": {
+        "placeholder": {
+          "type": "string",
+          "default": "Enter text...",
+          "description": "Placeholder text shown when input is empty"
+        },
+        "inputType": {
+          "type": "string",
+          "default": "text",
+          "description": "HTML input type",
+          "enum": ["text", "email", "password", "number", "tel", "url", "search"]
+        },
+        "variant": {
+          "type": "string",
+          "default": "default",
+          "description": "Input style variant",
+          "enum": ["default", "error", "success"]
+        },
+        "value": {
+          "type": "string",
+          "default": "",
+          "description": "Current input value"
+        },
+        "disabled": {
+          "type": "boolean",
+          "default": false,
+          "description": "Whether the input is disabled"
+        },
+        "required": {
+          "type": "boolean",
+          "default": false,
+          "description": "Whether the input is required"
+        }
+      },
+      "defaultValues": {
+        "placeholder": "Enter text...",
+        "inputType": "text",
+        "variant": "default",
+        "value": "",
+        "disabled": false,
+        "required": false
+      }
+    },
+    "canvasIntegration": {
+      "resizable": true,
+      "draggable": true,
+      "selectable": true,
+      "minWidth": 100,
+      "minHeight": 30,
+      "maxWidth": 600,
+      "maxHeight": 60,
+      "defaultWidth": 200,
+      "defaultHeight": 40,
+      "snapToGrid": true,
+      "allowChildElements": false
+    },
+    "events": {
+      "input": {
+        "description": "Triggered when the input value changes",
+        "parameters": ["event", "elementData", "value"]
+      },
+      "focus": {
+        "description": "Triggered when the input receives focus",
+        "parameters": ["event", "elementData"]
+      },
+      "blur": {
+        "description": "Triggered when the input loses focus",
+        "parameters": ["event", "elementData"]
+      },
+      "keydown": {
+        "description": "Triggered when a key is pressed",
+        "parameters": ["event", "elementData", "key"]
+      }
+    }
+  },
+  "musicalSequences": {
+    "componentInteraction": {
+      "sequenceName": "JSON Input Component Interaction Symphony No. 1",
+      "description": "Handles user interactions with the JSON input component",
+      "key": "F Major",
+      "tempo": 110,
+      "movements": [
+        {
+          "name": "User Interaction Movement",
+          "measures": [
+            {
+              "beat": 1,
+              "event": "COMPONENT_INTERACTION_START",
+              "dynamics": "forte"
+            },
+            {
+              "beat": 2,
+              "event": "COMPONENT_INPUT_VALIDATION",
+              "dynamics": "mezzo-forte"
+            },
+            {
+              "beat": 3,
+              "event": "COMPONENT_STATE_UPDATE",
+              "dynamics": "mezzo-piano"
+            },
+            {
+              "beat": 4,
+              "event": "COMPONENT_INTERACTION_COMPLETE",
+              "dynamics": "piano"
+            }
+          ]
+        }
+      ]
+    },
+    "resizeOperation": {
+      "sequenceName": "JSON Input Resize Symphony No. 2",
+      "description": "Handles resizing operations for the JSON input",
+      "key": "G Major",
+      "tempo": 100,
+      "movements": [
+        {
+          "name": "Resize Operation Movement",
+          "measures": [
+            {
+              "beat": 1,
+              "event": "COMPONENT_RESIZE_START",
+              "dynamics": "forte"
+            },
+            {
+              "beat": 2,
+              "event": "COMPONENT_RESIZE_VALIDATE",
+              "dynamics": "mezzo-forte"
+            },
+            {
+              "beat": 3,
+              "event": "COMPONENT_RESIZE_UPDATE",
+              "dynamics": "mezzo-piano"
+            },
+            {
+              "beat": 4,
+              "event": "COMPONENT_RESIZE_COMPLETE",
+              "dynamics": "piano"
+            }
+          ]
+        }
+      ]
+    },
+    "positionUpdate": {
+      "sequenceName": "JSON Input Position Update Symphony No. 3",
+      "description": "Handles position updates for the JSON input",
+      "key": "E Major",
+      "tempo": 105,
+      "movements": [
+        {
+          "name": "Position Update Movement",
+          "measures": [
+            {
+              "beat": 1,
+              "event": "COMPONENT_POSITION_START",
+              "dynamics": "forte"
+            },
+            {
+              "beat": 2,
+              "event": "COMPONENT_POSITION_VALIDATE",
+              "dynamics": "mezzo-forte"
+            },
+            {
+              "beat": 3,
+              "event": "COMPONENT_POSITION_UPDATE",
+              "dynamics": "mezzo-piano"
+            },
+            {
+              "beat": 4,
+              "event": "COMPONENT_POSITION_COMPLETE",
+              "dynamics": "piano"
+            }
+          ]
+        }
+      ]
+    }
+  }
+}

@@ -1,0 +1,198 @@
+{
+  "metadata": {
+    "type": "button",
+    "name": "Button",
+    "version": "1.0.0",
+    "author": "RenderX Team",
+    "description": "Interactive button component with click handling - JSON replacement for built-in button",
+    "category": "basic",
+    "tags": ["button", "interactive", "form", "ui"],
+    "replaces": "button"
+  },
+  "ui": {
+    "template": "<button class=\"rx-button rx-button--{{variant}} rx-button--{{size}}\" type=\"button\" {{#if disabled}}disabled{{/if}}>{{content}}</button>",
+    "styles": {
+      "css": ".rx-button { background-color: var(--bg-color); color: var(--text-color); border: var(--border); padding: var(--padding); border-radius: var(--border-radius); cursor: pointer; font-size: var(--font-size); font-weight: 500; transition: all 0.2s ease; display: inline-flex; align-items: center; justify-content: center; text-decoration: none; user-select: none; } .rx-button:hover:not(:disabled) { background-color: var(--hover-bg); transform: translateY(-1px); box-shadow: 0 2px 8px rgba(0,0,0,0.15); } .rx-button:active:not(:disabled) { transform: translateY(0); box-shadow: 0 1px 4px rgba(0,0,0,0.1); } .rx-button:disabled { opacity: 0.6; cursor: not-allowed; } .rx-button--primary { --bg-color: #007bff; --text-color: #ffffff; --hover-bg: #0056b3; --border: none; } .rx-button--secondary { --bg-color: #6c757d; --text-color: #ffffff; --hover-bg: #545b62; --border: none; } .rx-button--danger { --bg-color: #dc3545; --text-color: #ffffff; --hover-bg: #c82333; --border: none; } .rx-button--small { --padding: 4px 8px; --font-size: 12px; --border-radius: 3px; } .rx-button--medium { --padding: 8px 16px; --font-size: 14px; --border-radius: 4px; } .rx-button--large { --padding: 12px 24px; --font-size: 16px; --border-radius: 6px; }",
+      "variables": {
+        "bg-color": "#007acc",
+        "text-color": "#ffffff",
+        "hover-bg": "#0056b3",
+        "border": "none",
+        "padding": "8px 16px",
+        "border-radius": "4px",
+        "font-size": "14px"
+      }
+    },
+    "tools": {
+      "drag": { "enabled": true },
+      "resize": {
+        "enabled": true,
+        "handles": ["nw", "n", "ne", "e", "se", "s", "sw", "w"],
+        "constraints": { "min": { "w": 40, "h": 24 } }
+      }
+    }
+  },
+  "integration": {
+    "properties": {
+      "schema": {
+        "content": {
+          "type": "string",
+          "default": "Click me",
+          "description": "Button text content",
+          "required": true
+        },
+        "variant": {
+          "type": "string",
+          "default": "primary",
+          "description": "Button style variant",
+          "enum": ["primary", "secondary", "danger"]
+        },
+        "size": {
+          "type": "string",
+          "default": "medium",
+          "description": "Button size",
+          "enum": ["small", "medium", "large"]
+        },
+        "disabled": {
+          "type": "boolean",
+          "default": false,
+          "description": "Whether the button is disabled"
+        }
+      },
+      "defaultValues": {
+        "content": "Click me",
+        "variant": "primary",
+        "size": "medium",
+        "disabled": false
+      }
+    },
+    "canvasIntegration": {
+      "resizable": true,
+      "draggable": true,
+      "selectable": true,
+      "minWidth": 80,
+      "minHeight": 30,
+      "maxWidth": 400,
+      "maxHeight": 100,
+      "defaultWidth": 120,
+      "defaultHeight": 40,
+      "snapToGrid": true,
+      "allowChildElements": false
+    },
+    "events": {
+      "click": {
+        "description": "Triggered when the button is clicked",
+        "parameters": ["event", "elementData"]
+      },
+      "focus": {
+        "description": "Triggered when the button receives focus",
+        "parameters": ["event", "elementData"]
+      },
+      "blur": {
+        "description": "Triggered when the button loses focus",
+        "parameters": ["event", "elementData"]
+      }
+    }
+  },
+  "musicalSequences": {
+    "componentInteraction": {
+      "sequenceName": "JSON Button Component Interaction Symphony No. 1",
+      "description": "Handles user interactions with the JSON button component",
+      "key": "A Major",
+      "tempo": 120,
+      "movements": [
+        {
+          "name": "User Interaction Movement",
+          "measures": [
+            {
+              "beat": 1,
+              "event": "COMPONENT_INTERACTION_START",
+              "dynamics": "forte"
+            },
+            {
+              "beat": 2,
+              "event": "COMPONENT_STATE_VALIDATION",
+              "dynamics": "mezzo-forte"
+            },
+            {
+              "beat": 3,
+              "event": "COMPONENT_VISUAL_UPDATE",
+              "dynamics": "mezzo-piano"
+            },
+            {
+              "beat": 4,
+              "event": "COMPONENT_INTERACTION_COMPLETE",
+              "dynamics": "piano"
+            }
+          ]
+        }
+      ]
+    },
+    "resizeOperation": {
+      "sequenceName": "JSON Button Resize Symphony No. 2",
+      "description": "Handles resizing operations for the JSON button",
+      "key": "D Major",
+      "tempo": 100,
+      "movements": [
+        {
+          "name": "Resize Operation Movement",
+          "measures": [
+            {
+              "beat": 1,
+              "event": "COMPONENT_RESIZE_START",
+              "dynamics": "forte"
+            },
+            {
+              "beat": 2,
+              "event": "COMPONENT_RESIZE_VALIDATE",
+              "dynamics": "mezzo-forte"
+            },
+            {
+              "beat": 3,
+              "event": "COMPONENT_RESIZE_UPDATE",
+              "dynamics": "mezzo-piano"
+            },
+            {
+              "beat": 4,
+              "event": "COMPONENT_RESIZE_COMPLETE",
+              "dynamics": "piano"
+            }
+          ]
+        }
+      ]
+    },
+    "positionUpdate": {
+      "sequenceName": "JSON Button Position Update Symphony No. 3",
+      "description": "Handles position updates for the JSON button",
+      "key": "C Major",
+      "tempo": 110,
+      "movements": [
+        {
+          "name": "Position Update Movement",
+          "measures": [
+            {
+              "beat": 1,
+              "event": "COMPONENT_POSITION_START",
+              "dynamics": "forte"
+            },
+            {
+              "beat": 2,
+              "event": "COMPONENT_POSITION_VALIDATE",
+              "dynamics": "mezzo-forte"
+            },
+            {
+              "beat": 3,
+              "event": "COMPONENT_POSITION_UPDATE",
+              "dynamics": "mezzo-piano"
+            },
+            {
+              "beat": 4,
+              "event": "COMPONENT_POSITION_COMPLETE",
+              "dynamics": "piano"
+            }
+          ]
+        }
+      ]
+    }
+  }
+}

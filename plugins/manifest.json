@@ -1,0 +1,78 @@
+{
+  "version": "1.0.0",
+  "plugins": [
+    {
+      "name": "Theme Management Plugin",
+      "path": "theme-management-plugin/",
+      "version": "1.0.0",
+      "description": "Theme switching and management plugin for SPA integration",
+      "autoMount": true
+    },
+    {
+      "name": "Component Library Plugin",
+      "path": "component-library-plugin/",
+      "version": "1.0.0",
+      "description": "Component library loading and preparation plugin",
+      "autoMount": true,
+      "ui": { "slot": "left", "export": "LibraryPanel" }
+    },
+    {
+      "name": "Library.component-drag-symphony",
+      "path": "library-drag-plugin/",
+      "version": "1.0.0",
+      "description": "Handles drag start/end from the Element Library",
+      "autoMount": true
+    },
+    {
+      "name": "Library.component-drop-symphony",
+      "path": "library-drop-plugin/",
+      "version": "1.0.0",
+      "description": "Handles library element drop onto the canvas and forwards create",
+      "autoMount": true
+    },
+    {
+      "name": "Canvas.component-create-symphony",
+      "path": "canvas-create-plugin/",
+      "version": "1.0.0",
+      "description": "Creates a new canvas component on drop",
+      "autoMount": true
+    },
+    {
+      "name": "Canvas.component-select-symphony",
+      "path": "canvas-selection-plugin/",
+      "version": "1.0.0",
+      "description": "Select/deselect a canvas component with callback updates",
+      "autoMount": true
+    },
+    {
+      "name": "Canvas.component-drag-symphony",
+      "path": "canvas-drag-plugin/",
+      "version": "1.0.0",
+      "description": "Drag/move a canvas component with callback updates",
+      "autoMount": true
+    },
+    {
+      "name": "Canvas.component-resize-symphony",
+      "path": "canvas-resize-plugin/",
+      "version": "1.0.0",
+      "description": "Resize a canvas component with callback updates",
+      "autoMount": true
+    },
+    {
+      "name": "Control Panel UI Plugin",
+      "path": "control-panel-plugin/",
+      "version": "1.0.0",
+      "description": "Properties panel UI for the right slot",
+      "autoMount": true,
+      "ui": { "slot": "right", "export": "ControlPanelPanel" }
+    },
+    {
+      "name": "Canvas UI Plugin",
+      "path": "canvas-ui-plugin/",
+      "version": "0.1.0",
+      "description": "Canvas UI (center slot) - scaffold",
+      "autoMount": true,
+      "ui": { "slot": "center", "export": "CanvasPage" }
+    }
+  ]
+}
