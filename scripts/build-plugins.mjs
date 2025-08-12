@@ -1,24 +1,34 @@
-import { promises as fs } from 'fs';
-import path from 'path';
+import { promises as fs } from "fs";
+import path from "path";
 
-// Simple copy-based build: plugins/** -> dist/<plugin>/index.js
+// Copy-based build: replicate plugin directory trees to dist/<plugin>/...
 const root = process.cwd();
-const pluginsDir = path.join(root, 'plugins');
-const distDir = path.join(root, 'dist');
+const pluginsDir = path.join(root, "plugins");
+const distDir = path.join(root, "dist");
 
 async function ensureDir(p) {
   await fs.mkdir(p, { recursive: true });
 }
 
-async function copyIfExists(src, dest) {
-  try {
-    const content = await fs.readFile(src, 'utf8');
-    await ensureDir(path.dirname(dest));
-    await fs.writeFile(dest, content, 'utf8');
-    console.log('copied', src, '->', dest);
-  } catch (e) {
-    if (e.code === 'ENOENT') return; // skip
-    throw e;
+async function copyFileBinary(src, dest) {
+  const buf = await fs.readFile(src);
+  await ensureDir(path.dirname(dest));
+  await fs.writeFile(dest, buf);
+  console.log("copied", src, "->", dest);
+}
+
+async function copyDir(srcDir, destDir) {
+  await ensureDir(destDir);
+  const entries = await fs.readdir(srcDir, { withFileTypes: true });
+  for (const ent of entries) {
+    const srcPath = path.join(srcDir, ent.name);
+    const destPath = path.join(destDir, ent.name);
+    if (ent.isDirectory()) {
+      await copyDir(srcPath, destPath);
+    } else if (ent.isFile()) {
+      // copy all plugin files: .js, .css, .json, etc.
+      await copyFileBinary(srcPath, destPath);
+    }
   }
 }
 
@@ -28,9 +38,9 @@ async function main() {
   for (const ent of entries) {
     if (!ent.isDirectory()) continue;
     const pluginName = ent.name;
-    const srcIndex = path.join(pluginsDir, pluginName, 'index.js');
-    const destIndex = path.join(distDir, pluginName, 'index.js');
-    await copyIfExists(srcIndex, destIndex);
+    const srcPluginDir = path.join(pluginsDir, pluginName);
+    const destPluginDir = path.join(distDir, pluginName);
+    await copyDir(srcPluginDir, destPluginDir);
   }
 }
 
@@ -38,4 +48,3 @@ main().catch((e) => {
   console.error(e);
   process.exit(1);
 });
-
