@@ -31,16 +31,16 @@ jobs:
           node ./scripts/build-plugins.mjs
           node ./scripts/generate-manifest.mjs
 
-      - name: Prepare site folder (keep dist/ at site root)
-        run: |
-          mkdir -p site
-          cp -R dist site/dist
-          echo > site/.nojekyll
+      - name: Setup Pages
+        uses: actions/configure-pages@v5
+
+      - name: Allow static files
+        run: echo > dist/.nojekyll
 
       - name: Upload Pages artifact
         uses: actions/upload-pages-artifact@v3
         with:
-          path: site
+          path: dist
 
   deploy:
     needs: build
