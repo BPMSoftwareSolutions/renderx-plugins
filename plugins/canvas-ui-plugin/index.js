@@ -318,10 +318,13 @@ export function CanvasPage(props = {}) {
   if (!React) return null;
   const { useEffect, useState } = React;
 
-  // Dev hint to console when mounted; wait until the plugin is mounted before calling play
+  // Dev hint via logger when mounted; wait until the plugin is mounted before calling play
   useEffect(() => {
     const pluginName = "Canvas UI Plugin";
-    console.log("🎨 Canvas UI Plugin (Scaffold): mounted UI");
+    try {
+      const sys = (window && window.renderxCommunicationSystem) || null;
+      sys?.logger?.info?.("🎨 Canvas UI Plugin (Scaffold): mounted UI");
+    } catch {}
     const tryStart = () => {
       try {
         const system = (window && window.renderxCommunicationSystem) || null;
