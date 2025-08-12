@@ -1,5 +1,5 @@
-import { loadRenderXPlugin } from "../../../utils/renderx-plugin-loader";
-import { TestEnvironment } from "../../../utils/test-helpers";
+import { loadRenderXPlugin } from "../../utils/renderx-plugin-loader";
+import { TestEnvironment } from "../../utils/test-helpers";
 
 const libraryPath = "RenderX/public/plugins/library-drop-plugin/index.js";
 const createPath = "RenderX/public/plugins/canvas-create-plugin/index.js";
@@ -31,8 +31,12 @@ describe("Orchestrated Flow (real Conductor): Library.drop -> Canvas.create", ()
     // Act: play the library drop symphony via real conductor and wait until Canvas.create handler completes
     await new Promise<void>(async (resolve, reject) => {
       const timeout = setTimeout(() => {
-        try { unsubBeat(); } catch {}
-        try { unsubHandlerEnd(); } catch {}
+        try {
+          unsubBeat();
+        } catch {}
+        try {
+          unsubHandlerEnd();
+        } catch {}
         reject(new Error("timeout waiting for Canvas.create handler end"));
       }, 5000);
 
@@ -44,16 +48,26 @@ describe("Orchestrated Flow (real Conductor): Library.drop -> Canvas.create", ()
         } catch {}
       });
 
-      const unsubHandlerEnd = eventBus.subscribe("plugin:handler:end", (evt: any) => {
-        try {
-          if (evt?.pluginId === create.sequence.id && evt?.handlerName === "createCanvasComponent") {
-            clearTimeout(timeout);
-            try { unsubBeat(); } catch {}
-            try { unsubHandlerEnd(); } catch {}
-            resolve();
-          }
-        } catch {}
-      });
+      const unsubHandlerEnd = eventBus.subscribe(
+        "plugin:handler:end",
+        (evt: any) => {
+          try {
+            if (
+              evt?.pluginId === create.sequence.id &&
+              evt?.handlerName === "createCanvasComponent"
+            ) {
+              clearTimeout(timeout);
+              try {
+                unsubBeat();
+              } catch {}
+              try {
+                unsubHandlerEnd();
+              } catch {}
+              resolve();
+            }
+          } catch {}
+        }
+      );
 
       await conductor.play(lib.sequence.id, lib.sequence.id, {
         coordinates: { x: 200, y: 120 },
@@ -67,7 +81,6 @@ describe("Orchestrated Flow (real Conductor): Library.drop -> Canvas.create", ()
     // Give microtask queue a chance to flush callback scheduling
     await new Promise((r) => setTimeout(r, 0));
 
-
     // Assert: no local fallback should be logged
     const hasLocalFallback = logs.some((m) =>
       m.includes("Local create fallback")
@@ -75,7 +88,9 @@ describe("Orchestrated Flow (real Conductor): Library.drop -> Canvas.create", ()
     expect(hasLocalFallback).toBe(false);
 
     // Assert: flow forwarded to Canvas.create via conductor.play
-    const hasForward = logs.some((m) => m.includes("Forwarding to Canvas.component-create-symphony"));
+    const hasForward = logs.some((m) =>
+      m.includes("Forwarding to Canvas.component-create-symphony")
+    );
     expect(hasForward).toBe(true);
 
     // Assert: callback invoked

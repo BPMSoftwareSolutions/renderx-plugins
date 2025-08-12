@@ -1,4 +1,4 @@
-import { loadRenderXPlugin } from "../../../utils/renderx-plugin-loader";
+import { loadRenderXPlugin } from "../../utils/renderx-plugin-loader";
 
 const uiPath = "RenderX/public/plugins/canvas-ui-plugin/handlers/drop.js";
 

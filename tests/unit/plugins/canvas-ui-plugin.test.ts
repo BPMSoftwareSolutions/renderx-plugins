@@ -1,4 +1,4 @@
-import { loadRenderXPlugin } from "../../../utils/renderx-plugin-loader";
+import { loadRenderXPlugin } from "../../utils/renderx-plugin-loader";
 
 const pluginPath = "RenderX/public/plugins/canvas-ui-plugin/index.js";
 
@@ -18,11 +18,9 @@ describe("RenderX Canvas UI Plugin (canvas.ui-symphony)", () => {
 
   test("sequence registers in SequenceRegistry", async () => {
     const { SequenceRegistry } = await import(
-      "../../../../modules/communication/sequences/core/SequenceRegistry"
+      "@communication/sequences/core/SequenceRegistry"
     );
-    const { EventBus } = await import(
-      "../../../../modules/communication/EventBus"
-    );
+    const { EventBus } = await import("@communication/EventBus");
     const registry = new SequenceRegistry(new EventBus());
     expect(() => registry.register(plugin.sequence)).not.toThrow();
   });

@@ -1,8 +1,14 @@
 import fs from "fs";
 import path from "path";
 
+function mapLegacyPath(p: string) {
+  // Support old tests that reference RenderX/public/plugins/**
+  return p.replace(/^RenderX\/(public\/)?plugins\//, "plugins/");
+}
+
 export function loadRenderXPlugin(relativePathFromRepoRoot: string): any {
-  const abs = path.resolve(__dirname, "../../", relativePathFromRepoRoot);
+  const mapped = mapLegacyPath(relativePathFromRepoRoot);
+  const abs = path.resolve(__dirname, "../../", mapped);
   const code = fs.readFileSync(abs, "utf8");
   const transpiled = code
     // strip simple ESM import lines to allow eval in tests

@@ -1,4 +1,4 @@
-import { loadRenderXPlugin } from "../../../utils/renderx-plugin-loader";
+import { loadRenderXPlugin } from "../../utils/renderx-plugin-loader";
 
 const pluginPath = "RenderX/public/plugins/component-library-plugin/index.js";
 
@@ -21,11 +21,9 @@ describe("RenderX Component Library Plugin", () => {
 
   test("sequence is acceptable to SequenceRegistry validation", async () => {
     const { SequenceRegistry } = await import(
-      "../../../../modules/communication/sequences/core/SequenceRegistry"
+      "@communication/sequences/core/SequenceRegistry"
     );
-    const { EventBus } = await import(
-      "../../../../modules/communication/EventBus"
-    );
+    const { EventBus } = await import("@communication/EventBus");
     const registry = new SequenceRegistry(new EventBus());
     expect(() => registry.register(plugin.sequence)).not.toThrow();
   });

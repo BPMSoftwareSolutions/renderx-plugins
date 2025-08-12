@@ -1,8 +1,8 @@
-import { loadRenderXPlugin } from "../../../utils/renderx-plugin-loader";
+import { loadRenderXPlugin } from "../../utils/renderx-plugin-loader";
 import {
   buildExpectedHTML,
   buildExpectedInstanceCSS,
-} from "../../../utils/dom-templates";
+} from "../../utils/dom-templates";
 
 const pluginPath = "RenderX/public/plugins/canvas-ui-plugin/index.js";
 

@@ -1,7 +1,7 @@
 import {
   loadRenderXPlugin,
   createTestLogger,
-} from "../../../utils/renderx-plugin-loader";
+} from "../../utils/renderx-plugin-loader";
 
 const pluginPath = "RenderX/public/plugins/library-drop-plugin/index.js";
 
@@ -22,11 +22,9 @@ describe("RenderX Library Drop Plugin", () => {
 
   test("sequence registers in SequenceRegistry", async () => {
     const { SequenceRegistry } = await import(
-      "../../../../modules/communication/sequences/core/SequenceRegistry"
+      "@communication/sequences/core/SequenceRegistry"
     );
-    const { EventBus } = await import(
-      "../../../../modules/communication/EventBus"
-    );
+    const { EventBus } = await import("@communication/EventBus");
     const registry = new SequenceRegistry(new EventBus());
     expect(() => registry.register(plugin.sequence)).not.toThrow();
   });
