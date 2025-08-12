@@ -1,0 +1,32 @@
+name: Build and publish plugin artifacts
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+  workflow_dispatch: {}
+
+jobs:
+  build-artifacts:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Build plugin bundles (copy)
+        run: |
+          node ./scripts/build-plugins.mjs
+          node ./scripts/generate-manifest.mjs
+
+      - name: Upload artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: renderx-plugins-dist
+          path: dist/**
+
