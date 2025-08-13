@@ -382,6 +382,46 @@ export function CanvasPage(props = {}) {
     };
   }, []);
 
+
+  // On mouseup: signal drag end via drag symphony; also dispatch a UI event
+  useEffect(() => {
+    const onUp = (e) => {
+      try {
+        // Immediately notify UI listeners that drag ended
+        try {
+          const evt = new CustomEvent("renderx:drag:end", { detail: {} });
+          window.dispatchEvent(evt);
+        } catch {}
+
+        const system = (window && window.renderxCommunicationSystem) || null;
+        const conductor = system && system.conductor;
+        if (conductor && typeof conductor.play === "function") {
+          conductor.play(
+            "Canvas.component-drag-symphony",
+            "Canvas.component-drag-symphony",
+            {
+              source: "canvas-ui-plugin:mouseup",
+              onDragEnd: () => {
+                try {
+                  const evt = new CustomEvent("renderx:drag:end", { detail: {} });
+                  window.dispatchEvent(evt);
+                } catch {}
+              },
+            }
+          );
+        }
+      } catch {}
+    };
+    try {
+      window.addEventListener("mouseup", onUp);
+    } catch {}
+    return () => {
+      try {
+        window.removeEventListener("mouseup", onUp);
+      } catch {}
+    };
+  }, []);
+
   return React.createElement(
     "div",
     { className: "canvas-container canvas-container--editor" },
