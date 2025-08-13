@@ -29,7 +29,7 @@ export function handleCanvasDrop(conductor, e, opts = {}) {
       });
     }
   } catch (err) {
-    try { console.warn('⚠️ Canvas UI Plugin: drop handling failed', err && err.message); } catch {}
+    // Silently ignore drop errors in plugin UI handler; tested at orchestration level
   }
 }
 

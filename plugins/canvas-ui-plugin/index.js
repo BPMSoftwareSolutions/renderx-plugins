@@ -529,11 +529,7 @@ export function CanvasPage(props = {}) {
               // Ensure a stable key to satisfy React list rendering
               let key = n.id || n.elementId || n.cssClass;
               if (!key) {
-                try {
-                  console.warn(
-                    "CanvasPage: missing id/elementId/cssClass for node; skipping render."
-                  );
-                } catch {}
+                // Skip rendering nodes without a stable key (id/elementId/cssClass)
                 return null;
               }
               const elementWithKey =
