@@ -269,6 +269,22 @@ export function renderCanvasNode(node) {
     } catch {}
   };
 
+  // Memoized transparent drag image to suppress native ghost preview
+  const getTransparentDragImage = () => {
+    try {
+      const w = (typeof window !== "undefined" && window) || {};
+      if (w.__rx_transparent_drag_img) return w.__rx_transparent_drag_img;
+      const img = new Image();
+      // 1x1 transparent pixel
+      img.src =
+        "data:image/gif;base64,R0lGODlhAQABAIABAP///wAAACwAAAAAAQABAAACAkQBADs=";
+      w.__rx_transparent_drag_img = img;
+      return img;
+    } catch {
+      return null;
+    }
+  };
+
   const props = {
     id: node.id,
     className: classes,
@@ -277,6 +293,12 @@ export function renderCanvasNode(node) {
     onDragStart: (e) => {
       try {
         e && e.stopPropagation && e.stopPropagation();
+        // Hide native drag ghost so only our DOM element is visible and synced
+        try {
+          const dt = e && (e.dataTransfer || (e.nativeEvent && e.nativeEvent.dataTransfer));
+          const img = getTransparentDragImage();
+          if (dt && typeof dt.setDragImage === "function" && img) dt.setDragImage(img, 0, 0);
+        } catch {}
         const origin = { x: e.clientX || 0, y: e.clientY || 0 };
         try {
           const w = (typeof window !== "undefined" && window) || {};
@@ -650,6 +672,12 @@ export function CanvasPage(props = {}) {
                 onDragStart: (e) => {
                   try {
                     e && e.stopPropagation && e.stopPropagation();
+                    // Hide native drag ghost so only our DOM element is visible and synced
+                    try {
+                      const dt = e && (e.dataTransfer || (e.nativeEvent && e.nativeEvent.dataTransfer));
+                      const img = getTransparentDragImage && getTransparentDragImage();
+                      if (dt && typeof dt.setDragImage === "function" && img) dt.setDragImage(img, 0, 0);
+                    } catch {}
                     const origin = { x: e.clientX || 0, y: e.clientY || 0 };
                     // store origin for this element for delta computation
                     try {
