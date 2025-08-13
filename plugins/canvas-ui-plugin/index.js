@@ -240,11 +240,85 @@ export function renderCanvasNode(node) {
   // Inject per-instance CSS for layout (no inline styles)
   _injectInstanceCSS(node, width, height);
 
+  // Helper for drag: update instance CSS position for this element
+  const updateInstancePositionCSS = (id, cls, x, y) => {
+    try {
+      const tagId = "component-instance-css-" + String(id || "");
+      let tag = document.getElementById(tagId);
+      // Preserve width/height from existing tag if present
+      let widthDecl = "";
+      let heightDecl = "";
+      if (tag && tag.textContent) {
+        const text = tag.textContent;
+        const w = text.match(new RegExp(`\\.${cls}\\s*\\{[^}]*width\\s*:\\s*([^;]+);`, "i"));
+        const h = text.match(new RegExp(`\\.${cls}\\s*\\{[^}]*height\\s*:\\s*([^;]+);`, "i"));
+        widthDecl = w ? `.${cls}{width:${w[1].trim()};}` : "";
+        heightDecl = h ? `.${cls}{height:${h[1].trim()};}` : "";
+      }
+      const lines = [
+        `.${cls}{position:absolute;left:${Math.round(x)}px;top:${Math.round(y)}px;box-sizing:border-box;display:block;}`,
+        widthDecl,
+        heightDecl,
+      ].filter(Boolean);
+      if (!tag) {
+        tag = document.createElement("style");
+        tag.id = tagId;
+        document.head.appendChild(tag);
+      }
+      tag.textContent = lines.join("\n");
+    } catch {}
+  };
+
   const props = {
     id: node.id,
     className: classes,
     "data-component-id": node.id,
     draggable: true,
+    onDragStart: (e) => {
+      try {
+        e && e.stopPropagation && e.stopPropagation();
+        const origin = { x: e.clientX || 0, y: e.clientY || 0 };
+        try {
+          const w = (typeof window !== "undefined" && window) || {};
+          w.__rx_drag_origins = w.__rx_drag_origins || {};
+          w.__rx_drag_origins[node.id] = origin;
+        } catch {}
+        const system = (window && window.renderxCommunicationSystem) || null;
+        const conductor = system && system.conductor;
+        if (conductor && typeof conductor.play === "function") {
+          conductor.play(
+            "Canvas.component-drag-symphony",
+            "Canvas.component-drag-symphony",
+            { elementId: node.id, origin }
+          );
+        }
+      } catch {}
+    },
+    onDrag: (e) => {
+      try {
+        const cur = { x: e.clientX || 0, y: e.clientY || 0 };
+        let origin = { x: 0, y: 0 };
+        try {
+          const w = (typeof window !== "undefined" && window) || {};
+          origin = (w.__rx_drag_origins && w.__rx_drag_origins[node.id]) || origin;
+        } catch {}
+        const delta = { dx: (cur.x || 0) - (origin.x || 0), dy: (cur.y || 0) - (origin.y || 0) };
+        const system = (window && window.renderxCommunicationSystem) || null;
+        const conductor = system && system.conductor;
+        const onDragUpdate = ({ elementId: id, position }) => {
+          try {
+            updateInstancePositionCSS(id, String(node.cssClass || node.id || ""), position.x, position.y);
+          } catch {}
+        };
+        if (conductor && typeof conductor.play === "function") {
+          conductor.play(
+            "Canvas.component-drag-symphony",
+            "Canvas.component-drag-symphony",
+            { elementId: node.id, delta, onDragUpdate }
+          );
+        }
+      } catch {}
+    },
     onClick:
       typeof onElementClick === "function"
         ? onElementClick(node)
@@ -532,9 +606,103 @@ export function CanvasPage(props = {}) {
                 // Skip rendering nodes without a stable key (id/elementId/cssClass)
                 return null;
               }
+              // Augment element with drag handlers and stable key
+              const elementId = n.id || n.elementId;
+              const instanceClass =
+                n.cssClass ||
+                (n.type ? makeRxCompClass(String(n.type).toLowerCase()) : "");
+
+              // Helper: update instance position CSS tag for this element
+              const updateInstancePositionCSS = (id, cls, x, y) => {
+                try {
+                  const tagId = "component-instance-css-" + String(id || "");
+                  let tag = document.getElementById(tagId);
+                  // Preserve width/height from existing tag if present
+                  let widthDecl = "";
+                  let heightDecl = "";
+                  if (tag && tag.textContent) {
+                    const text = tag.textContent;
+                    const w = text.match(new RegExp(`\\.${cls}\\s*\\{[^}]*width\\s*:\\s*([^;]+);`, "i"));
+                    const h = text.match(new RegExp(`\\.${cls}\\s*\\{[^}]*height\\s*:\\s*([^;]+);`, "i"));
+                    widthDecl = w ? `.${cls}{width:${w[1].trim()};}` : "";
+                    heightDecl = h ? `.${cls}{height:${h[1].trim()};}` : "";
+                  }
+                  const lines = [
+                    `.${cls}{position:absolute;left:${Math.round(x)}px;top:${Math.round(y)}px;box-sizing:border-box;display:block;}`,
+                    widthDecl,
+                    heightDecl,
+                  ].filter(Boolean);
+                  if (!tag) {
+                    tag = document.createElement("style");
+                    tag.id = tagId;
+                    document.head.appendChild(tag);
+                  }
+                  tag.textContent = lines.join("\n");
+                } catch {}
+              };
+
+              const augmentedProps = {
+                key,
+                onDragStart: (e) => {
+                  try {
+                    e && e.stopPropagation && e.stopPropagation();
+                    const origin = { x: e.clientX || 0, y: e.clientY || 0 };
+                    // store origin for this element for delta computation
+                    try {
+                      const w = (typeof window !== "undefined" && window) || {};
+                      w.__rx_drag_origins = w.__rx_drag_origins || {};
+                      w.__rx_drag_origins[elementId] = origin;
+                    } catch {}
+                    const system = (window && window.renderxCommunicationSystem) || null;
+                    const conductor = system && system.conductor;
+                    if (conductor && typeof conductor.play === "function") {
+                      conductor.play(
+                        "Canvas.component-drag-symphony",
+                        "Canvas.component-drag-symphony",
+                        { elementId, origin }
+                      );
+                    }
+                  } catch {}
+                },
+                onDrag: (e) => {
+                  try {
+                    const cur = { x: e.clientX || 0, y: e.clientY || 0 };
+                    let origin = { x: 0, y: 0 };
+                    try {
+                      const w = (typeof window !== "undefined" && window) || {};
+                      origin = (w.__rx_drag_origins && w.__rx_drag_origins[elementId]) || origin;
+                    } catch {}
+                    const delta = { dx: (cur.x || 0) - (origin.x || 0), dy: (cur.y || 0) - (origin.y || 0) };
+                    const system = (window && window.renderxCommunicationSystem) || null;
+                    const conductor = system && system.conductor;
+                    const onDragUpdate = ({ elementId: id, position }) => {
+                      try {
+                        updateInstancePositionCSS(id, instanceClass, position.x, position.y);
+                        // Update internal nodes state to reflect new position
+                        setNodes((prev) => {
+                          try {
+                            const arr = Array.isArray(prev) ? prev.slice() : [];
+                            const idx = arr.findIndex((x) => (x.id || x.elementId) === id);
+                            if (idx >= 0) arr[idx] = { ...arr[idx], position: { x: position.x, y: position.y } };
+                            return arr;
+                          } catch { return prev; }
+                        });
+                      } catch {}
+                    };
+                    if (conductor && typeof conductor.play === "function") {
+                      conductor.play(
+                        "Canvas.component-drag-symphony",
+                        "Canvas.component-drag-symphony",
+                        { elementId, delta, onDragUpdate }
+                      );
+                    }
+                  } catch {}
+                },
+              };
+
               const elementWithKey =
                 el && React && typeof React.cloneElement === "function"
-                  ? React.cloneElement(el, { key })
+                  ? React.cloneElement(el, { ...(el.props || {}), ...augmentedProps })
                   : el && React && typeof React.createElement === "function"
                   ? (function () {
                       const rawChildren =
@@ -546,7 +714,7 @@ export function CanvasPage(props = {}) {
                         : [];
                       return React.createElement(
                         el.type,
-                        { ...(el.props || {}), key },
+                        { ...(el.props || {}), ...augmentedProps },
                         ...childArray
                       );
                     })()
