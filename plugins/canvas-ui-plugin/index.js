@@ -280,8 +280,8 @@ export function renderCanvasNode(node) {
         const origin = { x: e.clientX || 0, y: e.clientY || 0 };
         try {
           const w = (typeof window !== "undefined" && window) || {};
-          w.__rx_drag_origins = w.__rx_drag_origins || {};
-          w.__rx_drag_origins[node.id] = origin;
+          w.__rx_drag = w.__rx_drag || {};
+          w.__rx_drag[node.id] = { origin, start: { x: (node.position && node.position.x) || 0, y: (node.position && node.position.y) || 0 } };
         } catch {}
         const system = (window && window.renderxCommunicationSystem) || null;
         const conductor = system && system.conductor;
@@ -298,16 +298,20 @@ export function renderCanvasNode(node) {
       try {
         const cur = { x: e.clientX || 0, y: e.clientY || 0 };
         let origin = { x: 0, y: 0 };
+        let startPos = { x: 0, y: 0 };
         try {
           const w = (typeof window !== "undefined" && window) || {};
-          origin = (w.__rx_drag_origins && w.__rx_drag_origins[node.id]) || origin;
+          const rec = (w.__rx_drag && w.__rx_drag[node.id]) || null;
+          if (rec) { origin = rec.origin || origin; startPos = rec.start || startPos; }
         } catch {}
+        // Compute new absolute canvas position: startPos + (cursor - origin)
         const delta = { dx: (cur.x || 0) - (origin.x || 0), dy: (cur.y || 0) - (origin.y || 0) };
+        const newPos = { x: (startPos.x || 0) + delta.dx, y: (startPos.y || 0) + delta.dy };
         const system = (window && window.renderxCommunicationSystem) || null;
         const conductor = system && system.conductor;
         const onDragUpdate = ({ elementId: id, position }) => {
           try {
-            updateInstancePositionCSS(id, String(node.cssClass || node.id || ""), position.x, position.y);
+            updateInstancePositionCSS(id, String(node.cssClass || node.id || ""), newPos.x, newPos.y);
           } catch {}
         };
         if (conductor && typeof conductor.play === "function") {
@@ -650,8 +654,10 @@ export function CanvasPage(props = {}) {
                     // store origin for this element for delta computation
                     try {
                       const w = (typeof window !== "undefined" && window) || {};
-                      w.__rx_drag_origins = w.__rx_drag_origins || {};
-                      w.__rx_drag_origins[elementId] = origin;
+                      w.__rx_drag = w.__rx_drag || {};
+                      const sel = Array.isArray(nodes) ? nodes.find(x => (x.id||x.elementId)===elementId) : null;
+                      const start = sel && sel.position ? { x: sel.position.x||0, y: sel.position.y||0 } : { x: 0, y: 0 };
+                      w.__rx_drag[elementId] = { origin, start };
                     } catch {}
                     const system = (window && window.renderxCommunicationSystem) || null;
                     const conductor = system && system.conductor;
@@ -668,22 +674,24 @@ export function CanvasPage(props = {}) {
                   try {
                     const cur = { x: e.clientX || 0, y: e.clientY || 0 };
                     let origin = { x: 0, y: 0 };
+                    let startPos = { x: 0, y: 0 };
                     try {
                       const w = (typeof window !== "undefined" && window) || {};
-                      origin = (w.__rx_drag_origins && w.__rx_drag_origins[elementId]) || origin;
+                      const rec = (w.__rx_drag && w.__rx_drag[elementId]) || null;
+                      if (rec) { origin = rec.origin || origin; startPos = rec.start || startPos; }
                     } catch {}
                     const delta = { dx: (cur.x || 0) - (origin.x || 0), dy: (cur.y || 0) - (origin.y || 0) };
+                    const newPos = { x: (startPos.x || 0) + delta.dx, y: (startPos.y || 0) + delta.dy };
                     const system = (window && window.renderxCommunicationSystem) || null;
                     const conductor = system && system.conductor;
-                    const onDragUpdate = ({ elementId: id, position }) => {
+                    const onDragUpdate = ({ elementId: id }) => {
                       try {
-                        updateInstancePositionCSS(id, instanceClass, position.x, position.y);
-                        // Update internal nodes state to reflect new position
+                        updateInstancePositionCSS(id, instanceClass, newPos.x, newPos.y);
                         setNodes((prev) => {
                           try {
                             const arr = Array.isArray(prev) ? prev.slice() : [];
                             const idx = arr.findIndex((x) => (x.id || x.elementId) === id);
-                            if (idx >= 0) arr[idx] = { ...arr[idx], position: { x: position.x, y: position.y } };
+                            if (idx >= 0) arr[idx] = { ...arr[idx], position: { x: newPos.x, y: newPos.y } };
                             return arr;
                           } catch { return prev; }
                         });

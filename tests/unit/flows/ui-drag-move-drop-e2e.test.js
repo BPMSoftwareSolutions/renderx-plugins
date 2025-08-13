@@ -70,8 +70,8 @@ describe("UI E2E: canvas component drag start/move/end wiring", () => {
       const instTag = document.getElementById(`component-instance-css-${node.id}`);
       expect(instTag).toBeTruthy();
       const css = (instTag.textContent || '').replace(/\s+/g, '');
-      // We use mouse origin for drag; position becomes absolute origin+delta => 120,115
-      expect(css).toContain(`.${node.cssClass}{position:absolute;left:120px;top:115px;box-sizing:border-box;display:block;}`.replace(/\s+/g, ''));
+      // With startPos (10,20), origin (100,100) and cursor (120,115): newPos = (10,20) + (20,15) => (30,35)
+      expect(css).toContain(`.${node.cssClass}{position:absolute;left:30px;top:35px;box-sizing:border-box;display:block;}`.replace(/\s+/g, ''));
 
       // Act 3: mouseup ends drag (wired in CanvasPage)
       window.dispatchEvent(new Event('mouseup'));
