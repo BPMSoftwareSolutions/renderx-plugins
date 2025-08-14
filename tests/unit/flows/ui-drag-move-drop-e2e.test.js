@@ -50,15 +50,15 @@ describe("UI E2E: canvas component drag start/move/end wiring", () => {
 
       ui.renderCanvasNode({ ...node });
 
-      // Find any element that has onDragStart attached
-      const draggableEl = created.slice().reverse().find(c => c && c.props && typeof c.props.onDragStart === 'function');
+      // Find any element that has pointer handlers attached
+      const draggableEl = created.slice().reverse().find(c => c && c.props && typeof c.props.onPointerDown === 'function');
       expect(draggableEl).toBeTruthy();
 
-      // Act 1: dragstart at (100, 100)
-      draggableEl.props.onDragStart({ clientX: 100, clientY: 100, stopPropagation(){} });
+      // Act 1: pointerdown at (100, 100)
+      draggableEl.props.onPointerDown({ clientX: 100, clientY: 100, pointerId: 1, target: { setPointerCapture(){} }, stopPropagation(){} });
 
-      // Act 2: drag move to (120, 115) -> delta (20, 15)
-      draggableEl.props.onDrag({ clientX: 120, clientY: 115 });
+      // Act 2: pointer move to (120, 115) -> delta (20, 15)
+      draggableEl.props.onPointerMove({ clientX: 120, clientY: 115 });
 
       // Allow microtasks for conductor shim
       await new Promise(r => setTimeout(r, 20));

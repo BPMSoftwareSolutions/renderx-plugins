@@ -5,7 +5,7 @@ const { loadRenderXPlugin } = require("../../utils/renderx-plugin-loader");
  */
 
 describe("Canvas UI drag ghost suppression", () => {
-  test("onDragStart calls setDragImage with a transparent 1x1 image", () => {
+  test("pointer-driven drag does not use native drag preview", () => {
     const plugin = loadRenderXPlugin("RenderX/public/plugins/canvas-ui-plugin/index.js");
 
     // Stub React
@@ -26,18 +26,14 @@ describe("Canvas UI drag ghost suppression", () => {
     };
 
     plugin.renderCanvasNode(node);
-    const el = created.find(c => c.props && typeof c.props.onDragStart === 'function');
+    const el = created.find(c => c.props && typeof c.props.onPointerDown === 'function');
     expect(el).toBeTruthy();
 
     const setDragImage = jest.fn();
-    el.props.onDragStart({ clientX: 1, clientY: 2, stopPropagation(){}, dataTransfer: { setDragImage } });
+    // Pointer-driven path no longer uses native drag; ensure we do NOT call setDragImage here
+    el.props.onPointerDown({ clientX: 1, clientY: 2, pointerId: 1, target: { setPointerCapture(){} }, stopPropagation(){}, dataTransfer: { setDragImage } });
 
-    expect(setDragImage).toHaveBeenCalled();
-    const [img, x, y] = setDragImage.mock.calls[0];
-    expect(typeof (img && img.src)).toBe("string");
-    expect(img.src.startsWith("data:image/gif;base64")).toBe(true);
-    expect(x).toBe(0);
-    expect(y).toBe(0);
+    expect(setDragImage).not.toHaveBeenCalled();
   });
 });
 

@@ -289,21 +289,20 @@ export function renderCanvasNode(node) {
     id: node.id,
     className: classes,
     "data-component-id": node.id,
-    draggable: true,
-    onDragStart: (e) => {
+    onPointerDown: (e) => {
       try {
         e && e.stopPropagation && e.stopPropagation();
-        // Hide native drag ghost so only our DOM element is visible and synced
-        try {
-          const dt = e && (e.dataTransfer || (e.nativeEvent && e.nativeEvent.dataTransfer));
-          const img = getTransparentDragImage();
-          if (dt && typeof dt.setDragImage === "function" && img) dt.setDragImage(img, 0, 0);
-        } catch {}
+        // Capture pointer to continue receiving move events even if leaving element
+        try { e.target && e.target.setPointerCapture && e.target.setPointerCapture(e.pointerId); } catch {}
         const origin = { x: e.clientX || 0, y: e.clientY || 0 };
         try {
           const w = (typeof window !== "undefined" && window) || {};
           w.__rx_drag = w.__rx_drag || {};
-          w.__rx_drag[node.id] = { origin, start: { x: (node.position && node.position.x) || 0, y: (node.position && node.position.y) || 0 } };
+          w.__rx_drag[node.id] = {
+            origin,
+            start: { x: (node.position && node.position.x) || 0, y: (node.position && node.position.y) || 0 },
+            active: true,
+          };
         } catch {}
         const system = (window && window.renderxCommunicationSystem) || null;
         const conductor = system && system.conductor;
@@ -316,22 +315,23 @@ export function renderCanvasNode(node) {
         }
       } catch {}
     },
-    onDrag: (e) => {
+    onPointerMove: (e) => {
       try {
         const cur = { x: e.clientX || 0, y: e.clientY || 0 };
         let origin = { x: 0, y: 0 };
         let startPos = { x: 0, y: 0 };
+        let active = false;
         try {
           const w = (typeof window !== "undefined" && window) || {};
           const rec = (w.__rx_drag && w.__rx_drag[node.id]) || null;
-          if (rec) { origin = rec.origin || origin; startPos = rec.start || startPos; }
+          if (rec) { origin = rec.origin || origin; startPos = rec.start || startPos; active = !!rec.active; }
         } catch {}
-        // Compute new absolute canvas position: startPos + (cursor - origin)
+        if (!active) return;
         const delta = { dx: (cur.x || 0) - (origin.x || 0), dy: (cur.y || 0) - (origin.y || 0) };
         const newPos = { x: (startPos.x || 0) + delta.dx, y: (startPos.y || 0) + delta.dy };
         const system = (window && window.renderxCommunicationSystem) || null;
         const conductor = system && system.conductor;
-        const onDragUpdate = ({ elementId: id, position }) => {
+        const onDragUpdate = ({ elementId: id }) => {
           try {
             updateInstancePositionCSS(id, String(node.cssClass || node.id || ""), newPos.x, newPos.y);
           } catch {}
@@ -342,6 +342,9 @@ export function renderCanvasNode(node) {
             "Canvas.component-drag-symphony",
             { elementId: node.id, delta, onDragUpdate }
           );
+        } else {
+          // Fallback: directly update CSS if no conductor
+          updateInstancePositionCSS(node.id, String(node.cssClass || node.id || ""), newPos.x, newPos.y);
         }
       } catch {}
     },
@@ -669,23 +672,17 @@ export function CanvasPage(props = {}) {
 
               const augmentedProps = {
                 key,
-                onDragStart: (e) => {
+                onPointerDown: (e) => {
                   try {
                     e && e.stopPropagation && e.stopPropagation();
-                    // Hide native drag ghost so only our DOM element is visible and synced
-                    try {
-                      const dt = e && (e.dataTransfer || (e.nativeEvent && e.nativeEvent.dataTransfer));
-                      const img = getTransparentDragImage && getTransparentDragImage();
-                      if (dt && typeof dt.setDragImage === "function" && img) dt.setDragImage(img, 0, 0);
-                    } catch {}
+                    try { e.target && e.target.setPointerCapture && e.target.setPointerCapture(e.pointerId); } catch {}
                     const origin = { x: e.clientX || 0, y: e.clientY || 0 };
-                    // store origin for this element for delta computation
                     try {
                       const w = (typeof window !== "undefined" && window) || {};
                       w.__rx_drag = w.__rx_drag || {};
                       const sel = Array.isArray(nodes) ? nodes.find(x => (x.id||x.elementId)===elementId) : null;
                       const start = sel && sel.position ? { x: sel.position.x||0, y: sel.position.y||0 } : { x: 0, y: 0 };
-                      w.__rx_drag[elementId] = { origin, start };
+                      w.__rx_drag[elementId] = { origin, start, active: true };
                     } catch {}
                     const system = (window && window.renderxCommunicationSystem) || null;
                     const conductor = system && system.conductor;
@@ -698,16 +695,18 @@ export function CanvasPage(props = {}) {
                     }
                   } catch {}
                 },
-                onDrag: (e) => {
+                onPointerMove: (e) => {
                   try {
                     const cur = { x: e.clientX || 0, y: e.clientY || 0 };
                     let origin = { x: 0, y: 0 };
                     let startPos = { x: 0, y: 0 };
+                    let active = false;
                     try {
                       const w = (typeof window !== "undefined" && window) || {};
                       const rec = (w.__rx_drag && w.__rx_drag[elementId]) || null;
-                      if (rec) { origin = rec.origin || origin; startPos = rec.start || startPos; }
+                      if (rec) { origin = rec.origin || origin; startPos = rec.start || startPos; active = !!rec.active; }
                     } catch {}
+                    if (!active) return;
                     const delta = { dx: (cur.x || 0) - (origin.x || 0), dy: (cur.y || 0) - (origin.y || 0) };
                     const newPos = { x: (startPos.x || 0) + delta.dx, y: (startPos.y || 0) + delta.dy };
                     const system = (window && window.renderxCommunicationSystem) || null;
@@ -731,6 +730,8 @@ export function CanvasPage(props = {}) {
                         "Canvas.component-drag-symphony",
                         { elementId, delta, onDragUpdate }
                       );
+                    } else {
+                      updateInstancePositionCSS(elementId, instanceClass, newPos.x, newPos.y);
                     }
                   } catch {}
                 },

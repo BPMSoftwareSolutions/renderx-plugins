@@ -45,14 +45,14 @@ describe("UI Drag: component follows cursor precisely", () => {
       // Render element
       ui.renderCanvasNode(node);
 
-      const el = created.slice().reverse().find(c => c && c.props && typeof c.props.onDragStart === 'function');
+      const el = created.slice().reverse().find(c => c && c.props && typeof c.props.onPointerDown === 'function');
       expect(el).toBeTruthy();
 
       // Start drag at origin (200, 150)
-      el.props.onDragStart({ clientX: 200, clientY: 150, stopPropagation(){} });
+      el.props.onPointerDown({ clientX: 200, clientY: 150, pointerId: 1, target: { setPointerCapture(){} }, stopPropagation(){} });
 
       // Move by (+30, +25)
-      el.props.onDrag({ clientX: 230, clientY: 175 });
+      el.props.onPointerMove({ clientX: 230, clientY: 175 });
       await new Promise(r => setTimeout(r, 10));
 
       // Position should be startPos + delta = (50+30, 60+25) = (80, 85)
@@ -62,7 +62,7 @@ describe("UI Drag: component follows cursor precisely", () => {
       expect(css).toContain(`.${node.cssClass}{position:absolute;left:80px;top:85px;box-sizing:border-box;display:block;}`.replace(/\s+/g, ''));
 
       // Move again by (-10, +5) from origin -> client (190, 155)
-      el.props.onDrag({ clientX: 190, clientY: 155 });
+      el.props.onPointerMove({ clientX: 190, clientY: 155 });
       await new Promise(r => setTimeout(r, 10));
       const css2 = (tag.textContent || '').replace(/\s+/g, '');
       // Now expected (start 50,60 + delta -10, +5) = (40, 65)
