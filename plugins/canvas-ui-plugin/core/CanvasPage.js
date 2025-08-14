@@ -6,6 +6,7 @@ import {
 } from "../utils/styles.js";
 import { attachDragHandlers } from "../handlers/drag.js";
 import { buildOverlayForNode } from "../ui/overlay.js";
+import { renderCanvasNode } from "./renderCanvasNode.js";
 
 export function CanvasPage(props = {}) {
   const providedNodes = Array.isArray(props.nodes) ? props.nodes : null;
@@ -249,9 +250,11 @@ export function CanvasPage(props = {}) {
                 onComponentCreated: (node) => {
                   try {
                     if (!node) return;
-                    const next = Array.isArray(nodes) ? nodes.slice() : [];
-                    next.push(node);
-                    setNodes(next);
+                    setNodes((prev) => {
+                      const next = Array.isArray(prev) ? prev.slice() : [];
+                      next.push(node);
+                      return next;
+                    });
                   } catch {}
                 },
               });
@@ -265,20 +268,15 @@ export function CanvasPage(props = {}) {
         { className: "canvas-content" },
         nodes && nodes.length > 0
           ? nodes.map((n) => {
-              const el =
-                typeof (window && window.renderCanvasNode) === "function"
-                  ? window.renderCanvasNode({
-                      id: n.id || n.elementId,
-                      cssClass:
-                        n.cssClass ||
-                        (n.type
-                          ? makeRxCompClass(String(n.type).toLowerCase())
-                          : ""),
-                      type: n.type,
-                      position: n.position || { x: 0, y: 0 },
-                      component: n.component || n.componentData,
-                    })
-                  : null;
+              const el = renderCanvasNode({
+                id: n.id || n.elementId,
+                cssClass:
+                  n.cssClass ||
+                  (n.type ? makeRxCompClass(String(n.type).toLowerCase()) : ""),
+                type: n.type,
+                position: n.position || { x: 0, y: 0 },
+                component: n.component || n.componentData,
+              });
               let key = n.id || n.elementId || n.cssClass;
               if (!key) return null;
               const elementId = n.id || n.elementId;
