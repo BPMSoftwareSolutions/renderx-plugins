@@ -19,6 +19,10 @@ export function CanvasPage(props = {}) {
       const sys = (window && window.renderxCommunicationSystem) || null;
       sys?.logger?.info?.("🎨 Canvas UI Plugin (Scaffold): mounted UI");
     } catch {}
+    try {
+      // Ensure overlay global CSS is present
+      overlayInjectGlobalCSS();
+    } catch {}
     const tryStart = () => {
       try {
         const system = (window && window.renderxCommunicationSystem) || null;

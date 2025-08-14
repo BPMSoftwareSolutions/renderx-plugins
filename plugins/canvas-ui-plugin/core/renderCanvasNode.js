@@ -1,5 +1,6 @@
 import { ensureCursorStylesInjected } from "../styles/cursors.js";
 import { attachDragHandlers } from "../handlers/drag.js";
+import { onElementClick } from "../handlers/select.js";
 import { updateInstancePositionCSS } from "../styles/instanceCss.js";
 import { injectRawCSS, injectInstanceCSS } from "../utils/styles.js";
 import {
@@ -15,10 +16,18 @@ export function renderCanvasNode(node) {
 
   const component = node.component || node.componentData || {};
   const template = (component.ui && component.ui.template) || "<div></div>";
-  const data = node.data || {};
+  const data = {
+    ...(node || {}),
+    ...(node?.component?.metadata || {}),
+    ...(node?.component?.ui || {}),
+    ...(node?.component || {}),
+    ...(node?.data || {}),
+  };
 
   const resolvedHtml = resolveTemplateTokens(template, data);
   const { tag, classes: tplClasses } = parseTemplateShape(resolvedHtml);
+  // If template does not specify a semantic tag, use type or 'div'
+  const semanticTag = tag || node.type || "div";
 
   try {
     const css = component?.ui?.styles?.css;
@@ -27,24 +36,31 @@ export function renderCanvasNode(node) {
     injectInstanceCSS(node, defaults.defaultWidth, defaults.defaultHeight);
   } catch {}
 
-  const classes = [String(node.cssClass || node.id || ""), ...tplClasses]
+  let classes = [String(node.cssClass || node.id || ""), ...tplClasses]
     .filter(Boolean)
     .join(" ");
 
+  // If resolvedHtml contains a class attribute with tokens resolved, ensure they're included in classes as well
+  try {
+    const m = resolvedHtml.match(/class\s*=\s*"([^"]*)"/i);
+    if (m) {
+      const fromAttr = m[1].split(/\s+/).filter(Boolean);
+      const merged = new Set(
+        (classes + " " + fromAttr.join(" ")).trim().split(/\s+/)
+      );
+      classes = Array.from(merged).join(" ");
+    }
+  } catch {}
+
   const dragHandlers = attachDragHandlers(node, { updateInstancePositionCSS });
 
-  return React.createElement(
-    tag,
-    {
-      id: node.id,
-      className: classes,
-      "data-component-id": node.id,
-      onPointerDown: dragHandlers.onPointerDown,
-      onPointerMove: dragHandlers.onPointerMove,
-      onPointerUp: dragHandlers.onPointerUp,
-    },
-    React.createElement("div", {
-      dangerouslySetInnerHTML: { __html: resolvedHtml },
-    })
-  );
+  return React.createElement(semanticTag, {
+    id: node.id,
+    className: classes,
+    "data-component-id": node.id,
+    onPointerDown: dragHandlers.onPointerDown,
+    onPointerMove: dragHandlers.onPointerMove,
+    onPointerUp: dragHandlers.onPointerUp,
+    onClick: onElementClick(node),
+  });
 }
