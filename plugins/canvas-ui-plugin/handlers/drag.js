@@ -81,6 +81,14 @@ export function attachDragHandlers(node, deps = {}) {
               newPos.y
             );
           } catch {}
+          // Also notify UI overlay callback (no DOM events)
+          try {
+            const w = (typeof window !== "undefined" && window) || {};
+            const ui = w.__rx_canvas_ui__ || null;
+            if (ui && typeof ui.onDragUpdate === "function") {
+              ui.onDragUpdate({ elementId: id, delta });
+            }
+          } catch {}
         };
         try {
           const system = (window && window.renderxCommunicationSystem) || null;

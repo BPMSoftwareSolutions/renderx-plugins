@@ -48,15 +48,19 @@ export function ControlPanelPanel(props = {}) {
   const [selectedId, setSelectedId] = useState(null);
 
   useEffect(() => {
-    const onSelection = (e) => {
+    try {
+      const w = (typeof window !== "undefined" && window) || {};
+      w.__rx_control_panel__ = w.__rx_control_panel__ || {};
+      w.__rx_control_panel__.onSelectionChanged = (id) =>
+        setSelectedId(id || null);
+    } catch {}
+    return () => {
       try {
-        const id = (e && e.detail && e.detail.id) || null;
-        setSelectedId(id);
+        const w = (typeof window !== "undefined" && window) || {};
+        if (w.__rx_control_panel__)
+          delete w.__rx_control_panel__.onSelectionChanged;
       } catch {}
     };
-    window.addEventListener("renderx:selection:update", onSelection);
-    return () =>
-      window.removeEventListener("renderx:selection:update", onSelection);
   }, []);
 
   return React.createElement(

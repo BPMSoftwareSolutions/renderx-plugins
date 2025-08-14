@@ -4,7 +4,8 @@ import { TestEnvironment } from "../../utils/test-helpers";
 describe("Canvas UI Plugin - overlay follows during drag", () => {
   test("overlay transform is applied on drag update and cleared on drag end", async () => {
     // Reset head styles
-    while (document.head.firstChild) document.head.removeChild(document.head.firstChild);
+    while (document.head.firstChild)
+      document.head.removeChild(document.head.firstChild);
 
     // Minimal window + React stub
     (global as any).window = (global as any).window || {};
@@ -36,8 +37,13 @@ describe("Canvas UI Plugin - overlay follows during drag", () => {
       position: { x: 50, y: 60 },
       component: {
         metadata: { name: "Button", type: "button" },
-        ui: { template: '<button class="rx-button">OK</button>', styles: { css: ".rx-button{color:#000}" } },
-        integration: { canvasIntegration: { defaultWidth: 100, defaultHeight: 30 } },
+        ui: {
+          template: '<button class="rx-button">OK</button>',
+          styles: { css: ".rx-button{color:#000}" },
+        },
+        integration: {
+          canvasIntegration: { defaultWidth: 100, defaultHeight: 30 },
+        },
       },
     };
 
@@ -48,33 +54,44 @@ describe("Canvas UI Plugin - overlay follows during drag", () => {
     // Assert no transform style tag initially
     expect(document.getElementById(`overlay-transform-${node.id}`)).toBeNull();
 
-    // Dispatch a drag update event with delta
-    const evUpdate = new CustomEvent("renderx:drag:update", {
-      detail: { elementId: node.id, delta: { dx: 7, dy: 9 } },
-    } as any);
-    window.dispatchEvent(evUpdate);
+    // Invoke UI overlay callbacks directly (no DOM events)
+    const w: any = (global as any).window;
+    w.__rx_canvas_ui__?.onDragUpdate?.({
+      elementId: node.id,
+      delta: { dx: 7, dy: 9 },
+    });
 
-    const t1 = document.getElementById(`overlay-transform-${node.id}`) as HTMLStyleElement | null;
+    const t1 = document.getElementById(
+      `overlay-transform-${node.id}`
+    ) as HTMLStyleElement | null;
     expect(t1).toBeTruthy();
     const css1 = (t1?.textContent || "").replace(/\s+/g, "");
-    expect(css1).toContain(`.rx-overlay-${node.id}{transform:translate(7px,9px);}`.replace(/\s+/g, ""));
+    expect(css1).toContain(
+      `.rx-overlay-${node.id}{transform:translate(7px,9px);}`.replace(
+        /\s+/g,
+        ""
+      )
+    );
 
-    // Dispatch another update to ensure it overwrites
-    const evUpdate2 = new CustomEvent("renderx:drag:update", {
-      detail: { elementId: node.id, delta: { dx: 2, dy: 3 } },
-    } as any);
-    window.dispatchEvent(evUpdate2);
-    const t2 = document.getElementById(`overlay-transform-${node.id}`) as HTMLStyleElement | null;
+    // Another update overwrites
+    w.__rx_canvas_ui__?.onDragUpdate?.({
+      elementId: node.id,
+      delta: { dx: 2, dy: 3 },
+    });
+    const t2 = document.getElementById(
+      `overlay-transform-${node.id}`
+    ) as HTMLStyleElement | null;
     const css2 = (t2?.textContent || "").replace(/\s+/g, "");
-    expect(css2).toContain(`.rx-overlay-${node.id}{transform:translate(2px,3px);}`.replace(/\s+/g, ""));
+    expect(css2).toContain(
+      `.rx-overlay-${node.id}{transform:translate(2px,3px);}`.replace(
+        /\s+/g,
+        ""
+      )
+    );
 
     // Drag end -> transform cleared
-    const evEnd = new CustomEvent("renderx:drag:end", {
-      detail: { elementId: node.id },
-    } as any);
-    window.dispatchEvent(evEnd);
+    w.__rx_canvas_ui__?.onDragEnd?.({ elementId: node.id });
 
     expect(document.getElementById(`overlay-transform-${node.id}`)).toBeNull();
   });
 });
-

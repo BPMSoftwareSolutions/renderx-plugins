@@ -62,18 +62,16 @@ export function CanvasPage(props = {}) {
       : [providedSelected ?? null, function noop() {}];
 
   useEffect(() => {
-    const onSel = (e) => {
-      try {
-        const id = e && e.detail && e.detail.id;
-        setSelectedId(id || null);
-      } catch {}
-    };
+    // Expose UI setters for conductor callback wiring; not a global listener
     try {
-      window.addEventListener("renderx:selection:update", onSel);
+      const w = (typeof window !== "undefined" && window) || {};
+      w.__rx_canvas_ui__ = w.__rx_canvas_ui__ || {};
+      w.__rx_canvas_ui__.setSelectedId = (id) => setSelectedId(id || null);
     } catch {}
     return () => {
       try {
-        window.removeEventListener("renderx:selection:update", onSel);
+        const w = (typeof window !== "undefined" && window) || {};
+        if (w.__rx_canvas_ui__) delete w.__rx_canvas_ui__.setSelectedId;
       } catch {}
     };
   }, []);
@@ -103,30 +101,33 @@ export function CanvasPage(props = {}) {
         if (t && t.parentNode) t.parentNode.removeChild(t);
       } catch {}
     };
-    const onDragUpdate = (e) => {
+    const onDragUpdate = ({ elementId, delta }) => {
       try {
-        const d = (e && e.detail) || {};
-        if (!d || d.elementId !== selectedId) return;
-        const dx = d.delta && typeof d.delta.dx === "number" ? d.delta.dx : 0;
-        const dy = d.delta && typeof d.delta.dy === "number" ? d.delta.dy : 0;
+        if (!elementId || elementId !== selectedId) return;
+        const dx = delta && typeof delta.dx === "number" ? delta.dx : 0;
+        const dy = delta && typeof delta.dy === "number" ? delta.dy : 0;
         applyOverlayTransform(dx, dy);
       } catch {}
     };
-    const onDragEnd = (e) => {
+    const onDragEnd = ({ elementId }) => {
       try {
-        const d = (e && e.detail) || {};
-        if (!d || d.elementId !== selectedId) return;
+        if (!elementId || elementId !== selectedId) return;
         clearOverlayTransform();
       } catch {}
     };
     try {
-      window.addEventListener("renderx:drag:update", onDragUpdate);
-      window.addEventListener("renderx:drag:end", onDragEnd);
+      const w = (typeof window !== "undefined" && window) || {};
+      w.__rx_canvas_ui__ = w.__rx_canvas_ui__ || {};
+      w.__rx_canvas_ui__.onDragUpdate = onDragUpdate;
+      w.__rx_canvas_ui__.onDragEnd = onDragEnd;
     } catch {}
     return () => {
       try {
-        window.removeEventListener("renderx:drag:update", onDragUpdate);
-        window.removeEventListener("renderx:drag:end", onDragEnd);
+        const w = (typeof window !== "undefined" && window) || {};
+        if (w.__rx_canvas_ui__) {
+          delete w.__rx_canvas_ui__.onDragUpdate;
+          delete w.__rx_canvas_ui__.onDragEnd;
+        }
       } catch {}
       clearOverlayTransform();
     };
@@ -135,37 +136,30 @@ export function CanvasPage(props = {}) {
   useEffect(() => {
     const onUp = () => {
       try {
-        try {
-          const evt = new CustomEvent("renderx:drag:end", { detail: {} });
-          window.dispatchEvent(evt);
-        } catch {}
         const system = (window && window.renderxCommunicationSystem) || null;
         const conductor = system && system.conductor;
         if (conductor && typeof conductor.play === "function") {
+          const w = (typeof window !== "undefined" && window) || {};
+          const onDragEnd = w.__rx_canvas_ui__ && w.__rx_canvas_ui__.onDragEnd;
           conductor.play(
             "Canvas.component-drag-symphony",
             "Canvas.component-drag-symphony",
             {
               source: "canvas-ui-plugin:mouseup",
-              onDragEnd: () => {
-                try {
-                  const evt = new CustomEvent("renderx:drag:end", {
-                    detail: {},
-                  });
-                  window.dispatchEvent(evt);
-                } catch {}
-              },
+              onDragEnd,
             }
           );
         }
       } catch {}
     };
-    try {
-      window.addEventListener("mouseup", onUp);
-    } catch {}
+    // Use React onPointerUp on workspace instead of global window mouseup
+    const w = (typeof window !== "undefined" && window) || {};
+    w.__rx_canvas_ui__ = w.__rx_canvas_ui__ || {};
+    w.__rx_canvas_ui__.onWindowMouseUp = onUp;
     return () => {
       try {
-        window.removeEventListener("mouseup", onUp);
+        const w = (typeof window !== "undefined" && window) || {};
+        if (w.__rx_canvas_ui__) delete w.__rx_canvas_ui__.onWindowMouseUp;
       } catch {}
     };
   }, []);
@@ -228,6 +222,17 @@ export function CanvasPage(props = {}) {
       "div",
       {
         className: "canvas-workspace",
+        onPointerUp: () => {
+          try {
+            const w = (typeof window !== "undefined" && window) || {};
+            if (
+              w.__rx_canvas_ui__ &&
+              typeof w.__rx_canvas_ui__.onWindowMouseUp === "function"
+            ) {
+              w.__rx_canvas_ui__.onWindowMouseUp();
+            }
+          } catch {}
+        },
         onDragOver: (e) => {
           try {
             e && e.preventDefault && e.preventDefault();

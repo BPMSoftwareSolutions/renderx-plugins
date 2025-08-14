@@ -72,9 +72,9 @@ export const handlers = {
     } catch {}
     return { elementId, position };
   },
-  handleDragEnd: ({ onDragEnd }, ctx) => {
+  handleDragEnd: ({ elementId, onDragEnd }, ctx) => {
     try {
-      onDragEnd?.();
+      onDragEnd?.({ elementId });
     } catch {}
     return {};
   },
