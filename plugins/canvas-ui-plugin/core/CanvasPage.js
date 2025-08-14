@@ -12,6 +12,10 @@ export function CanvasPage(props = {}) {
   const providedSelected = props.selectedId ?? undefined;
   const React = (typeof window !== "undefined" && window.React) || null;
   if (!React) return null;
+  // Ensure overlay global CSS is present synchronously for tests that check head styles immediately
+  try {
+    overlayInjectGlobalCSS();
+  } catch {}
   const { useEffect, useState } = React;
 
   useEffect(() => {
