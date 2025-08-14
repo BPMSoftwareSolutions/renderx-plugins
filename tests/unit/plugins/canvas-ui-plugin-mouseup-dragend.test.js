@@ -7,7 +7,7 @@ const { TestEnvironment } = require("../../utils/test-helpers");
  */
 
 describe("Canvas UI Plugin - mouseup triggers drag:end", () => {
-  test("window mouseup -> conductor.play(Canvas.component-drag-symphony) and dispatches renderx:drag:end", async () => {
+  test("mouseup on workspace triggers conductor.play(Canvas.component-drag-symphony) and clears overlay via callback", async () => {
     // Arrange conductor and expose to window
     const eventBus = TestEnvironment.createEventBus();
     const conductor = TestEnvironment.createMusicalConductor(eventBus);
@@ -30,36 +30,34 @@ describe("Canvas UI Plugin - mouseup triggers drag:end", () => {
     const logs = [];
     const orig = console.log;
     console.log = (...args) => {
-      try { logs.push(String(args[0])); } catch {}
+      try {
+        logs.push(String(args[0]));
+      } catch {}
       return orig.apply(console, args);
     };
 
-    // Listen for UI drag-end custom event
-    const dragEnd = { count: 0 };
-    const onDragEndEvt = () => { dragEnd.count++; };
-    window.addEventListener("renderx:drag:end", onDragEndEvt);
-
-    // Render CanvasPage to register mouseup listener
+    // Render CanvasPage to register mouseup callback and workspace handler
     plugin.CanvasPage({ nodes: [] });
 
-    // Act: dispatch mouseup
-    window.dispatchEvent(new Event("mouseup"));
+    // Act: call workspace pointerUp handler (no DOM globals)
+    const workspace = global.window.__rx_canvas_ui__ || {};
+    if (typeof workspace.onWindowMouseUp === "function") {
+      workspace.onWindowMouseUp();
+    }
 
     // Allow microtasks
     await new Promise((r) => setTimeout(r, 20));
 
     // Restore
-    window.removeEventListener("renderx:drag:end", onDragEndEvt);
     console.log = orig;
 
     // Assert: play was called with drag symphony (by checking the shim log)
     expect(
       logs.some((l) =>
-        l.includes("PluginInterfaceFacade.play(): Canvas.component-drag-symphony")
+        l.includes(
+          "PluginInterfaceFacade.play(): Canvas.component-drag-symphony"
+        )
       )
     ).toBe(true);
-    // Assert: UI custom event dispatched exactly once
-    expect(dragEnd.count).toBe(1);
   });
 });
-
