@@ -251,13 +251,19 @@ export function renderCanvasNode(node) {
       let heightDecl = "";
       if (tag && tag.textContent) {
         const text = tag.textContent;
-        const w = text.match(new RegExp(`\\.${cls}\\s*\\{[^}]*width\\s*:\\s*([^;]+);`, "i"));
-        const h = text.match(new RegExp(`\\.${cls}\\s*\\{[^}]*height\\s*:\\s*([^;]+);`, "i"));
+        const w = text.match(
+          new RegExp(`\\.${cls}\\s*\\{[^}]*width\\s*:\\s*([^;]+);`, "i")
+        );
+        const h = text.match(
+          new RegExp(`\\.${cls}\\s*\\{[^}]*height\\s*:\\s*([^;]+);`, "i")
+        );
         widthDecl = w ? `.${cls}{width:${w[1].trim()};}` : "";
         heightDecl = h ? `.${cls}{height:${h[1].trim()};}` : "";
       }
       const lines = [
-        `.${cls}{position:absolute;left:${Math.round(x)}px;top:${Math.round(y)}px;box-sizing:border-box;display:block;}`,
+        `.${cls}{position:absolute;left:${Math.round(x)}px;top:${Math.round(
+          y
+        )}px;box-sizing:border-box;display:block;}`,
         widthDecl,
         heightDecl,
       ].filter(Boolean);
@@ -272,9 +278,9 @@ export function renderCanvasNode(node) {
 
   // Pointer drag UX: cursor styles
   try {
-    const styleId = 'rx-canvas-ui-cursors';
+    const styleId = "rx-canvas-ui-cursors";
     if (!document.getElementById(styleId)) {
-      const s = document.createElement('style');
+      const s = document.createElement("style");
       s.id = styleId;
       s.textContent = `
         .rx-comp-draggable { cursor: grab; cursor: -webkit-grab; }
@@ -308,16 +314,27 @@ export function renderCanvasNode(node) {
       try {
         e && e.stopPropagation && e.stopPropagation();
         // Set grabbing cursor
-        try { e.currentTarget && e.currentTarget.classList && e.currentTarget.classList.add('rx-comp-grabbing'); } catch {}
+        try {
+          e.currentTarget &&
+            e.currentTarget.classList &&
+            e.currentTarget.classList.add("rx-comp-grabbing");
+        } catch {}
         // Capture pointer to continue receiving move events even if leaving element
-        try { e.target && e.target.setPointerCapture && e.target.setPointerCapture(e.pointerId); } catch {}
+        try {
+          e.target &&
+            e.target.setPointerCapture &&
+            e.target.setPointerCapture(e.pointerId);
+        } catch {}
         const origin = { x: e.clientX || 0, y: e.clientY || 0 };
         try {
           const w = (typeof window !== "undefined" && window) || {};
           w.__rx_drag = w.__rx_drag || {};
           w.__rx_drag[node.id] = {
             origin,
-            start: { x: (node.position && node.position.x) || 0, y: (node.position && node.position.y) || 0 },
+            start: {
+              x: (node.position && node.position.x) || 0,
+              y: (node.position && node.position.y) || 0,
+            },
             active: true,
           };
         } catch {}
@@ -335,7 +352,11 @@ export function renderCanvasNode(node) {
     onPointerMove: (e) => {
       try {
         // Ensure grabbing cursor persists during drag
-        try { e.currentTarget && e.currentTarget.classList && e.currentTarget.classList.add('rx-comp-grabbing'); } catch {}
+        try {
+          e.currentTarget &&
+            e.currentTarget.classList &&
+            e.currentTarget.classList.add("rx-comp-grabbing");
+        } catch {}
         const cur = { x: e.clientX || 0, y: e.clientY || 0 };
         let origin = { x: 0, y: 0 };
         let startPos = { x: 0, y: 0 };
@@ -343,16 +364,31 @@ export function renderCanvasNode(node) {
         try {
           const w = (typeof window !== "undefined" && window) || {};
           const rec = (w.__rx_drag && w.__rx_drag[node.id]) || null;
-          if (rec) { origin = rec.origin || origin; startPos = rec.start || startPos; active = !!rec.active; }
+          if (rec) {
+            origin = rec.origin || origin;
+            startPos = rec.start || startPos;
+            active = !!rec.active;
+          }
         } catch {}
         if (!active) return;
-        const delta = { dx: (cur.x || 0) - (origin.x || 0), dy: (cur.y || 0) - (origin.y || 0) };
-        const newPos = { x: (startPos.x || 0) + delta.dx, y: (startPos.y || 0) + delta.dy };
+        const delta = {
+          dx: (cur.x || 0) - (origin.x || 0),
+          dy: (cur.y || 0) - (origin.y || 0),
+        };
+        const newPos = {
+          x: (startPos.x || 0) + delta.dx,
+          y: (startPos.y || 0) + delta.dy,
+        };
         const system = (window && window.renderxCommunicationSystem) || null;
         const conductor = system && system.conductor;
         const onDragUpdate = ({ elementId: id }) => {
           try {
-            updateInstancePositionCSS(id, String(node.cssClass || node.id || ""), newPos.x, newPos.y);
+            updateInstancePositionCSS(
+              id,
+              String(node.cssClass || node.id || ""),
+              newPos.x,
+              newPos.y
+            );
           } catch {}
         };
         if (conductor && typeof conductor.play === "function") {
@@ -363,19 +399,34 @@ export function renderCanvasNode(node) {
           );
         } else {
           // Fallback: directly update CSS if no conductor
-          updateInstancePositionCSS(node.id, String(node.cssClass || node.id || ""), newPos.x, newPos.y);
+          updateInstancePositionCSS(
+            node.id,
+            String(node.cssClass || node.id || ""),
+            newPos.x,
+            newPos.y
+          );
         }
       } catch {}
     },
     onPointerUp: (e) => {
       try {
         // Remove grabbing cursor and release capture
-        try { e.currentTarget && e.currentTarget.classList && e.currentTarget.classList.remove('rx-comp-grabbing'); } catch {}
-        try { e.target && e.target.releasePointerCapture && e.target.releasePointerCapture(e.pointerId); } catch {}
+        try {
+          e.currentTarget &&
+            e.currentTarget.classList &&
+            e.currentTarget.classList.remove("rx-comp-grabbing");
+        } catch {}
+        try {
+          e.target &&
+            e.target.releasePointerCapture &&
+            e.target.releasePointerCapture(e.pointerId);
+        } catch {}
         // End drag state
         try {
           const w = (typeof window !== "undefined" && window) || {};
-          if (w.__rx_drag && w.__rx_drag[node.id]) { w.__rx_drag[node.id].active = false; }
+          if (w.__rx_drag && w.__rx_drag[node.id]) {
+            w.__rx_drag[node.id].active = false;
+          }
         } catch {}
         // Play drag end
         const system = (window && window.renderxCommunicationSystem) || null;
@@ -526,6 +577,67 @@ export function CanvasPage(props = {}) {
     };
   }, []);
 
+  // While dragging, keep the selection overlay visually in sync by applying a temporary transform.
+  // On drag end, clear the transform so overlay re-anchors to absolute left/top.
+  useEffect(() => {
+    // Helper: apply or update transform style tag for current selectedId
+    const applyOverlayTransform = (dx, dy) => {
+      try {
+        if (!selectedId) return;
+        const styleId = `overlay-transform-${selectedId}`;
+        let tag = document.getElementById(styleId);
+        if (!tag) {
+          tag = document.createElement("style");
+          tag.id = styleId;
+          document.head.appendChild(tag);
+        }
+        const cls = `.rx-overlay-${selectedId}{transform:translate(${
+          Math.round(dx) || 0
+        }px,${Math.round(dy) || 0}px);}`;
+        tag.textContent = cls;
+      } catch {}
+    };
+
+    const clearOverlayTransform = () => {
+      try {
+        if (!selectedId) return;
+        const styleId = `overlay-transform-${selectedId}`;
+        const tag = document.getElementById(styleId);
+        if (tag && tag.parentNode) tag.parentNode.removeChild(tag);
+      } catch {}
+    };
+
+    const onDragUpdate = (e) => {
+      try {
+        const d = (e && e.detail) || {};
+        if (!d || d.elementId !== selectedId) return;
+        const dx = d.delta && typeof d.delta.dx === "number" ? d.delta.dx : 0;
+        const dy = d.delta && typeof d.delta.dy === "number" ? d.delta.dy : 0;
+        applyOverlayTransform(dx, dy);
+      } catch {}
+    };
+
+    const onDragEnd = (e) => {
+      try {
+        const d = (e && e.detail) || {};
+        if (!d || d.elementId !== selectedId) return;
+        clearOverlayTransform();
+      } catch {}
+    };
+
+    try {
+      window.addEventListener("renderx:drag:update", onDragUpdate);
+      window.addEventListener("renderx:drag:end", onDragEnd);
+    } catch {}
+
+    return () => {
+      try {
+        window.removeEventListener("renderx:drag:update", onDragUpdate);
+        window.removeEventListener("renderx:drag:end", onDragEnd);
+      } catch {}
+      clearOverlayTransform();
+    };
+  }, [selectedId]);
 
   // On mouseup: signal drag end via drag symphony; also dispatch a UI event
   useEffect(() => {
@@ -547,7 +659,9 @@ export function CanvasPage(props = {}) {
               source: "canvas-ui-plugin:mouseup",
               onDragEnd: () => {
                 try {
-                  const evt = new CustomEvent("renderx:drag:end", { detail: {} });
+                  const evt = new CustomEvent("renderx:drag:end", {
+                    detail: {},
+                  });
                   window.dispatchEvent(evt);
                 } catch {}
               },
@@ -692,13 +806,27 @@ export function CanvasPage(props = {}) {
                   let heightDecl = "";
                   if (tag && tag.textContent) {
                     const text = tag.textContent;
-                    const w = text.match(new RegExp(`\\.${cls}\\s*\\{[^}]*width\\s*:\\s*([^;]+);`, "i"));
-                    const h = text.match(new RegExp(`\\.${cls}\\s*\\{[^}]*height\\s*:\\s*([^;]+);`, "i"));
+                    const w = text.match(
+                      new RegExp(
+                        `\\.${cls}\\s*\\{[^}]*width\\s*:\\s*([^;]+);`,
+                        "i"
+                      )
+                    );
+                    const h = text.match(
+                      new RegExp(
+                        `\\.${cls}\\s*\\{[^}]*height\\s*:\\s*([^;]+);`,
+                        "i"
+                      )
+                    );
                     widthDecl = w ? `.${cls}{width:${w[1].trim()};}` : "";
                     heightDecl = h ? `.${cls}{height:${h[1].trim()};}` : "";
                   }
                   const lines = [
-                    `.${cls}{position:absolute;left:${Math.round(x)}px;top:${Math.round(y)}px;box-sizing:border-box;display:block;}`,
+                    `.${cls}{position:absolute;left:${Math.round(
+                      x
+                    )}px;top:${Math.round(
+                      y
+                    )}px;box-sizing:border-box;display:block;}`,
                     widthDecl,
                     heightDecl,
                   ].filter(Boolean);
@@ -716,17 +844,31 @@ export function CanvasPage(props = {}) {
                 onPointerDown: (e) => {
                   try {
                     e && e.stopPropagation && e.stopPropagation();
-                    try { e.currentTarget && e.currentTarget.classList && e.currentTarget.classList.add('rx-comp-grabbing'); } catch {}
-                    try { e.target && e.target.setPointerCapture && e.target.setPointerCapture(e.pointerId); } catch {}
+                    try {
+                      e.currentTarget &&
+                        e.currentTarget.classList &&
+                        e.currentTarget.classList.add("rx-comp-grabbing");
+                    } catch {}
+                    try {
+                      e.target &&
+                        e.target.setPointerCapture &&
+                        e.target.setPointerCapture(e.pointerId);
+                    } catch {}
                     const origin = { x: e.clientX || 0, y: e.clientY || 0 };
                     try {
                       const w = (typeof window !== "undefined" && window) || {};
                       w.__rx_drag = w.__rx_drag || {};
-                      const sel = Array.isArray(nodes) ? nodes.find(x => (x.id||x.elementId)===elementId) : null;
-                      const start = sel && sel.position ? { x: sel.position.x||0, y: sel.position.y||0 } : { x: 0, y: 0 };
+                      const sel = Array.isArray(nodes)
+                        ? nodes.find((x) => (x.id || x.elementId) === elementId)
+                        : null;
+                      const start =
+                        sel && sel.position
+                          ? { x: sel.position.x || 0, y: sel.position.y || 0 }
+                          : { x: 0, y: 0 };
                       w.__rx_drag[elementId] = { origin, start, active: true };
                     } catch {}
-                    const system = (window && window.renderxCommunicationSystem) || null;
+                    const system =
+                      (window && window.renderxCommunicationSystem) || null;
                     const conductor = system && system.conductor;
                     if (conductor && typeof conductor.play === "function") {
                       conductor.play(
@@ -739,31 +881,60 @@ export function CanvasPage(props = {}) {
                 },
                 onPointerMove: (e) => {
                   try {
-                    try { e.currentTarget && e.currentTarget.classList && e.currentTarget.classList.add('rx-comp-grabbing'); } catch {}
+                    try {
+                      e.currentTarget &&
+                        e.currentTarget.classList &&
+                        e.currentTarget.classList.add("rx-comp-grabbing");
+                    } catch {}
                     const cur = { x: e.clientX || 0, y: e.clientY || 0 };
                     let origin = { x: 0, y: 0 };
                     let startPos = { x: 0, y: 0 };
                     let active = false;
                     try {
                       const w = (typeof window !== "undefined" && window) || {};
-                      const rec = (w.__rx_drag && w.__rx_drag[elementId]) || null;
-                      if (rec) { origin = rec.origin || origin; startPos = rec.start || startPos; active = !!rec.active; }
+                      const rec =
+                        (w.__rx_drag && w.__rx_drag[elementId]) || null;
+                      if (rec) {
+                        origin = rec.origin || origin;
+                        startPos = rec.start || startPos;
+                        active = !!rec.active;
+                      }
                     } catch {}
                     if (!active) return;
-                    const delta = { dx: (cur.x || 0) - (origin.x || 0), dy: (cur.y || 0) - (origin.y || 0) };
-                    const newPos = { x: (startPos.x || 0) + delta.dx, y: (startPos.y || 0) + delta.dy };
-                    const system = (window && window.renderxCommunicationSystem) || null;
+                    const delta = {
+                      dx: (cur.x || 0) - (origin.x || 0),
+                      dy: (cur.y || 0) - (origin.y || 0),
+                    };
+                    const newPos = {
+                      x: (startPos.x || 0) + delta.dx,
+                      y: (startPos.y || 0) + delta.dy,
+                    };
+                    const system =
+                      (window && window.renderxCommunicationSystem) || null;
                     const conductor = system && system.conductor;
                     const onDragUpdate = ({ elementId: id }) => {
                       try {
-                        updateInstancePositionCSS(id, instanceClass, newPos.x, newPos.y);
+                        updateInstancePositionCSS(
+                          id,
+                          instanceClass,
+                          newPos.x,
+                          newPos.y
+                        );
                         setNodes((prev) => {
                           try {
                             const arr = Array.isArray(prev) ? prev.slice() : [];
-                            const idx = arr.findIndex((x) => (x.id || x.elementId) === id);
-                            if (idx >= 0) arr[idx] = { ...arr[idx], position: { x: newPos.x, y: newPos.y } };
+                            const idx = arr.findIndex(
+                              (x) => (x.id || x.elementId) === id
+                            );
+                            if (idx >= 0)
+                              arr[idx] = {
+                                ...arr[idx],
+                                position: { x: newPos.x, y: newPos.y },
+                              };
                             return arr;
-                          } catch { return prev; }
+                          } catch {
+                            return prev;
+                          }
                         });
                       } catch {}
                     };
@@ -774,19 +945,35 @@ export function CanvasPage(props = {}) {
                         { elementId, delta, onDragUpdate }
                       );
                     } else {
-                      updateInstancePositionCSS(elementId, instanceClass, newPos.x, newPos.y);
+                      updateInstancePositionCSS(
+                        elementId,
+                        instanceClass,
+                        newPos.x,
+                        newPos.y
+                      );
                     }
                   } catch {}
                 },
                 onPointerUp: (e) => {
                   try {
-                    try { e.currentTarget && e.currentTarget.classList && e.currentTarget.classList.remove('rx-comp-grabbing'); } catch {}
-                    try { e.target && e.target.releasePointerCapture && e.target.releasePointerCapture(e.pointerId); } catch {}
+                    try {
+                      e.currentTarget &&
+                        e.currentTarget.classList &&
+                        e.currentTarget.classList.remove("rx-comp-grabbing");
+                    } catch {}
+                    try {
+                      e.target &&
+                        e.target.releasePointerCapture &&
+                        e.target.releasePointerCapture(e.pointerId);
+                    } catch {}
                     try {
                       const w = (typeof window !== "undefined" && window) || {};
-                      if (w.__rx_drag && w.__rx_drag[elementId]) { w.__rx_drag[elementId].active = false; }
+                      if (w.__rx_drag && w.__rx_drag[elementId]) {
+                        w.__rx_drag[elementId].active = false;
+                      }
                     } catch {}
-                    const system = (window && window.renderxCommunicationSystem) || null;
+                    const system =
+                      (window && window.renderxCommunicationSystem) || null;
                     const conductor = system && system.conductor;
                     if (conductor && typeof conductor.play === "function") {
                       conductor.play(
@@ -801,7 +988,10 @@ export function CanvasPage(props = {}) {
 
               const elementWithKey =
                 el && React && typeof React.cloneElement === "function"
-                  ? React.cloneElement(el, { ...(el.props || {}), ...augmentedProps })
+                  ? React.cloneElement(el, {
+                      ...(el.props || {}),
+                      ...augmentedProps,
+                    })
                   : el && React && typeof React.createElement === "function"
                   ? (function () {
                       const rawChildren =
