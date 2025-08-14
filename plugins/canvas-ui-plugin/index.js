@@ -226,6 +226,7 @@ export function renderCanvasNode(node) {
   );
   const classes = [
     String(node.cssClass || node.id || ""),
+    "rx-comp-draggable",
     ...resolvedTemplateClasses,
   ]
     .filter(Boolean)
@@ -269,6 +270,20 @@ export function renderCanvasNode(node) {
     } catch {}
   };
 
+  // Pointer drag UX: cursor styles
+  try {
+    const styleId = 'rx-canvas-ui-cursors';
+    if (!document.getElementById(styleId)) {
+      const s = document.createElement('style');
+      s.id = styleId;
+      s.textContent = `
+        .rx-comp-draggable { cursor: grab; cursor: -webkit-grab; }
+        .rx-comp-grabbing { cursor: grabbing !important; cursor: -webkit-grabbing !important; }
+      `;
+      document.head.appendChild(s);
+    }
+  } catch {}
+
   // Memoized transparent drag image to suppress native ghost preview
   const getTransparentDragImage = () => {
     try {
@@ -292,6 +307,8 @@ export function renderCanvasNode(node) {
     onPointerDown: (e) => {
       try {
         e && e.stopPropagation && e.stopPropagation();
+        // Set grabbing cursor
+        try { e.currentTarget && e.currentTarget.classList && e.currentTarget.classList.add('rx-comp-grabbing'); } catch {}
         // Capture pointer to continue receiving move events even if leaving element
         try { e.target && e.target.setPointerCapture && e.target.setPointerCapture(e.pointerId); } catch {}
         const origin = { x: e.clientX || 0, y: e.clientY || 0 };
@@ -317,6 +334,8 @@ export function renderCanvasNode(node) {
     },
     onPointerMove: (e) => {
       try {
+        // Ensure grabbing cursor persists during drag
+        try { e.currentTarget && e.currentTarget.classList && e.currentTarget.classList.add('rx-comp-grabbing'); } catch {}
         const cur = { x: e.clientX || 0, y: e.clientY || 0 };
         let origin = { x: 0, y: 0 };
         let startPos = { x: 0, y: 0 };
@@ -345,6 +364,28 @@ export function renderCanvasNode(node) {
         } else {
           // Fallback: directly update CSS if no conductor
           updateInstancePositionCSS(node.id, String(node.cssClass || node.id || ""), newPos.x, newPos.y);
+        }
+      } catch {}
+    },
+    onPointerUp: (e) => {
+      try {
+        // Remove grabbing cursor and release capture
+        try { e.currentTarget && e.currentTarget.classList && e.currentTarget.classList.remove('rx-comp-grabbing'); } catch {}
+        try { e.target && e.target.releasePointerCapture && e.target.releasePointerCapture(e.pointerId); } catch {}
+        // End drag state
+        try {
+          const w = (typeof window !== "undefined" && window) || {};
+          if (w.__rx_drag && w.__rx_drag[node.id]) { w.__rx_drag[node.id].active = false; }
+        } catch {}
+        // Play drag end
+        const system = (window && window.renderxCommunicationSystem) || null;
+        const conductor = system && system.conductor;
+        if (conductor && typeof conductor.play === "function") {
+          conductor.play(
+            "Canvas.component-drag-symphony",
+            "Canvas.component-drag-symphony",
+            { elementId: node.id, end: true }
+          );
         }
       } catch {}
     },
@@ -675,6 +716,7 @@ export function CanvasPage(props = {}) {
                 onPointerDown: (e) => {
                   try {
                     e && e.stopPropagation && e.stopPropagation();
+                    try { e.currentTarget && e.currentTarget.classList && e.currentTarget.classList.add('rx-comp-grabbing'); } catch {}
                     try { e.target && e.target.setPointerCapture && e.target.setPointerCapture(e.pointerId); } catch {}
                     const origin = { x: e.clientX || 0, y: e.clientY || 0 };
                     try {
@@ -697,6 +739,7 @@ export function CanvasPage(props = {}) {
                 },
                 onPointerMove: (e) => {
                   try {
+                    try { e.currentTarget && e.currentTarget.classList && e.currentTarget.classList.add('rx-comp-grabbing'); } catch {}
                     const cur = { x: e.clientX || 0, y: e.clientY || 0 };
                     let origin = { x: 0, y: 0 };
                     let startPos = { x: 0, y: 0 };
@@ -732,6 +775,25 @@ export function CanvasPage(props = {}) {
                       );
                     } else {
                       updateInstancePositionCSS(elementId, instanceClass, newPos.x, newPos.y);
+                    }
+                  } catch {}
+                },
+                onPointerUp: (e) => {
+                  try {
+                    try { e.currentTarget && e.currentTarget.classList && e.currentTarget.classList.remove('rx-comp-grabbing'); } catch {}
+                    try { e.target && e.target.releasePointerCapture && e.target.releasePointerCapture(e.pointerId); } catch {}
+                    try {
+                      const w = (typeof window !== "undefined" && window) || {};
+                      if (w.__rx_drag && w.__rx_drag[elementId]) { w.__rx_drag[elementId].active = false; }
+                    } catch {}
+                    const system = (window && window.renderxCommunicationSystem) || null;
+                    const conductor = system && system.conductor;
+                    if (conductor && typeof conductor.play === "function") {
+                      conductor.play(
+                        "Canvas.component-drag-symphony",
+                        "Canvas.component-drag-symphony",
+                        { elementId, end: true }
+                      );
                     }
                   } catch {}
                 },
