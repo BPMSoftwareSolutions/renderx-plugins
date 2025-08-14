@@ -9,13 +9,19 @@ export function updateInstancePositionCSS(id, cls, x, y) {
     let heightDecl = "";
     if (tag && tag.textContent) {
       const text = tag.textContent;
-      const w = text.match(new RegExp(`\\.${cls}\\s*\\{[^}]*width\\s*:\\s*([^;]+);`, "i"));
-      const h = text.match(new RegExp(`\\.${cls}\\s*\\{[^}]*height\\s*:\\s*([^;]+);`, "i"));
+      const w = text.match(
+        new RegExp(`\\.${cls}\\s*\\{[^}]*width\\s*:\\s*([^;]+);`, "i")
+      );
+      const h = text.match(
+        new RegExp(`\\.${cls}\\s*\\{[^}]*height\\s*:\\s*([^;]+);`, "i")
+      );
       widthDecl = w ? `.${cls}{width:${w[1].trim()};}` : "";
       heightDecl = h ? `.${cls}{height:${h[1].trim()};}` : "";
     }
     const lines = [
-      `.${cls}{position:absolute;left:${Math.round(x)}px;top:${Math.round(y)}px;box-sizing:border-box;display:block;}`,
+      `.${cls}{position:absolute;left:${Math.round(x)}px;top:${Math.round(
+        y
+      )}px;box-sizing:border-box;display:block;}`,
       widthDecl,
       heightDecl,
     ].filter(Boolean);
@@ -27,4 +33,3 @@ export function updateInstancePositionCSS(id, cls, x, y) {
     tag.textContent = lines.join("\n");
   } catch {}
 }
-

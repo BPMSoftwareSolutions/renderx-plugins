@@ -16,18 +16,37 @@ export function renderCanvasNode(node) {
 
   const component = node.component || node.componentData || {};
   const template = (component.ui && component.ui.template) || "<div></div>";
+  // Provide sensible defaults for common tokens used in templates
+  const defaults = {
+    variant:
+      node?.variant ??
+      component?.ui?.defaults?.variant ??
+      component?.variant ??
+      "primary",
+    size:
+      node?.size ?? component?.ui?.defaults?.size ?? component?.size ?? "md",
+    content:
+      node?.content ?? component?.metadata?.name ?? component?.name ?? "",
+  };
   const data = {
     ...(node || {}),
     ...(node?.component?.metadata || {}),
     ...(node?.component?.ui || {}),
     ...(node?.component || {}),
     ...(node?.data || {}),
+    ...defaults,
   };
 
   const resolvedHtml = resolveTemplateTokens(template, data);
   const { tag, classes: tplClasses } = parseTemplateShape(resolvedHtml);
   // If template does not specify a semantic tag, use type or 'div'
   const semanticTag = tag || node.type || "div";
+  // Try to extract inner text content from the resolved template
+  let innerText = "";
+  try {
+    const m = resolvedHtml.match(/>\s*([^<]+)\s*</);
+    innerText = m ? m[1] : "";
+  } catch {}
 
   try {
     const css = component?.ui?.styles?.css;
@@ -54,13 +73,17 @@ export function renderCanvasNode(node) {
 
   const dragHandlers = attachDragHandlers(node, { updateInstancePositionCSS });
 
-  return React.createElement(semanticTag, {
-    id: node.id,
-    className: classes,
-    "data-component-id": node.id,
-    onPointerDown: dragHandlers.onPointerDown,
-    onPointerMove: dragHandlers.onPointerMove,
-    onPointerUp: dragHandlers.onPointerUp,
-    onClick: onElementClick(node),
-  });
+  return React.createElement(
+    semanticTag,
+    {
+      id: node.id,
+      className: classes,
+      "data-component-id": node.id,
+      onPointerDown: dragHandlers.onPointerDown,
+      onPointerMove: dragHandlers.onPointerMove,
+      onPointerUp: dragHandlers.onPointerUp,
+      onClick: onElementClick(node),
+    },
+    innerText
+  );
 }
