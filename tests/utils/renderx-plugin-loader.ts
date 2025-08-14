@@ -6,31 +6,131 @@ function mapLegacyPath(p: string) {
   return p.replace(/^RenderX\/(public\/)?plugins\//, "plugins/");
 }
 
+// Minimal ESM import resolver for tests: recursively loads modules and converts ESM to CommonJS-like
 export function loadRenderXPlugin(relativePathFromRepoRoot: string): any {
+  const cache = new Map<string, any>();
+
+  function resolveFile(fromAbs: string, spec: string): string {
+    const baseDir = path.dirname(fromAbs);
+    let target = spec;
+    if (spec.startsWith(".")) {
+      target = path.resolve(baseDir, spec);
+    } else if (spec.startsWith("plugins/")) {
+      target = path.resolve(__dirname, "../../", spec);
+    } else if (spec.startsWith("/")) {
+      target = spec;
+    } else {
+      // Not expected in tests; allow fallback relative to repo root
+      target = path.resolve(__dirname, "../../", spec);
+    }
+    if (!/\.m?js$/i.test(target)) {
+      if (fs.existsSync(target + ".js")) return target + ".js";
+    }
+    return target;
+  }
+
+  function transpileAndEval(absPath: string): any {
+    if (cache.has(absPath)) return cache.get(absPath);
+    const raw = fs.readFileSync(absPath, "utf8");
+
+    // Build import prelude and strip import lines
+    let importPrelude: string[] = [];
+    const codeNoImports = raw.replace(
+      /^\s*import\s+([^;]+?)\s+from\s+["']([^"']+)["'];?/gm,
+      (_full, bindings: string, spec: string) => {
+        const normalized = String(bindings).trim();
+        const resolved = `require(${JSON.stringify(spec)})`;
+        // Named imports
+        if (normalized.startsWith("{")) {
+          const inner = normalized.replace(/[{}]/g, "").trim();
+          const renamed = inner.replace(/\bas\b/g, ":");
+          importPrelude.push(`const { ${renamed} } = ${resolved};`);
+          return "";
+        }
+        // Namespace import: import * as NS from 'x'
+        const nsMatch = normalized.match(/^\*\s+as\s+(\w+)$/);
+        if (nsMatch) {
+          importPrelude.push(`const ${nsMatch[1]} = ${resolved};`);
+          return "";
+        }
+        // Default or default + named (fallback to .default or module object)
+        const defMatch = normalized.match(/^(\w+)\s*(,\s*\{([^}]+)\})?$/);
+        if (defMatch) {
+          const def = defMatch[1];
+          const named = defMatch[3];
+          importPrelude.push(
+            `const ${def} = (${resolved}).default ?? ${resolved};`
+          );
+          if (named) {
+            const renamed = named.replace(/\bas\b/g, ":");
+            importPrelude.push(`const { ${renamed} } = ${resolved};`);
+          }
+          return "";
+        }
+        return "";
+      }
+    );
+
+    // Handle re-exports: export { A, B as C } from '...';
+    let reexportPrelude: string[] = [];
+    const codeNoImportsNoReexp = codeNoImports.replace(
+      /^\s*export\s*\{\s*([^}]+)\s*\}\s*from\s*["']([^"']+)["'];?/gm,
+      (_full, names: string, spec: string) => {
+        const aliasPairs = names
+          .split(",")
+          .map((s) => s.trim())
+          .filter(Boolean)
+          .map((part) => {
+            const m = part.match(/^(\w+)\s+as\s+(\w+)$/);
+            return m ? { from: m[1], to: m[2] } : { from: part, to: part };
+          });
+        const modIdent = `__reexp_${Math.random().toString(36).slice(2, 8)}`;
+        const resolved = `require(${JSON.stringify(spec)})`;
+        reexportPrelude.push(`const ${modIdent} = ${resolved};`);
+        aliasPairs.forEach(({ from, to }) => {
+          reexportPrelude.push(`moduleExports.${to} = ${modIdent}.${from};`);
+        });
+        return "";
+      }
+    );
+
+    // Transform exports to moduleExports assignments
+    const transformed = (
+      importPrelude.join("\n") +
+      "\n" +
+      reexportPrelude.join("\n") +
+      "\n" +
+      codeNoImportsNoReexp
+    )
+      // export const X = ...
+      .replace(/export const (\w+)\s*=\s*/g, "moduleExports.$1 = ")
+      // export async function X(...) { ... }
+      .replace(
+        /export\s+async\s+function\s+(\w+)\s*\(/g,
+        "moduleExports.$1 = async function $1("
+      )
+      // export function X(...) { ... }
+      .replace(
+        /export\s+function\s+(\w+)\s*\(/g,
+        "moduleExports.$1 = function $1("
+      )
+      // export default ...
+      .replace(/export default\s+/g, "moduleExports.default = ");
+
+    const moduleExports: any = {};
+    const scopedRequire = (spec: string) => {
+      const target = resolveFile(absPath, spec);
+      return transpileAndEval(target);
+    };
+    const fn = new Function("moduleExports", "fetch", "require", transformed);
+    fn(moduleExports, (global as any).fetch, scopedRequire);
+    cache.set(absPath, moduleExports);
+    return moduleExports;
+  }
+
   const mapped = mapLegacyPath(relativePathFromRepoRoot);
   const abs = path.resolve(__dirname, "../../", mapped);
-  const code = fs.readFileSync(abs, "utf8");
-  const transpiled = code
-    // strip simple ESM import lines to allow eval in tests
-    .replace(/^\s*import\s+[^;]+;?/gm, "")
-    // export const X = ...
-    .replace(/export const (\w+)\s*=\s*/g, "moduleExports.$1 = ")
-    // export async function X(...) { ... }
-    .replace(
-      /export\s+async\s+function\s+(\w+)\s*\(/g,
-      "moduleExports.$1 = async function $1("
-    )
-    // export function X(...) { ... }
-    .replace(
-      /export\s+function\s+(\w+)\s*\(/g,
-      "moduleExports.$1 = function $1("
-    )
-    // export default ...
-    .replace(/export default\s+/g, "moduleExports.default = ");
-  const moduleExports: any = {};
-  const fn = new Function("moduleExports", "fetch", transpiled);
-  fn(moduleExports, (global as any).fetch);
-  return moduleExports;
+  return transpileAndEval(abs);
 }
 
 export function createTestLogger() {
