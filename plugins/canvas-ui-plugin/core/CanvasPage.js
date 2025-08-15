@@ -57,6 +57,12 @@ export function CanvasPage(props = {}) {
       ? window.React.useState(providedNodes || [])
       : [providedNodes || [], function noop() {}];
 
+  // Helper to get a node by id
+  const getNodeById = (id) => {
+    const arr = Array.isArray(nodes) ? nodes : [];
+    return arr.find((n) => n && (n.id === id || n.elementId === id)) || null;
+  };
+
   const [selectedId, setSelectedId] =
     window.React && typeof window.React.useState === "function"
       ? window.React.useState(providedSelected ?? null)
@@ -68,11 +74,40 @@ export function CanvasPage(props = {}) {
       const w = (typeof window !== "undefined" && window) || {};
       w.__rx_canvas_ui__ = w.__rx_canvas_ui__ || {};
       w.__rx_canvas_ui__.setSelectedId = (id) => setSelectedId(id || null);
+      // Allow drag handlers to persist final position for future drags and overlay sync
+      w.__rx_canvas_ui__.positions = w.__rx_canvas_ui__.positions || {};
+      w.__rx_canvas_ui__.commitNodePosition = ({ elementId, position }) => {
+        try {
+          if (!elementId || !position) return;
+          // Persist for subsequent drag baselines
+          w.__rx_canvas_ui__.positions[elementId] = {
+            x: position.x,
+            y: position.y,
+          };
+        } catch {}
+        try {
+          // Update CanvasPage local state so any re-rendered overlays/nodes use new position
+          setNodes((prev) => {
+            const next = Array.isArray(prev) ? prev.slice() : [];
+            for (let i = 0; i < next.length; i++) {
+              const n = next[i];
+              if (n && (n.id === elementId || n.elementId === elementId)) {
+                next[i] = { ...n, position: { x: position.x, y: position.y } };
+                break;
+              }
+            }
+            return next;
+          });
+        } catch {}
+      };
     } catch {}
     return () => {
       try {
         const w = (typeof window !== "undefined" && window) || {};
-        if (w.__rx_canvas_ui__) delete w.__rx_canvas_ui__.setSelectedId;
+        if (w.__rx_canvas_ui__) {
+          delete w.__rx_canvas_ui__.setSelectedId;
+          delete w.__rx_canvas_ui__.commitNodePosition;
+        }
       } catch {}
     };
   }, []);
@@ -133,9 +168,24 @@ export function CanvasPage(props = {}) {
         applyOverlayTransform(dx, dy);
       } catch {}
     };
-    const onDragEnd = ({ elementId }) => {
+    const onDragEnd = ({ elementId, position }) => {
       try {
         if (!elementId || elementId !== selectedId) return;
+        // Update overlay base CSS to new position (keeps overlay aligned after drop)
+        const n = getNodeById(elementId);
+        const defaults = n?.component?.integration?.canvasIntegration || {};
+        const nextNode = {
+          id: elementId,
+          position: {
+            x: position?.x ?? n?.position?.x ?? 0,
+            y: position?.y ?? n?.position?.y ?? 0,
+          },
+        };
+        overlayInjectInstanceCSS(
+          nextNode,
+          defaults.defaultWidth,
+          defaults.defaultHeight
+        );
         clearOverlayTransform();
         setOverlayHidden(false);
       } catch {}

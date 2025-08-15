@@ -7,10 +7,20 @@ import { DragCoordinator } from "../utils/DragCoordinator.js";
 export function attachDragHandlers(node, deps = {}) {
   ensureCursorStylesInjected();
 
-  const getStartPos = () => ({
-    x: node?.position?.x || 0,
-    y: node?.position?.y || 0,
-  });
+  const getStartPos = () => {
+    // Prefer committed position from UI state (set by CanvasPage.commitNodePosition)
+    try {
+      const w = (typeof window !== "undefined" && window) || {};
+      const p = w.__rx_canvas_ui__?.positions?.[node.id];
+      if (p && typeof p.x === "number" && typeof p.y === "number") {
+        return { x: p.x, y: p.y };
+      }
+    } catch {}
+    return {
+      x: node?.position?.x || 0,
+      y: node?.position?.y || 0,
+    };
+  };
 
   const play = (id, payload) => {
     try {
@@ -181,7 +191,7 @@ export function attachDragHandlers(node, deps = {}) {
                 ui.commitNodePosition({ elementId: node.id, position: pos });
               }
               if (ui && typeof ui.onDragEnd === "function") {
-                ui.onDragEnd({ elementId: node.id });
+                ui.onDragEnd({ elementId: node.id, position: pos });
               }
             } catch {}
           },

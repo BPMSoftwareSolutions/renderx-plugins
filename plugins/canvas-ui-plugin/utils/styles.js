@@ -102,11 +102,13 @@ export function overlayInjectInstanceCSS(node, width, height) {
   try {
     if (!node) return;
     const id = "overlay-css-" + String(node.id || "");
-    if (document.getElementById(id)) return;
     const cssText = buildOverlayInstanceCssTextSafe(node, width, height);
-    const tag = document.createElement("style");
-    tag.id = id;
+    let tag = document.getElementById(id);
+    if (!tag) {
+      tag = document.createElement("style");
+      tag.id = id;
+      document.head.appendChild(tag);
+    }
     tag.textContent = cssText;
-    document.head.appendChild(tag);
   } catch {}
 }
