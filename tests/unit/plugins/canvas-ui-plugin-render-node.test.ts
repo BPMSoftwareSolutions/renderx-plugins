@@ -105,7 +105,7 @@ describe("Canvas UI Plugin - renderCanvasNode pure element rendering", () => {
       expect(instTag).toBeTruthy();
       const instCss = (instTag?.textContent || "").replace(/\s+/g, "");
       expect(instCss).toContain(
-        `.${node.cssClass}{position:absolute;left:100px;top:40px;box-sizing:border-box;}`.replace(
+        `.${node.cssClass}{position:absolute;left:100px;top:40px;box-sizing:border-box;display:block;}`.replace(
           /\s+/g,
           ""
         )
