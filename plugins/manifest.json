@@ -79,7 +79,7 @@
       "path": "header/left/",
       "version": "0.1.0",
       "description": "Header left slot branding/status UI",
-      "autoMount": true,
+      "autoMount": false,
       "ui": { "slot": "header-left", "export": "HeaderLeft" }
     },
     {
@@ -87,7 +87,7 @@
       "path": "header/center/",
       "version": "0.1.0",
       "description": "Header center slot panel toggles UI",
-      "autoMount": true,
+      "autoMount": false,
       "ui": { "slot": "header-center", "export": "HeaderCenter" }
     },
     {
@@ -95,7 +95,7 @@
       "path": "header/right/",
       "version": "0.1.0",
       "description": "Header right slot action buttons UI",
-      "autoMount": true,
+      "autoMount": false,
       "ui": { "slot": "header-right", "export": "HeaderRight" }
     }
   ]

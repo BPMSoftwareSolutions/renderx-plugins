@@ -53,12 +53,14 @@ async function main() {
       : undefined;
     const name = relPath.replace(/\/$/, "");
     const last = name.split("/").pop() || name;
+    const isHeaderUi =
+      /^(header\/left\/|header\/center\/|header\/right\/)$/i.test(relPath);
     return {
       name: last.replace(/-/g, " "),
       path: relPath,
       version: "0.1.0",
       description: `${name} bundle`,
-      autoMount: true,
+      autoMount: isHeaderUi ? false : true,
       ...(ui || {}),
     };
   });

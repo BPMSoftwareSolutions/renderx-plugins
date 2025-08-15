@@ -204,7 +204,7 @@ export function LibraryPanel(props = {}) {
       const tryStart = () => {
         if (cancelled) return;
         try {
-          if ((window && window.__rx_library_played__) === true) return;
+          // Always attempt to (re)play on mount; allow idempotent refresh on remount
           const names = Array.isArray(conductor.getMountedPlugins?.())
             ? conductor.getMountedPlugins()
             : [];
@@ -216,7 +216,6 @@ export function LibraryPanel(props = {}) {
             (ids.includes && ids.includes("load-components-symphony"));
 
           if (pluginReady) {
-            window.__rx_library_played__ = true;
             conductor.play(
               "load-components-symphony",
               "load-components-symphony",
