@@ -9,7 +9,11 @@ describe("Theme toggle via header-right triggers theme-symphony and persists", (
     const themePlugin: any = loadRenderXPlugin(
       "RenderX/public/plugins/theme-management-plugin/index.js"
     );
-    await conductor.mount(themePlugin.sequence, themePlugin.handlers, themePlugin.sequence.id);
+    await conductor.mount(
+      themePlugin.sequence,
+      themePlugin.handlers,
+      themePlugin.sequence.id
+    );
 
     // Expose conductor to window
     (global as any).window = (global as any).window || {};
@@ -37,9 +41,15 @@ describe("Theme toggle via header-right triggers theme-symphony and persists", (
     const storage: Record<string, string> = {};
     (global as any).localStorage = {
       getItem: (k: string) => storage[k] ?? null,
-      setItem: (k: string, v: string) => { storage[k] = String(v); },
-      removeItem: (k: string) => { delete storage[k]; },
-      clear: () => { for (const k of Object.keys(storage)) delete storage[k]; },
+      setItem: (k: string, v: string) => {
+        storage[k] = String(v);
+      },
+      removeItem: (k: string) => {
+        delete storage[k];
+      },
+      clear: () => {
+        for (const k of Object.keys(storage)) delete storage[k];
+      },
     } as any;
 
     // Load header-right plugin and render
@@ -51,19 +61,27 @@ describe("Theme toggle via header-right triggers theme-symphony and persists", (
     headerRight.HeaderRight({});
 
     const themeBtn = created.find(
-      (e) => e.type === "button" && /rx-comp-button__theme1/.test(e.props?.className || "")
+      (e) =>
+        e.type === "button" &&
+        /rx-comp-button__theme1/.test(e.props?.className || "")
     );
     expect(themeBtn).toBeTruthy();
 
     // Initial theme is auto
-    expect((global as any).localStorage.getItem("app-theme") || "auto").toBe("auto");
+    expect((global as any).localStorage.getItem("app-theme") || "auto").toBe(
+      "auto"
+    );
 
     // Click 1: auto -> light
     themeBtn.props.onClick();
     expect(playSpy).toHaveBeenCalledWith(
+      "AppShell",
       "theme-symphony",
-      "theme-symphony",
-      expect.objectContaining({ targetTheme: expect.any(String) })
+      expect.objectContaining({
+        currentTheme: "auto",
+        targetTheme: expect.any(String),
+        onThemeChange: expect.any(Function),
+      })
     );
 
     // Simulate theme plugin applying and persisting light
@@ -82,4 +100,3 @@ describe("Theme toggle via header-right triggers theme-symphony and persists", (
     expect(plays.length).toBeGreaterThanOrEqual(3);
   });
 });
-

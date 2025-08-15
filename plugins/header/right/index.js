@@ -32,10 +32,19 @@ export function HeaderRight(_props = {}) {
   const onToggleTheme = () => {
     const current =
       (typeof localStorage !== "undefined" &&
-        localStorage.getItem("app-theme")) ||
+        (localStorage.getItem("app-theme") || "auto")) ||
       "auto";
-    conductor?.play("theme-symphony", "theme-symphony", {
-      targetTheme: next(current),
+    const target = next(current);
+    const onThemeChange = (theme) => {
+      try {
+        if (typeof localStorage !== "undefined")
+          localStorage.setItem("app-theme", theme);
+      } catch {}
+    };
+    conductor?.play("AppShell", "theme-symphony", {
+      currentTheme: current,
+      targetTheme: target,
+      onThemeChange,
     });
   };
 
