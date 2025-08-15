@@ -79,6 +79,8 @@ export function renderCanvasNode(node) {
       id: node.id,
       className: classes,
       "data-component-id": node.id,
+      onPointerEnter: dragHandlers.onPointerEnter,
+      onPointerLeave: dragHandlers.onPointerLeave,
       onPointerDown: dragHandlers.onPointerDown,
       onPointerMove: dragHandlers.onPointerMove,
       onPointerUp: dragHandlers.onPointerUp,

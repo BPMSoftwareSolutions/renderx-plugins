@@ -40,10 +40,32 @@ export function attachDragHandlers(node, deps = {}) {
   };
 
   return {
+    onPointerEnter: (e) => {
+      try {
+        const rec = getRec();
+        if (!rec || !rec.active) {
+          e.currentTarget?.classList?.add("rx-comp-draggable");
+          e.currentTarget?.classList?.remove("rx-comp-grabbing");
+        }
+      } catch {}
+    },
+
+    onPointerLeave: (e) => {
+      try {
+        const rec = getRec();
+        if (!rec || !rec.active) {
+          e.currentTarget?.classList?.remove("rx-comp-draggable");
+          e.currentTarget?.classList?.remove("rx-comp-grabbing");
+        }
+      } catch {}
+    },
+
     onPointerDown: (e) => {
       try {
         e?.stopPropagation?.();
         try {
+          // On drag start: switch cursor to grabbing
+          e.currentTarget?.classList?.remove("rx-comp-draggable");
           e.currentTarget?.classList?.add("rx-comp-grabbing");
           if (e.currentTarget && e.currentTarget.style) {
             try {
@@ -70,6 +92,15 @@ export function attachDragHandlers(node, deps = {}) {
           rafScheduled: false,
           el: e.currentTarget || null,
         });
+        // Notify UI overlay to hide handles during drag
+        try {
+          const w = (typeof window !== "undefined" && window) || {};
+          const ui = w.__rx_canvas_ui__ || null;
+          if (ui && typeof ui.onDragStart === "function") {
+            ui.onDragStart({ elementId: node.id });
+          }
+        } catch {}
+
         play("Canvas.component-drag-symphony", { elementId: node.id, origin });
       } catch {}
     },
@@ -77,6 +108,8 @@ export function attachDragHandlers(node, deps = {}) {
     onPointerMove: (e) => {
       try {
         try {
+          // Maintain grabbing cursor while dragging
+          e.currentTarget?.classList?.remove("rx-comp-draggable");
           e.currentTarget?.classList?.add("rx-comp-grabbing");
         } catch {}
         const cur = { x: e.clientX || 0, y: e.clientY || 0 };
@@ -115,6 +148,7 @@ export function attachDragHandlers(node, deps = {}) {
       try {
         try {
           e.currentTarget?.classList?.remove("rx-comp-grabbing");
+          e.currentTarget?.classList?.add("rx-comp-draggable");
           if (e.currentTarget && e.currentTarget.style) {
             try {
               e.currentTarget.style.willChange = "";

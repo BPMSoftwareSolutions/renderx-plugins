@@ -102,6 +102,29 @@ export function CanvasPage(props = {}) {
         if (t && t.parentNode) t.parentNode.removeChild(t);
       } catch {}
     };
+    const setOverlayHidden = (hidden) => {
+      try {
+        if (!selectedId) return;
+        const id = `overlay-visibility-${selectedId}`;
+        let tag = document.getElementById(id);
+        if (hidden) {
+          if (!tag) {
+            tag = document.createElement("style");
+            tag.id = id;
+            document.head.appendChild(tag);
+          }
+          tag.textContent = `.rx-overlay-${selectedId}{display:none;}`;
+        } else if (tag && tag.parentNode) {
+          tag.parentNode.removeChild(tag);
+        }
+      } catch {}
+    };
+    const onDragStart = ({ elementId }) => {
+      try {
+        if (!elementId || elementId !== selectedId) return;
+        setOverlayHidden(true);
+      } catch {}
+    };
     const onDragUpdate = ({ elementId, delta }) => {
       try {
         if (!elementId || elementId !== selectedId) return;
@@ -114,11 +137,13 @@ export function CanvasPage(props = {}) {
       try {
         if (!elementId || elementId !== selectedId) return;
         clearOverlayTransform();
+        setOverlayHidden(false);
       } catch {}
     };
     try {
       const w = (typeof window !== "undefined" && window) || {};
       w.__rx_canvas_ui__ = w.__rx_canvas_ui__ || {};
+      w.__rx_canvas_ui__.onDragStart = onDragStart;
       w.__rx_canvas_ui__.onDragUpdate = onDragUpdate;
       w.__rx_canvas_ui__.onDragEnd = onDragEnd;
     } catch {}
@@ -126,11 +151,13 @@ export function CanvasPage(props = {}) {
       try {
         const w = (typeof window !== "undefined" && window) || {};
         if (w.__rx_canvas_ui__) {
+          delete w.__rx_canvas_ui__.onDragStart;
           delete w.__rx_canvas_ui__.onDragUpdate;
           delete w.__rx_canvas_ui__.onDragEnd;
         }
       } catch {}
       clearOverlayTransform();
+      setOverlayHidden(false);
     };
   }, [selectedId]);
 
