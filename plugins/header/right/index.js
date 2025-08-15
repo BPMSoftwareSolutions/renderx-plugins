@@ -41,11 +41,29 @@ export function HeaderRight(_props = {}) {
           localStorage.setItem("app-theme", theme);
       } catch {}
     };
-    conductor?.play("AppShell", "theme-symphony", {
+    const payload = {
       currentTheme: current,
       targetTheme: target,
       onThemeChange,
-    });
+    };
+    try {
+      const res = conductor?.play?.("AppShell", "theme-symphony", payload);
+      if (res && typeof res.then === "function") {
+        res.catch?.(() => {
+          try {
+            conductor?.play?.("theme-symphony", "theme-symphony", {
+              targetTheme: target,
+            });
+          } catch {}
+        });
+      }
+    } catch (_e) {
+      try {
+        conductor?.play?.("theme-symphony", "theme-symphony", {
+          targetTheme: target,
+        });
+      } catch {}
+    }
   };
 
   return React.createElement(
