@@ -73,19 +73,36 @@ export function renderCanvasNode(node) {
 
   const dragHandlers = attachDragHandlers(node, { updateInstancePositionCSS });
 
-  return React.createElement(
-    semanticTag,
-    {
-      id: node.id,
-      className: classes,
-      "data-component-id": node.id,
-      onPointerEnter: dragHandlers.onPointerEnter,
-      onPointerLeave: dragHandlers.onPointerLeave,
-      onPointerDown: dragHandlers.onPointerDown,
-      onPointerMove: dragHandlers.onPointerMove,
-      onPointerUp: dragHandlers.onPointerUp,
-      onClick: onElementClick(node),
-    },
-    innerText
-  );
+  // Avoid passing children for void elements like <input/>
+  const VOID_TAGS = new Set([
+    "area",
+    "base",
+    "br",
+    "col",
+    "embed",
+    "hr",
+    "img",
+    "input",
+    "link",
+    "meta",
+    "param",
+    "source",
+    "track",
+    "wbr",
+  ]);
+  const props = {
+    id: node.id,
+    className: classes,
+    "data-component-id": node.id,
+    onPointerEnter: dragHandlers.onPointerEnter,
+    onPointerLeave: dragHandlers.onPointerLeave,
+    onPointerDown: dragHandlers.onPointerDown,
+    onPointerMove: dragHandlers.onPointerMove,
+    onPointerUp: dragHandlers.onPointerUp,
+    onClick: onElementClick(node),
+  };
+  if (VOID_TAGS.has(String(semanticTag).toLowerCase())) {
+    return React.createElement(semanticTag, props);
+  }
+  return React.createElement(semanticTag, props, innerText);
 }
