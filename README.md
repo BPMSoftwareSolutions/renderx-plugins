@@ -17,8 +17,8 @@ RenderX plugins are modular, lazily-loaded components integrated into the Render
 
 This repository builds and publishes:
 
-1) All plugin bundles to dist/
-2) A generated dist/manifest.json for RenderX to consume
+1. All plugin bundles to dist/
+2. A generated dist/manifest.json for RenderX to consume
 
 ---
 
@@ -39,8 +39,8 @@ Artifacts are emitted to dist/, including dist/manifest.json.
   - component-library-plugin/
   - control-panel-plugin/
   - canvas-ui-plugin/
-  - canvas-*/ (drag, resize, selection, create)
-  - library-*/ (drag/drop)
+  - canvas-\*/ (drag, resize, selection, create)
+  - library-\*/ (drag/drop)
   - header/ (left, center, right)
   - theme-management-plugin/
 - scripts/
@@ -61,11 +61,23 @@ Artifacts are emitted to dist/, including dist/manifest.json.
 - npm run build:manifest — generate dist/manifest.json
 - npm run build — build plugins then generate manifest
 
+### Build and Manifest Scripts
+
+- Build plugins (copy from plugins/ to dist/):
+  - Usage: node ./scripts/build-plugins.mjs
+  - Output: dist/<plugin>/\*\* (all files copied; no bundling)
+- Generate manifest (scan dist for plugin entries and write dist/manifest.json):
+  - Usage: node ./scripts/generate-manifest.mjs
+  - Notes:
+    - A plugin is recognized if dist/<plugin>/index.js exists
+    - Known UI slot hints are inferred by path; see slotHintsByRelPath in scripts/generate-manifest.mjs
+    - Header UI plugins are marked autoMount: false; other plugins default to autoMount: true
+
 ---
 
 ## Manifest and Slot Mapping
 
-The manifest is generated from dist/**/index.js entries. Known UI slot mappings are inferred by path hints in scripts/generate-manifest.mjs:
+The manifest is generated from dist/\*\*/index.js entries. Known UI slot mappings are inferred by path hints in scripts/generate-manifest.mjs:
 
 - component-library-plugin/ → slot: left, export: LibraryPanel
 - control-panel-plugin/ → slot: right, export: ControlPanelPanel
@@ -75,6 +87,7 @@ The manifest is generated from dist/**/index.js entries. Known UI slot mappings 
 - header/right/ → slot: header-right, export: HeaderRight
 
 If you add a new UI plugin that should auto-mount into a slot, either:
+
 - Place it under one of the recognized paths above, or
 - Update slotHintsByRelPath in scripts/generate-manifest.mjs to declare the mapping.
 
@@ -92,10 +105,10 @@ All other plugins will be included in the manifest without a ui slot hint by def
 
 ## Adding a New Plugin
 
-1) Create plugins/your-plugin-name/index.js and export your entry API/UI.
-2) Run npm run build to copy to dist/ and update dist/manifest.json.
-3) If your plugin should render UI in a specific slot, add a slot hint in scripts/generate-manifest.mjs.
-4) Add unit tests under tests/ to validate your orchestration handlers and expected conductor interactions.
+1. Create plugins/your-plugin-name/index.js and export your entry API/UI.
+2. Run npm run build to copy to dist/ and update dist/manifest.json.
+3. If your plugin should render UI in a specific slot, add a slot hint in scripts/generate-manifest.mjs.
+4. Add unit tests under tests/ to validate your orchestration handlers and expected conductor interactions.
 
 ---
 
@@ -103,7 +116,7 @@ All other plugins will be included in the manifest without a ui slot hint by def
 
 Short-term integration (per repo split plan):
 
-- After building this repo, copy dist/* into the RenderX app’s public/plugins folder so the app can fetch dist/manifest.json and bundles.
+- After building this repo, copy dist/\* into the RenderX app’s public/plugins folder so the app can fetch dist/manifest.json and bundles.
 - Alternatively, point RenderX to a CDN or static host that serves this repo’s dist/.
 
 Long-term, RenderX will fetch the manifest and plugin bundles from a CDN/Pages URL.
@@ -114,7 +127,7 @@ Long-term, RenderX will fetch the manifest and plugin bundles from a CDN/Pages U
 
 - Test runner: Jest (jsdom). See jest.config.js.
 - Setup files: tests/setup/jest.setup.ts, tests/setup/jest.cia-plugins.setup.ts, global setup/teardown.
-- Location: tests/**/*.test.(ts|js)
+- Location: tests/\*_/_.test.(ts|js)
 
 Run: npm test
 
