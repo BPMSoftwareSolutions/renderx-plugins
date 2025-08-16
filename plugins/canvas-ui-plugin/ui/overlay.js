@@ -19,11 +19,25 @@ export function buildOverlayForNode(React, n, key, selectedId) {
         n.component.integration &&
         n.component.integration.canvasIntegration) ||
       {};
-    overlayInjectInstanceCSS(
-      { id: n.id, position: n.position },
-      defaults.defaultWidth,
-      defaults.defaultHeight
-    );
+    // Try to read committed size from instance CSS so overlay matches on reselect
+    let w = defaults.defaultWidth;
+    let h = defaults.defaultHeight;
+    try {
+      const cls = String(n.cssClass || n.id || "");
+      const tagId =
+        "component-instance-css-" + String(n.id || n.elementId || "");
+      const tag = document.getElementById(tagId);
+      const text = (tag && tag.textContent) || "";
+      const mw = text.match(
+        new RegExp(`\\.${cls}\\s*\\{[^}]*width\\s*:\\s*([0-9.-]+)px;`, "i")
+      );
+      const mh = text.match(
+        new RegExp(`\\.${cls}\\s*\\{[^}]*height\\s*:\\s*([0-9.-]+)px;`, "i")
+      );
+      if (mw) w = parseFloat(mw[1]);
+      if (mh) h = parseFloat(mh[1]);
+    } catch {}
+    overlayInjectInstanceCSS({ id: n.id, position: n.position }, w, h);
   } catch {}
   const overlayClass = `rx-resize-overlay rx-overlay-${n.id || n.elementId}`;
   const handles = ["nw", "n", "ne", "e", "se", "s", "sw", "w"];
