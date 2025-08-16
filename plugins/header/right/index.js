@@ -48,7 +48,12 @@ export function HeaderRight(_props = {}) {
     };
     try {
       const res = conductor?.play?.("AppShell", "theme-symphony", payload);
-      if (res && typeof res.then === "function") {
+      if (!res || typeof res.then !== "function") {
+        // AppShell not present or non-promise path; fallback immediately
+        conductor?.play?.("theme-symphony", "theme-symphony", {
+          targetTheme: target,
+        });
+      } else {
         res.catch?.(() => {
           try {
             conductor?.play?.("theme-symphony", "theme-symphony", {
