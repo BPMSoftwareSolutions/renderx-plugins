@@ -7,6 +7,7 @@ import {
 import { attachDragHandlers } from "../handlers/drag.js";
 import { buildOverlayForNode } from "../ui/overlay.js";
 import { renderCanvasNode } from "./renderCanvasNode.js";
+import { updateInstanceSizeCSS } from "../styles/instanceCss.js";
 
 export function CanvasPage(props = {}) {
   const providedNodes = Array.isArray(props.nodes) ? props.nodes : null;
@@ -190,12 +191,52 @@ export function CanvasPage(props = {}) {
         setOverlayHidden(false);
       } catch {}
     };
+
+    // Resize overlay live updates and commit hooks
+    const onResizeUpdate = ({ elementId, box }) => {
+      try {
+        if (!elementId || elementId !== selectedId) return;
+        const n = getNodeById(elementId);
+        const defaults = n?.component?.integration?.canvasIntegration || {};
+        const nextNode = {
+          id: elementId,
+          position: { x: n?.position?.x ?? 0, y: n?.position?.y ?? 0 },
+        };
+        overlayInjectInstanceCSS(
+          nextNode,
+          box?.w ?? defaults.defaultWidth,
+          box?.h ?? defaults.defaultHeight
+        );
+      } catch {}
+    };
+    const onResizeEnd = ({ elementId, box }) => {
+      try {
+        if (!elementId || elementId !== selectedId) return;
+        const n = getNodeById(elementId);
+        const cls = String(n?.cssClass || n?.id || "");
+        if (!cls) return;
+        updateInstanceSizeCSS(elementId, cls, box?.w ?? 0, box?.h ?? 0, {
+          x: n?.position?.x ?? 0,
+          y: n?.position?.y ?? 0,
+        });
+        // Also update overlay to reflect committed size
+        const defaults = n?.component?.integration?.canvasIntegration || {};
+        overlayInjectInstanceCSS(
+          { id: elementId, position: n?.position || { x: 0, y: 0 } },
+          box?.w ?? defaults.defaultWidth,
+          box?.h ?? defaults.defaultHeight
+        );
+      } catch {}
+    };
     try {
       const w = (typeof window !== "undefined" && window) || {};
       w.__rx_canvas_ui__ = w.__rx_canvas_ui__ || {};
       w.__rx_canvas_ui__.onDragStart = onDragStart;
       w.__rx_canvas_ui__.onDragUpdate = onDragUpdate;
       w.__rx_canvas_ui__.onDragEnd = onDragEnd;
+      // Wire resize callbacks for UI-driven overlay and instance CSS updates
+      w.__rx_canvas_ui__.onResizeUpdate = onResizeUpdate;
+      w.__rx_canvas_ui__.onResizeEnd = onResizeEnd;
     } catch {}
     return () => {
       try {
@@ -204,6 +245,8 @@ export function CanvasPage(props = {}) {
           delete w.__rx_canvas_ui__.onDragStart;
           delete w.__rx_canvas_ui__.onDragUpdate;
           delete w.__rx_canvas_ui__.onDragEnd;
+          delete w.__rx_canvas_ui__.onResizeUpdate;
+          delete w.__rx_canvas_ui__.onResizeEnd;
         }
       } catch {}
       clearOverlayTransform();
