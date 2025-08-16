@@ -64,6 +64,56 @@ export function buildOverlayForNode(React, n, key, selectedId) {
             e && e.stopPropagation && e.stopPropagation();
             const origin = { x: e.clientX || 0, y: e.clientY || 0 };
             ResizeCoordinator.start({ id: elementId, origin });
+            // Determine starting box from instance CSS tag (or defaults)
+            let startW = 0,
+              startH = 0;
+            try {
+              const w = (typeof window !== "undefined" && window) || {};
+              const cls = String(n.cssClass || n.id || "");
+              const tagId = "component-instance-css-" + String(elementId || "");
+              const tag = document.getElementById(tagId);
+              const text = (tag && tag.textContent) || "";
+              const mw = text.match(
+                new RegExp(
+                  `\\.${cls}\\s*\\{[^}]*width\\s*:\\s*([0-9.-]+)px;`,
+                  "i"
+                )
+              );
+              const mh = text.match(
+                new RegExp(
+                  `\\.${cls}\\s*\\{[^}]*height\\s*:\\s*([0-9.-]+)px;`,
+                  "i"
+                )
+              );
+              if (mw) startW = parseFloat(mw[1]);
+              if (mh) startH = parseFloat(mh[1]);
+              if (!startW || !startH) {
+                const defaults =
+                  n?.component?.integration?.canvasIntegration || {};
+                startW = startW || defaults.defaultWidth || 0;
+                startH = startH || defaults.defaultHeight || 0;
+              }
+              w.__rx_canvas_ui__ = w.__rx_canvas_ui__ || {};
+              w.__rx_canvas_ui__.__lastW = startW;
+              w.__rx_canvas_ui__.__lastH = startH;
+              w.__rx_canvas_ui__.__lastBox = {
+                x: 0,
+                y: 0,
+                w: startW,
+                h: startH,
+              };
+              // Also pass callbacks + startBox so plugin can compute/rehydrate
+              const ui = getUI();
+              play({
+                elementId,
+                handle: h,
+                start: origin,
+                startBox: { x: 0, y: 0, w: startW, h: startH },
+                onResizeUpdate: ui.onResizeUpdate,
+                onResizeEnd: ui.onResizeEnd,
+              });
+              return; // We already played with proper payload
+            } catch {}
             play({ elementId, handle: h, start: origin });
           } catch {}
         },
@@ -75,20 +125,18 @@ export function buildOverlayForNode(React, n, key, selectedId) {
               cursor,
               onFrame: ({ dx, dy }) => {
                 const ui = getUI();
-                // Drive overlay live via UI callback
                 try {
-                  ui.onResizeUpdate?.({
-                    elementId,
-                    box: {
-                      x: 0,
-                      y: 0,
-                      w: (ui.__lastW || 0) + dx,
-                      h: (ui.__lastH || 0) + dy,
-                    },
-                  });
+                  // Compute new size from baseline + delta and update UI overlay immediately
+                  const baseW = Number(ui.__lastW || 0);
+                  const baseH = Number(ui.__lastH || 0);
+                  const w = Math.max(0, Math.round(baseW + dx));
+                  const h = Math.max(0, Math.round(baseH + dy));
+                  ui.onResizeUpdate?.({ elementId, box: { x: 0, y: 0, w, h } });
                 } catch {}
-                // Also play resized beat for plugin-driven constraints/logic
-                play({ elementId, handle: h, delta: { dx, dy } });
+                try {
+                  // Also play to plugin so constraints/logic can run
+                  play({ elementId, handle: h, delta: { dx, dy } });
+                } catch {}
               },
             });
           } catch {}
@@ -96,18 +144,20 @@ export function buildOverlayForNode(React, n, key, selectedId) {
         onPointerUp: (e) => {
           try {
             const up = { x: e.clientX || 0, y: e.clientY || 0 };
-            const { dx, dy } = ResizeCoordinator.end({
-              id: elementId,
-              upClient: up,
-            }) || { dx: 0, dy: 0 };
-            // Let plugin finalize and UI commit via callback rehydration
+            ResizeCoordinator.end({ id: elementId, upClient: up });
             const ui = getUI();
             try {
-              // We do not know startBox; let plugin compute final box and call onResizeEnd via conductor callbacks if wired.
-              // As a safety, also invoke UI commit if plugin callbacks are not used.
-              ui.onResizeEnd?.({ elementId, box: ui.__lastBox || null });
+              if (ui && typeof ui.onResizeEnd === "function" && ui.__lastBox) {
+                ui.onResizeEnd({ elementId, box: ui.__lastBox });
+              }
             } catch {}
-            play({ elementId, handle: h, end: true });
+            // Also notify plugin end (constraints/persistence as needed)
+            play({
+              elementId,
+              handle: h,
+              end: true,
+              onResizeEnd: ui.onResizeEnd,
+            });
           } catch {}
         },
       })

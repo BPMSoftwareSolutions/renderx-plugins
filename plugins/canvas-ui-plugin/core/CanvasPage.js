@@ -202,6 +202,16 @@ export function CanvasPage(props = {}) {
           id: elementId,
           position: { x: n?.position?.x ?? 0, y: n?.position?.y ?? 0 },
         };
+        // Track last box/size for UI computations if needed
+        try {
+          const w = (typeof window !== "undefined" && window) || {};
+          w.__rx_canvas_ui__ = w.__rx_canvas_ui__ || {};
+          if (box && typeof box.w === "number" && typeof box.h === "number") {
+            w.__rx_canvas_ui__.__lastBox = box;
+            w.__rx_canvas_ui__.__lastW = box.w;
+            w.__rx_canvas_ui__.__lastH = box.h;
+          }
+        } catch {}
         overlayInjectInstanceCSS(
           nextNode,
           box?.w ?? defaults.defaultWidth,
@@ -215,16 +225,35 @@ export function CanvasPage(props = {}) {
         const n = getNodeById(elementId);
         const cls = String(n?.cssClass || n?.id || "");
         if (!cls) return;
-        updateInstanceSizeCSS(elementId, cls, box?.w ?? 0, box?.h ?? 0, {
-          x: n?.position?.x ?? 0,
-          y: n?.position?.y ?? 0,
-        });
-        // Also update overlay to reflect committed size
-        const defaults = n?.component?.integration?.canvasIntegration || {};
+        let finalBox = box;
+        try {
+          if (!finalBox) {
+            const w = (typeof window !== "undefined" && window) || {};
+            const ui = w.__rx_canvas_ui__ || {};
+            if (
+              ui.__lastBox &&
+              typeof ui.__lastBox.w === "number" &&
+              typeof ui.__lastBox.h === "number"
+            ) {
+              finalBox = ui.__lastBox;
+            }
+          }
+        } catch {}
+        if (!finalBox) return;
+        updateInstanceSizeCSS(
+          elementId,
+          cls,
+          finalBox.w ?? 0,
+          finalBox.h ?? 0,
+          {
+            x: n?.position?.x ?? 0,
+            y: n?.position?.y ?? 0,
+          }
+        );
         overlayInjectInstanceCSS(
           { id: elementId, position: n?.position || { x: 0, y: 0 } },
-          box?.w ?? defaults.defaultWidth,
-          box?.h ?? defaults.defaultHeight
+          finalBox.w,
+          finalBox.h
         );
       } catch {}
     };
