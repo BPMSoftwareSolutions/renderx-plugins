@@ -105,11 +105,19 @@ export function buildOverlayForNode(React, n, key, selectedId) {
                 startH = startH || defaults.defaultHeight || 0;
               }
               w.__rx_canvas_ui__ = w.__rx_canvas_ui__ || {};
+              const baseX =
+                n && n.position && typeof n.position.x === "number"
+                  ? n.position.x
+                  : 0;
+              const baseY =
+                n && n.position && typeof n.position.y === "number"
+                  ? n.position.y
+                  : 0;
               w.__rx_canvas_ui__.__lastW = startW;
               w.__rx_canvas_ui__.__lastH = startH;
               w.__rx_canvas_ui__.__lastBox = {
-                x: 0,
-                y: 0,
+                x: baseX,
+                y: baseY,
                 w: startW,
                 h: startH,
               };
@@ -117,8 +125,8 @@ export function buildOverlayForNode(React, n, key, selectedId) {
               w.__rx_canvas_ui__.__resizeBaseline =
                 w.__rx_canvas_ui__.__resizeBaseline || {};
               w.__rx_canvas_ui__.__resizeBaseline[elementId] = {
-                x: 0,
-                y: 0,
+                x: baseX,
+                y: baseY,
                 w: startW,
                 h: startH,
               };
@@ -128,7 +136,7 @@ export function buildOverlayForNode(React, n, key, selectedId) {
                 elementId,
                 handle: h,
                 start: origin,
-                startBox: { x: 0, y: 0, w: startW, h: startH },
+                startBox: { x: baseX, y: baseY, w: startW, h: startH },
                 onResizeUpdate: ui.onResizeUpdate,
                 onResizeEnd: ui.onResizeEnd,
               });
@@ -150,14 +158,32 @@ export function buildOverlayForNode(React, n, key, selectedId) {
                 try {
                   const base = (ui.__resizeBaseline &&
                     ui.__resizeBaseline[elementId]) || {
+                    x: 0,
+                    y: 0,
                     w: Number(ui.__lastW || 0),
                     h: Number(ui.__lastH || 0),
                   };
-                  const wNew = Math.max(0, Math.round((base.w || 0) + dx));
-                  const hNew = Math.max(0, Math.round((base.h || 0) + dy));
+                  // Derive new box depending on handle semantics
+                  let xNew = base.x;
+                  let yNew = base.y;
+                  let wNew = base.w;
+                  let hNew = base.h;
+                  const dir = String(h || "");
+                  if (dir.includes("e"))
+                    wNew = Math.max(0, Math.round((base.w || 0) + dx));
+                  if (dir.includes("s"))
+                    hNew = Math.max(0, Math.round((base.h || 0) + dy));
+                  if (dir.includes("w")) {
+                    xNew = Math.round((base.x || 0) + dx);
+                    wNew = Math.max(0, Math.round((base.w || 0) - dx));
+                  }
+                  if (dir.match(/(^|[^n])n/)) {
+                    yNew = Math.round((base.y || 0) + dy);
+                    hNew = Math.max(0, Math.round((base.h || 0) - dy));
+                  }
                   ui.onResizeUpdate?.({
                     elementId,
-                    box: { x: 0, y: 0, w: wNew, h: hNew },
+                    box: { x: xNew, y: yNew, w: wNew, h: hNew },
                   });
                 } catch {}
                 try {
@@ -165,6 +191,7 @@ export function buildOverlayForNode(React, n, key, selectedId) {
                   const base =
                     (ui.__resizeBaseline && ui.__resizeBaseline[elementId]) ||
                     null;
+                  // For N/W handles, plugin will compute x/y; include baseline so UI can show left/top changes via onResizeUpdate
                   play({
                     elementId,
                     handle: h,

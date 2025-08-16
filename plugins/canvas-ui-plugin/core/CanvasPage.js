@@ -198,16 +198,23 @@ export function CanvasPage(props = {}) {
         if (!elementId || elementId !== selectedId) return;
         const n = getNodeById(elementId);
         const defaults = n?.component?.integration?.canvasIntegration || {};
+        const posX = typeof box?.x === "number" ? box.x : n?.position?.x ?? 0;
+        const posY = typeof box?.y === "number" ? box.y : n?.position?.y ?? 0;
         const nextNode = {
           id: elementId,
-          position: { x: n?.position?.x ?? 0, y: n?.position?.y ?? 0 },
+          position: { x: posX, y: posY },
         };
         // Track last box/size for UI computations if needed
         try {
           const w = (typeof window !== "undefined" && window) || {};
           w.__rx_canvas_ui__ = w.__rx_canvas_ui__ || {};
           if (box && typeof box.w === "number" && typeof box.h === "number") {
-            w.__rx_canvas_ui__.__lastBox = box;
+            w.__rx_canvas_ui__.__lastBox = {
+              x: posX,
+              y: posY,
+              w: box.w,
+              h: box.h,
+            };
             w.__rx_canvas_ui__.__lastW = box.w;
             w.__rx_canvas_ui__.__lastH = box.h;
           }
@@ -246,12 +253,26 @@ export function CanvasPage(props = {}) {
           finalBox.w ?? 0,
           finalBox.h ?? 0,
           {
-            x: n?.position?.x ?? 0,
-            y: n?.position?.y ?? 0,
+            x:
+              typeof finalBox.x === "number" ? finalBox.x : n?.position?.x ?? 0,
+            y:
+              typeof finalBox.y === "number" ? finalBox.y : n?.position?.y ?? 0,
           }
         );
         overlayInjectInstanceCSS(
-          { id: elementId, position: n?.position || { x: 0, y: 0 } },
+          {
+            id: elementId,
+            position: {
+              x:
+                typeof finalBox.x === "number"
+                  ? finalBox.x
+                  : n?.position?.x ?? 0,
+              y:
+                typeof finalBox.y === "number"
+                  ? finalBox.y
+                  : n?.position?.y ?? 0,
+            },
+          },
           finalBox.w,
           finalBox.h
         );
