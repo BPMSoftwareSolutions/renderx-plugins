@@ -62,6 +62,11 @@ export function buildOverlayForNode(React, n, key, selectedId) {
         onPointerDown: (e) => {
           try {
             e && e.stopPropagation && e.stopPropagation();
+            // Toggle cursor: resizing active
+            try {
+              e.currentTarget?.classList?.remove("rx-comp-draggable");
+              e.currentTarget?.classList?.add("rx-comp-grabbing");
+            } catch {}
             // Pointer capture for reliable move/up
             try {
               if (
@@ -187,6 +192,13 @@ export function buildOverlayForNode(React, n, key, selectedId) {
                   });
                 } catch {}
                 try {
+                  // Maintain grabbing cursor while resizing
+                  try {
+                    if (e && e.currentTarget) {
+                      e.currentTarget.classList?.remove("rx-comp-draggable");
+                      e.currentTarget.classList?.add("rx-comp-grabbing");
+                    }
+                  } catch {}
                   // Also play to plugin, and include baseline + onResizeUpdate to satisfy contract
                   const base =
                     (ui.__resizeBaseline && ui.__resizeBaseline[elementId]) ||
@@ -208,6 +220,11 @@ export function buildOverlayForNode(React, n, key, selectedId) {
           try {
             const up = { x: e.clientX || 0, y: e.clientY || 0 };
             ResizeCoordinator.end({ id: elementId, upClient: up });
+            // Restore cursor: back to draggable
+            try {
+              e.currentTarget?.classList?.remove("rx-comp-grabbing");
+              e.currentTarget?.classList?.add("rx-comp-draggable");
+            } catch {}
             // Release pointer capture
             try {
               if (
