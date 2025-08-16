@@ -102,6 +102,15 @@ export function buildOverlayForNode(React, n, key, selectedId) {
                 w: startW,
                 h: startH,
               };
+              // Keep a fixed baseline for this gesture
+              w.__rx_canvas_ui__.__resizeBaseline =
+                w.__rx_canvas_ui__.__resizeBaseline || {};
+              w.__rx_canvas_ui__.__resizeBaseline[elementId] = {
+                x: 0,
+                y: 0,
+                w: startW,
+                h: startH,
+              };
               // Also pass callbacks + startBox so plugin can compute/rehydrate
               const ui = getUI();
               play({
@@ -126,16 +135,30 @@ export function buildOverlayForNode(React, n, key, selectedId) {
               onFrame: ({ dx, dy }) => {
                 const ui = getUI();
                 try {
-                  // Compute new size from baseline + delta and update UI overlay immediately
-                  const baseW = Number(ui.__lastW || 0);
-                  const baseH = Number(ui.__lastH || 0);
-                  const w = Math.max(0, Math.round(baseW + dx));
-                  const h = Math.max(0, Math.round(baseH + dy));
-                  ui.onResizeUpdate?.({ elementId, box: { x: 0, y: 0, w, h } });
+                  const base = (ui.__resizeBaseline &&
+                    ui.__resizeBaseline[elementId]) || {
+                    w: Number(ui.__lastW || 0),
+                    h: Number(ui.__lastH || 0),
+                  };
+                  const wNew = Math.max(0, Math.round((base.w || 0) + dx));
+                  const hNew = Math.max(0, Math.round((base.h || 0) + dy));
+                  ui.onResizeUpdate?.({
+                    elementId,
+                    box: { x: 0, y: 0, w: wNew, h: hNew },
+                  });
                 } catch {}
                 try {
-                  // Also play to plugin so constraints/logic can run
-                  play({ elementId, handle: h, delta: { dx, dy } });
+                  // Also play to plugin, and include baseline + onResizeUpdate to satisfy contract
+                  const base =
+                    (ui.__resizeBaseline && ui.__resizeBaseline[elementId]) ||
+                    null;
+                  play({
+                    elementId,
+                    handle: h,
+                    delta: { dx, dy },
+                    startBox: base || undefined,
+                    onResizeUpdate: ui.onResizeUpdate,
+                  });
                 } catch {}
               },
             });
