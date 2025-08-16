@@ -5,14 +5,14 @@
 export function HeaderRight(_props = {}) {
   const React = (typeof window !== "undefined" && window.React) || null;
   if (!React) return null;
-  const conductor =
+  const getConductor = () =>
     (typeof window !== "undefined" &&
       window.renderxCommunicationSystem &&
       window.renderxCommunicationSystem.conductor) ||
     null;
 
   const onPreview = () =>
-    conductor?.play("layout-mode-symphony", "onModeChange", {
+    getConductor()?.play("layout-mode-symphony", "onModeChange", {
       previousMode: "editor",
       currentMode: "preview",
       options: { animated: true, preserveState: true },
@@ -20,7 +20,7 @@ export function HeaderRight(_props = {}) {
     });
 
   const onFullscreen = () =>
-    conductor?.play("layout-mode-symphony", "onModeChange", {
+    getConductor()?.play("layout-mode-symphony", "onModeChange", {
       previousMode: "editor",
       currentMode: "fullscreen-preview",
       options: { animated: true, preserveState: false },
@@ -47,16 +47,16 @@ export function HeaderRight(_props = {}) {
       onThemeChange,
     };
     try {
-      const res = conductor?.play?.("AppShell", "theme-symphony", payload);
+      const res = getConductor()?.play?.("AppShell", "theme-symphony", payload);
       if (!res || typeof res.then !== "function") {
         // AppShell not present or non-promise path; fallback immediately
-        conductor?.play?.("theme-symphony", "theme-symphony", {
+        getConductor()?.play?.("theme-symphony", "theme-symphony", {
           targetTheme: target,
         });
       } else {
         res.catch?.(() => {
           try {
-            conductor?.play?.("theme-symphony", "theme-symphony", {
+            getConductor()?.play?.("theme-symphony", "theme-symphony", {
               targetTheme: target,
             });
           } catch {}
@@ -64,7 +64,7 @@ export function HeaderRight(_props = {}) {
       }
     } catch (_e) {
       try {
-        conductor?.play?.("theme-symphony", "theme-symphony", {
+        getConductor()?.play?.("theme-symphony", "theme-symphony", {
           targetTheme: target,
         });
       } catch {}
