@@ -34,9 +34,10 @@ describe("HeaderRight theme switch - fallback when AppShell returns non-promise 
       },
     } as any;
 
-    // Conductor where first call does NOT throw and returns undefined
+    // Conductor where first call does NOT throw and returns undefined (AppShell mounted)
     const play = jest.fn().mockImplementation(() => undefined);
-    (global as any).window.renderxCommunicationSystem = { conductor: { play } } as any;
+    const getMountedPluginIds = jest.fn(() => ["AppShell", "theme-symphony"]);
+    (global as any).window.renderxCommunicationSystem = { conductor: { play, getMountedPluginIds } } as any;
 
     const plugin: any = loadRenderXPlugin("RenderX/public/plugins/header/right/index.js");
     plugin.HeaderRight({});

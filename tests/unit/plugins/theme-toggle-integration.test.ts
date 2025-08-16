@@ -18,7 +18,8 @@ describe("Theme toggle via header-right triggers theme-symphony and persists", (
     // Expose conductor to window
     (global as any).window = (global as any).window || {};
     (global as any).window.renderxCommunicationSystem = { conductor } as any;
-
+    // Ensure AppShell appears mounted so header-right attempts that path first
+    (conductor as any).getMountedPluginIds = () => ["AppShell", "theme-symphony"];
     // Spy on play
     const playSpy = jest.spyOn(conductor as any, "play");
 

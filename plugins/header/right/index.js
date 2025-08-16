@@ -46,27 +46,42 @@ export function HeaderRight(_props = {}) {
       targetTheme: target,
       onThemeChange,
     };
+    // Check if AppShell is mounted; otherwise call theme-symphony directly
+    const c = getConductor();
+    let hasAppShell = false; // default to false; only attempt AppShell if we can confirm it's mounted
     try {
-      const res = getConductor()?.play?.("AppShell", "theme-symphony", payload);
+      const canQuery =
+        typeof c?.getMountedPlugins === "function" ||
+        typeof c?.getMountedPluginIds === "function";
+      if (canQuery) {
+        const names = Array.isArray(c?.getMountedPlugins?.()) ? c.getMountedPlugins() : [];
+        const ids = Array.isArray(c?.getMountedPluginIds?.()) ? c.getMountedPluginIds() : [];
+        hasAppShell =
+          (names.includes && names.includes("AppShell")) ||
+          (ids.includes && ids.includes("AppShell"));
+      }
+    } catch {}
+    if (!hasAppShell) {
+      try {
+        c?.play?.("theme-symphony", "theme-symphony", { targetTheme: target });
+      } catch {}
+      return;
+    }
+
+    try {
+      const res = c?.play?.("AppShell", "theme-symphony", payload);
       if (!res || typeof res.then !== "function") {
-        // AppShell not present or non-promise path; fallback immediately
-        getConductor()?.play?.("theme-symphony", "theme-symphony", {
-          targetTheme: target,
-        });
+        c?.play?.("theme-symphony", "theme-symphony", { targetTheme: target });
       } else {
         res.catch?.(() => {
           try {
-            getConductor()?.play?.("theme-symphony", "theme-symphony", {
-              targetTheme: target,
-            });
+            c?.play?.("theme-symphony", "theme-symphony", { targetTheme: target });
           } catch {}
         });
       }
     } catch (_e) {
       try {
-        getConductor()?.play?.("theme-symphony", "theme-symphony", {
-          targetTheme: target,
-        });
+        c?.play?.("theme-symphony", "theme-symphony", { targetTheme: target });
       } catch {}
     }
   };
