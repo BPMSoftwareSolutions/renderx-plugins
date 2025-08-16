@@ -224,6 +224,19 @@ export function CanvasPage(props = {}) {
           box?.w ?? defaults.defaultWidth,
           box?.h ?? defaults.defaultHeight
         );
+        // Also live-update the actual component instance CSS so the element resizes during drag
+        try {
+          const cls = String(n?.cssClass || n?.id || "").trim();
+          if (cls) {
+            updateInstanceSizeCSS(
+              elementId,
+              cls,
+              box?.w ?? defaults.defaultWidth ?? 0,
+              box?.h ?? defaults.defaultHeight ?? 0,
+              { x: posX, y: posY }
+            );
+          }
+        } catch {}
       } catch {}
     };
     const onResizeEnd = ({ elementId, box }) => {
