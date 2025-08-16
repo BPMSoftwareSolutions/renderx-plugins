@@ -10,6 +10,7 @@
 The current Canvas UI plugin concentrates many responsibilities in a single component (e.g., CanvasPage.js): bootstrapping, state, event handling, rendering, CSS injection, and conductor wiring. This increases cognitive load, hinders testability, and makes scaling difficult.
 
 We want a scalable, testable, and comprehensible architecture that:
+
 - Enforces single-responsibility boundaries
 - Uses the Musical Conductor play()/callback pattern exclusively (no direct global listeners)
 - Keeps UI components thin and logic side-effect-free where possible
@@ -25,10 +26,12 @@ Adopt an “Orchestral Architecture” with three core actors and one testing co
   - Pure domain logic and rules (math, transforms, decisions); no side effects
 - Adapter → StageCrew
   - Ports/adapters that interact with the environment (DOM, CSS, window). The only place for side effects
+- Store → Prompt Book
+  - The authoritative, annotated state of the performance (nodes, selection). Concertmasters write via actions; everyone reads via selectors
 - Tests → Rehearsals
   - All tests are named and described as rehearsals; we practice the score before the performance
 
-All event flows originate from UI elements as React events or from other symphonies, and are routed through the Conductor (play/callback). Controllers (Concertmasters) subscribe to symphonies, call Arrangements (pure logic), and delegate side effects to StageCrew.
+All event flows originate from UI elements as React events or from other symphonies, and are routed through the Conductor (play/callback). Concertmasters consult the Prompt Book (selectors), decide using Arrangements (pure logic), record outcomes in the Prompt Book (actions), and delegate side effects to StageCrew.
 
 ## Vocabulary Mapping
 
@@ -87,7 +90,7 @@ plugins/
       components/*.tsx               # Presentational; emit conductor.play
       hooks/*.ts                     # Read-only selectors, minor glue
     state/
-      canvas.store.ts                # Store + actions (pure where possible)
+      canvas.prompt-book.ts          # Shared store (Prompt Book) with selectors/actions
       selectors.ts
       actions.ts
     adapters/
@@ -104,10 +107,10 @@ plugins/
 
 ## Typical Flow
 
-1) UI event → conductor.play('Canvas.component-drag-symphony','update', payload)
-2) Symphony dispatch → Drag Concertmaster receives event
-3) Concertmaster invokes Drag Arrangement (pure math) → next position
-4) Concertmaster updates state and calls Overlay Concertmaster via play, or asks StageCrew to apply CSS via overlay channel
+1. UI event → conductor.play('Canvas.component-drag-symphony','update', payload)
+2. Symphony dispatch → Drag Concertmaster receives event
+3. Concertmaster invokes Drag Arrangement (pure math) → next position
+4. Concertmaster updates state and calls Overlay Concertmaster via play, or asks StageCrew to apply CSS via overlay channel
 
 ## Code Sketches
 
@@ -115,23 +118,34 @@ Concertmaster (Controller):
 
 ```ts
 // features/drag/drag.concertmaster.ts
-export function registerDragConcertmaster(conductor, { store, dragArrangement }) {
-  conductor.on('Canvas.component-drag-symphony', 'start', ({ elementId }) => {
+export function registerDragConcertmaster(
+  conductor,
+  { store, dragArrangement }
+) {
+  conductor.on("Canvas.component-drag-symphony", "start", ({ elementId }) => {
     store.actions.select(elementId);
-    conductor.play('Overlay', 'hide-handles', { elementId });
+    conductor.play("Overlay", "hide-handles", { elementId });
   });
 
-  conductor.on('Canvas.component-drag-symphony', 'update', ({ elementId, delta }) => {
-    const current = store.selectors.positionOf(elementId);
-    const next = dragArrangement.applyDelta(current, delta);
-    store.actions.move(elementId, next);
-    conductor.play('Overlay', 'transform', { elementId, dx: delta.dx, dy: delta.dy });
-  });
+  conductor.on(
+    "Canvas.component-drag-symphony",
+    "update",
+    ({ elementId, delta }) => {
+      const current = store.selectors.positionOf(elementId);
+      const next = dragArrangement.applyDelta(current, delta);
+      store.actions.move(elementId, next);
+      conductor.play("Overlay", "transform", {
+        elementId,
+        dx: delta.dx,
+        dy: delta.dy,
+      });
+    }
+  );
 
-  conductor.on('Canvas.component-drag-symphony', 'end', ({ elementId }) => {
+  conductor.on("Canvas.component-drag-symphony", "end", ({ elementId }) => {
     const pos = store.selectors.positionOf(elementId);
-    conductor.play('Overlay', 'commit-position', { elementId, position: pos });
-    conductor.play('Overlay', 'show-handles', { elementId });
+    conductor.play("Overlay", "commit-position", { elementId, position: pos });
+    conductor.play("Overlay", "show-handles", { elementId });
   });
 }
 ```
@@ -178,10 +192,10 @@ Rehearsal (Test):
 
 ```ts
 // features/drag/drag.rehearsal.test.ts
-import { dragArrangement } from './drag.arrangement';
+import { dragArrangement } from "./drag.arrangement";
 
-describe('Drag Rehearsal', () => {
-  it('applies deltas', () => {
+describe("Drag Rehearsal", () => {
+  it("applies deltas", () => {
     const next = dragArrangement.applyDelta({ x: 10, y: 5 }, { dx: 3, dy: -2 });
     expect(next).toEqual({ x: 13, y: 3 });
   });
@@ -197,9 +211,23 @@ export function CanvasNode({ id, position, className, conductor }) {
     <div
       className={`rx-node ${className}`}
       style={{ transform: `translate(${position.x}px, ${position.y}px)` }}
-      onPointerDown={() => conductor.play('Canvas.component-drag-symphony','start',{ elementId: id })}
-      onPointerMove={(e) => e.buttons === 1 && conductor.play('Canvas.component-drag-symphony','update',{ elementId: id, delta: { dx: e.movementX, dy: e.movementY } })}
-      onPointerUp={() => conductor.play('Canvas.component-drag-symphony','end',{ elementId: id })}
+      onPointerDown={() =>
+        conductor.play("Canvas.component-drag-symphony", "start", {
+          elementId: id,
+        })
+      }
+      onPointerMove={(e) =>
+        e.buttons === 1 &&
+        conductor.play("Canvas.component-drag-symphony", "update", {
+          elementId: id,
+          delta: { dx: e.movementX, dy: e.movementY },
+        })
+      }
+      onPointerUp={() =>
+        conductor.play("Canvas.component-drag-symphony", "end", {
+          elementId: id,
+        })
+      }
     />
   );
 }
@@ -223,8 +251,8 @@ export function CanvasNode({ id, position, className, conductor }) {
 ## Migration Plan (Incremental)
 
 1. Introduce folders (features, symphonies, adapters, state, ui)
-2. Extract Overlay into overlay/* (arrangement + stage-crew). Replace direct DOM CSS with css.adapter
-3. Extract Drag/Resize into drag/*, resize/*; move window callbacks into symphonies
+2. Extract Overlay into overlay/\* (arrangement + stage-crew). Replace direct DOM CSS with css.adapter
+3. Extract Drag/Resize into drag/_, resize/_; move window callbacks into symphonies
 4. Introduce canvas.store with selectors/actions. Concertmasters update state, not components directly
 5. Add rehearsals for overlay rules, drag deltas, resize commits, and theme
 6. Clean up CanvasPage to a thin page with presentational components
@@ -244,4 +272,3 @@ export function CanvasNode({ id, position, className, conductor }) {
 
 - Musical Conductor pattern in this repository
 - Internal UX policy: hide handles on drag; show on drop; cursor states
-
