@@ -54,8 +54,9 @@ export function attachDragHandlers(node, deps = {}) {
       try {
         const rec = getRec();
         if (!rec || !rec.active) {
-          e.currentTarget?.classList?.add("rx-comp-draggable");
+          // Ensure only hover affordance is present
           e.currentTarget?.classList?.remove("rx-comp-grabbing");
+          e.currentTarget?.classList?.add("rx-comp-draggable");
         }
       } catch {}
     },
@@ -118,9 +119,11 @@ export function attachDragHandlers(node, deps = {}) {
     onPointerMove: (e) => {
       try {
         try {
-          // Maintain grabbing cursor while dragging
-          e.currentTarget?.classList?.remove("rx-comp-draggable");
-          e.currentTarget?.classList?.add("rx-comp-grabbing");
+          // Maintain grabbing cursor while dragging; ignore hover-only moves
+          if (e && e.buttons === 1) {
+            e.currentTarget?.classList?.remove("rx-comp-draggable");
+            e.currentTarget?.classList?.add("rx-comp-grabbing");
+          }
         } catch {}
         const cur = { x: e.clientX || 0, y: e.clientY || 0 };
         const rec = getRec();
