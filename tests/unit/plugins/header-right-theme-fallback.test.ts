@@ -25,11 +25,12 @@ describe("HeaderRight theme switch - fallback when AppShell route not handled", 
       clear: () => { for (const k of Object.keys(storage)) delete storage[k]; },
     } as any;
 
-    // Conductor where first call throws, second should be used by component
+    // Conductor where first call throws, second should be used by component (AppShell mounted)
     const play = jest.fn()
       .mockImplementationOnce(() => { throw new Error("No route for AppShell"); })
       .mockImplementation(() => {});
-    (global as any).window.renderxCommunicationSystem = { conductor: { play } } as any;
+    const getMountedPluginIds = jest.fn(() => ["AppShell", "theme-symphony"]);
+    (global as any).window.renderxCommunicationSystem = { conductor: { play, getMountedPluginIds } } as any;
 
     const plugin: any = loadRenderXPlugin("RenderX/public/plugins/header/right/index.js");
     plugin.HeaderRight({});

@@ -90,40 +90,52 @@ export const handlers = {
   },
 
   applyTheme: (data, context) => {
-    const { targetTheme } = context;
     const { transitionDuration } = context.sequence.configuration;
+    const t =
+      (context && context.payload && context.payload.theme) ??
+      (context && context.targetTheme) ??
+      (data && data.targetTheme) ??
+      "auto";
     if (typeof document !== "undefined") {
-      document.documentElement.setAttribute("data-theme", targetTheme);
-      document.body.className = `theme-${targetTheme}`;
-      document.documentElement.style.setProperty(
-        "--theme-transition-duration",
-        `${transitionDuration}ms`
-      );
+      document.documentElement.setAttribute("data-theme", t);
+      document.body.className = `theme-${t}`;
+      try {
+        document.documentElement.style.setProperty(
+          "--theme-transition-duration",
+          `${transitionDuration}ms`
+        );
+      } catch {}
     }
-    return { applied: true, theme: targetTheme };
+    return { applied: true, theme: t };
   },
 
   persistTheme: (data, context) => {
-    const { theme } = context.payload;
     const { persistToStorage } = context.sequence.configuration;
-    if (!persistToStorage)
-      return { persisted: false, reason: "disabled", theme };
+    const t =
+      (context && context.payload && context.payload.theme) ??
+      (context && context.targetTheme) ??
+      (data && data.targetTheme) ??
+      "auto";
+    if (!persistToStorage) return { persisted: false, reason: "disabled", theme: t };
     try {
-      if (typeof localStorage !== "undefined")
-        localStorage.setItem("app-theme", theme);
-      return { persisted: true, theme };
+      if (typeof localStorage !== "undefined") localStorage.setItem("app-theme", t);
+      return { persisted: true, theme: t };
     } catch (e) {
-      return { persisted: false, error: e?.message, theme };
+      return { persisted: false, error: e?.message, theme: t };
     }
   },
 
   notifyThemeChange: (data, context) => {
-    const { theme } = context.payload;
+    const t =
+      (context && context.payload && context.payload.theme) ??
+      (context && context.targetTheme) ??
+      (data && data.targetTheme) ??
+      "auto";
     if (context.onThemeChange) {
       try {
-        context.onThemeChange(theme);
+        context.onThemeChange(t);
       } catch {}
     }
-    return { notified: true, theme };
+    return { notified: true, theme: t };
   },
 };

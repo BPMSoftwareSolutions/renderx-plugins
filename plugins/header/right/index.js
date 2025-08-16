@@ -5,14 +5,14 @@
 export function HeaderRight(_props = {}) {
   const React = (typeof window !== "undefined" && window.React) || null;
   if (!React) return null;
-  const conductor =
+  const getConductor = () =>
     (typeof window !== "undefined" &&
       window.renderxCommunicationSystem &&
       window.renderxCommunicationSystem.conductor) ||
     null;
 
   const onPreview = () =>
-    conductor?.play("layout-mode-symphony", "onModeChange", {
+    getConductor()?.play("layout-mode-symphony", "onModeChange", {
       previousMode: "editor",
       currentMode: "preview",
       options: { animated: true, preserveState: true },
@@ -20,7 +20,7 @@ export function HeaderRight(_props = {}) {
     });
 
   const onFullscreen = () =>
-    conductor?.play("layout-mode-symphony", "onModeChange", {
+    getConductor()?.play("layout-mode-symphony", "onModeChange", {
       previousMode: "editor",
       currentMode: "fullscreen-preview",
       options: { animated: true, preserveState: false },
@@ -46,22 +46,42 @@ export function HeaderRight(_props = {}) {
       targetTheme: target,
       onThemeChange,
     };
+    // Check if AppShell is mounted; otherwise call theme-symphony directly
+    const c = getConductor();
+    let hasAppShell = false; // default to false; only attempt AppShell if we can confirm it's mounted
     try {
-      const res = conductor?.play?.("AppShell", "theme-symphony", payload);
-      if (res && typeof res.then === "function") {
+      const canQuery =
+        typeof c?.getMountedPlugins === "function" ||
+        typeof c?.getMountedPluginIds === "function";
+      if (canQuery) {
+        const names = Array.isArray(c?.getMountedPlugins?.()) ? c.getMountedPlugins() : [];
+        const ids = Array.isArray(c?.getMountedPluginIds?.()) ? c.getMountedPluginIds() : [];
+        hasAppShell =
+          (names.includes && names.includes("AppShell")) ||
+          (ids.includes && ids.includes("AppShell"));
+      }
+    } catch {}
+    if (!hasAppShell) {
+      try {
+        c?.play?.("theme-symphony", "theme-symphony", { targetTheme: target });
+      } catch {}
+      return;
+    }
+
+    try {
+      const res = c?.play?.("AppShell", "theme-symphony", payload);
+      if (!res || typeof res.then !== "function") {
+        c?.play?.("theme-symphony", "theme-symphony", { targetTheme: target });
+      } else {
         res.catch?.(() => {
           try {
-            conductor?.play?.("theme-symphony", "theme-symphony", {
-              targetTheme: target,
-            });
+            c?.play?.("theme-symphony", "theme-symphony", { targetTheme: target });
           } catch {}
         });
       }
     } catch (_e) {
       try {
-        conductor?.play?.("theme-symphony", "theme-symphony", {
-          targetTheme: target,
-        });
+        c?.play?.("theme-symphony", "theme-symphony", { targetTheme: target });
       } catch {}
     }
   };

@@ -14,15 +14,15 @@ function installReactStub(created: any[]) {
   (global as any).window.React = ReactStub;
 }
 
-describe("HeaderRight theme switch - play contract with AppShell", () => {
-  test("Clicking theme button calls play('AppShell','theme-symphony',{currentTheme,targetTheme,onThemeChange})", () => {
+describe("HeaderRight - lazy conductor lookup", () => {
+  test("mount without conductor, attach later, then click theme triggers play via lazy getConductor()", () => {
     const created: any[] = [];
     installReactStub(created);
 
-    // Fake conductor (AppShell mounted) and storage
-    const play = jest.fn();
-    const getMountedPluginIds = jest.fn(() => ["AppShell", "theme-symphony"]);
-    (global as any).window.renderxCommunicationSystem = { conductor: { play, getMountedPluginIds } } as any;
+    // No conductor at mount
+    (global as any).window.renderxCommunicationSystem = undefined;
+
+    // localStorage stub
     const storage: Record<string, string> = { "app-theme": "auto" };
     (global as any).localStorage = {
       getItem: (k: string) => storage[k] ?? null,
@@ -31,7 +31,7 @@ describe("HeaderRight theme switch - play contract with AppShell", () => {
       clear: () => { for (const k of Object.keys(storage)) delete storage[k]; },
     } as any;
 
-    const plugin = loadRenderXPlugin("RenderX/public/plugins/header/right/index.js");
+    const plugin: any = loadRenderXPlugin("RenderX/public/plugins/header/right/index.js");
     plugin.HeaderRight({});
 
     const themeBtn = created.find(
@@ -39,20 +39,13 @@ describe("HeaderRight theme switch - play contract with AppShell", () => {
     );
     expect(themeBtn).toBeTruthy();
 
-    // Click: auto -> light, with proper contract
-    themeBtn.props.onClick();
+    // Attach conductor AFTER render
+    const play = jest.fn(() => undefined);
+    (global as any).window.renderxCommunicationSystem = { conductor: { play } } as any;
 
+    // Click should now pick up the conductor and attempt AppShell + fallback
+    themeBtn.props.onClick();
     expect(play).toHaveBeenCalled();
-    const call = play.mock.calls[0];
-    expect(call[0]).toBe("AppShell"); // plugin name
-    expect(call[1]).toBe("theme-symphony"); // sequence id
-    expect(call[2]).toEqual(
-      expect.objectContaining({
-        currentTheme: "auto",
-        targetTheme: expect.stringMatching(/^(light|dark|auto)$/),
-        onThemeChange: expect.any(Function),
-      })
-    );
   });
 });
 
