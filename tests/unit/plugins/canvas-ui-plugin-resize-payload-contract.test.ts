@@ -76,8 +76,8 @@ describe("Canvas UI Overlay - resize payload contract (startBox + callbacks)", (
       clientY: 0,
       stopPropagation() {},
     });
-    // Pointer move
-    await handle.props.onPointerMove({ clientX: 20, clientY: 10 });
+    // Pointer move (buttons=1 required now that overlay ignores hover moves)
+    await handle.props.onPointerMove({ clientX: 20, clientY: 10, buttons: 1 });
     // Give rAF time to run and play to be recorded
     await new Promise((r) => setTimeout(r, 30));
     // Pointer up

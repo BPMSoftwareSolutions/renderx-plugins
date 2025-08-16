@@ -62,6 +62,17 @@ export function buildOverlayForNode(React, n, key, selectedId) {
         onPointerDown: (e) => {
           try {
             e && e.stopPropagation && e.stopPropagation();
+            // Pointer capture for reliable move/up
+            try {
+              if (
+                e &&
+                e.target &&
+                typeof e.target.setPointerCapture === "function" &&
+                typeof e.pointerId !== "undefined"
+              ) {
+                e.target.setPointerCapture(e.pointerId);
+              }
+            } catch {}
             const origin = { x: e.clientX || 0, y: e.clientY || 0 };
             ResizeCoordinator.start({ id: elementId, origin });
             // Determine starting box from instance CSS tag (or defaults)
@@ -128,6 +139,8 @@ export function buildOverlayForNode(React, n, key, selectedId) {
         },
         onPointerMove: (e) => {
           try {
+            // Ignore hover after pointerup or non-primary moves
+            if (!e || e.buttons !== 1) return;
             const cursor = { x: e.clientX || 0, y: e.clientY || 0 };
             ResizeCoordinator.move({
               id: elementId,
@@ -168,10 +181,25 @@ export function buildOverlayForNode(React, n, key, selectedId) {
           try {
             const up = { x: e.clientX || 0, y: e.clientY || 0 };
             ResizeCoordinator.end({ id: elementId, upClient: up });
+            // Release pointer capture
+            try {
+              if (
+                e &&
+                e.target &&
+                typeof e.target.releasePointerCapture === "function" &&
+                typeof e.pointerId !== "undefined"
+              ) {
+                e.target.releasePointerCapture(e.pointerId);
+              }
+            } catch {}
             const ui = getUI();
             try {
               if (ui && typeof ui.onResizeEnd === "function" && ui.__lastBox) {
                 ui.onResizeEnd({ elementId, box: ui.__lastBox });
+              }
+              // Clear baseline for element
+              if (ui && ui.__resizeBaseline && ui.__resizeBaseline[elementId]) {
+                delete ui.__resizeBaseline[elementId];
               }
             } catch {}
             // Also notify plugin end (constraints/persistence as needed)
