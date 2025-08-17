@@ -12,6 +12,22 @@ import {
   updateInstancePositionCSS,
 } from "../styles/instanceCss.js";
 
+function __isDev() {
+  try {
+    if (typeof process !== "undefined" && process && process.env) {
+      if (process.env.MC_DEV === "1" || process.env.NODE_ENV === "development")
+        return true;
+    }
+  } catch {}
+  try {
+    const w = (typeof window !== "undefined" && window) || {};
+    if (w && w.__CONDUCTOR_ENV__ && w.__CONDUCTOR_ENV__.dev === true)
+      return true;
+    if (w && (w.MC_DEV === 1 || w.MC_DEV === "1")) return true;
+  } catch {}
+  return false;
+}
+
 export function CanvasPage(props = {}) {
   const providedNodes = Array.isArray(props.nodes) ? props.nodes : null;
   const providedSelected = props.selectedId ?? undefined;
@@ -43,6 +59,57 @@ export function CanvasPage(props = {}) {
         const ids = Array.isArray(getIds) ? getIds : [];
         if (ids.includes && ids.includes("Canvas.ui-symphony")) {
           window.__rx_canvas_ui_played__ = true;
+
+          // Dev-only stage:cue logging as per ADR-0017 guidelines
+          try {
+            if (__isDev() && typeof conductor.on === "function") {
+              if (!window.__rx_canvas_ui_stagecue_logger__) {
+                const pluginId = "Canvas.ui-symphony";
+                const handler = (cue) => {
+                  try {
+                    if (cue && cue.pluginId && cue.pluginId !== pluginId)
+                      return;
+                    // Pretty log a compact view of the operations
+                    const ops = (cue.ops || cue.operations || []).map((op) => {
+                      const t = op.type || op.action || "";
+                      if (t === "upsertStyle")
+                        return {
+                          t,
+                          id: op.id,
+                          size: (op.cssText || "").length,
+                        };
+                      if (t === "update")
+                        return {
+                          t,
+                          selector: op.selector,
+                          classes: op.classes,
+                          attrs: op.attrs,
+                          style: op.style,
+                        };
+                      if (t === "create")
+                        return { t, tag: op.tagName, appendTo: op.appendTo };
+                      if (t === "remove") return { t, selector: op.selector };
+                      return op;
+                    });
+                    console.debug(
+                      "stage:cue",
+                      cue.correlationId || cue.id,
+                      cue.pluginId || pluginId,
+                      ops
+                    );
+                  } catch {}
+                };
+                conductor.on("stage", "cue", handler);
+                window.__rx_canvas_ui_stagecue_logger__ = () => {
+                  try {
+                    conductor.off && conductor.off("stage", "cue", handler);
+                  } catch {}
+                  delete window.__rx_canvas_ui_stagecue_logger__;
+                };
+              }
+            }
+          } catch {}
+
           conductor.play("Canvas.ui-symphony", "Canvas.ui-symphony", {
             source: "canvas-ui-plugin",
           });

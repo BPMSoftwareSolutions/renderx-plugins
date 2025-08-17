@@ -39,7 +39,7 @@ if (!getStageCrew) {
 export function injectRawCSS(css) {
   try {
     if (!css) return;
-    const id = "component-css-" + btoa(css).substring(0, 10);
+    const id = "component-css-" + safeHash(css).slice(0, 10);
     if (document.getElementById(id)) return;
     const sc = getStageCrew();
     const corr = `mc-${Date.now().toString(36)}${Math.random()
@@ -49,6 +49,26 @@ export function injectRawCSS(css) {
       .upsertStyle(id, css)
       .commit();
   } catch {}
+}
+
+function safeHash(input) {
+  try {
+    // Prefer crypto if available (stable)
+    const crypto =
+      (typeof globalThis !== "undefined" &&
+        (globalThis.crypto || globalThis.msCrypto)) ||
+      null;
+    if (crypto && crypto.subtle && typeof TextEncoder !== "undefined") {
+      // Synchronous hash emulation is non-trivial; fallback below for simplicity in this environment
+    }
+  } catch {}
+  // Simple deterministic hash (djb2)
+  let hash = 5381;
+  for (let i = 0; i < String(input).length; i++) {
+    hash = (hash << 5) + hash + String(input).charCodeAt(i);
+    hash = hash & 0xffffffff;
+  }
+  return Math.abs(hash).toString(36);
 }
 
 export function injectInstanceCSS(node, width, height) {
