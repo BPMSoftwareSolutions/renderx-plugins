@@ -1,3 +1,11 @@
+// Expose binder on window for plugins that load from public bundles without module path access
+try {
+  const w = (typeof window !== "undefined" && window) || {};
+  if (!w.__rx_capability_binder__) {
+    w.__rx_capability_binder__ = module.exports;
+  }
+} catch {}
+
 const path = require("path");
 const fs = require("fs");
 

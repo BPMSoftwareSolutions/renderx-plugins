@@ -5,7 +5,17 @@ import { updateInstancePositionCSS } from "../styles/instanceCss.js";
 import { DragCoordinator } from "../utils/DragCoordinator.js";
 import { overlayArrangement } from "../features/overlay/overlay.arrangement.js";
 
-import { play as playCapability } from "../../../core/binder/CapabilityBinder.js";
+// Resolve binder at runtime via window to keep plugin self-contained in public build
+function playCapability(conductor, node, capability, payload) {
+  try {
+    const w = (typeof window !== "undefined" && window) || {};
+    const binder = w.__rx_capability_binder__;
+    if (binder && typeof binder.play === "function") {
+      return binder.play(conductor, node, capability, payload);
+    }
+  } catch {}
+  return Promise.reject(new Error("CapabilityBinder not available"));
+}
 
 export function attachDragHandlers(node, deps = {}) {
   ensureCursorStylesInjected();
