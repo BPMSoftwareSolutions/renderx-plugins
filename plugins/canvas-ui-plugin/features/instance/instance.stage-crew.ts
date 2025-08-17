@@ -1,5 +1,7 @@
 // Component Instance StageCrew (Adapter): applies per-instance CSS for the actual component element
-// Note: self-contained (no imports) to avoid Jest ESM transform issues in mixed JS/TS modules.
+// Migrated to route DOM writes through Stage Crew (ADR-0017 Option B)
+import { getStageCrew } from "@communication/StageCrew";
+
 export function makeInstanceStageCrew() {
   return {
     commitPosition(
@@ -14,12 +16,14 @@ export function makeInstanceStageCrew() {
         const x = Math.round(position?.x ?? 0);
         const y = Math.round(position?.y ?? 0);
         const tagId = "component-instance-css-" + id;
-        let tag = document.getElementById(tagId) as HTMLStyleElement | null;
-        // Preserve width/height from existing tag if present
+        // Preserve width/height from existing tag if present (reads are allowed)
         let widthDecl = "";
         let heightDecl = "";
-        if (tag && tag.textContent) {
-          const text = tag.textContent;
+        try {
+          const existing = document.getElementById(
+            tagId
+          ) as HTMLStyleElement | null;
+          const text = existing?.textContent || "";
           const w = text.match(
             new RegExp(`\\.${cls}\\s*\\{[^}]*width\\s*:\\s*([^;]+);`, "i")
           );
@@ -28,18 +32,23 @@ export function makeInstanceStageCrew() {
           );
           widthDecl = w ? `.${cls}{width:${w[1].trim()};}` : "";
           heightDecl = h ? `.${cls}{height:${h[1].trim()};}` : "";
-        }
-        const lines = [
+        } catch {}
+        const cssText = [
           `.${cls}{position:absolute;left:${x}px;top:${y}px;box-sizing:border-box;display:block;}`,
           widthDecl,
           heightDecl,
-        ].filter(Boolean);
-        if (!tag) {
-          tag = document.createElement("style");
-          tag.id = tagId;
-          document.head.appendChild(tag);
-        }
-        tag.textContent = lines.join("\n");
+        ]
+          .filter(Boolean)
+          .join("\n");
+
+        // Route the DOM write via Stage Crew
+        const sc = getStageCrew();
+        const correlationId = `mc-${Date.now().toString(36)}${Math.random()
+          .toString(36)
+          .slice(2, 6)}`;
+        sc.beginBeat(correlationId, { handlerName: "instance.commitPosition" })
+          .upsertStyle(tagId, cssText)
+          .commit();
       } catch {}
     },
   };

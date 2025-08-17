@@ -1,21 +1,57 @@
-// Overlay StageCrew (Adapter): applies arrangement CSS via a cssAdapter port
-export function makeOverlayStageCrew(cssAdapter: { upsertStyle: Function; removeStyle: Function }, overlayArrangement: any) {
+// Overlay StageCrew (Adapter): applies arrangement CSS via Stage Crew (ADR-0017 Option B)
+import { getStageCrew } from "@communication/StageCrew";
+
+export function makeOverlayStageCrew(
+  _cssAdapter: { upsertStyle: Function; removeStyle: Function },
+  overlayArrangement: any
+) {
   return {
     transform(elementId: string, dx: number, dy: number) {
       const css = overlayArrangement.transformRule(elementId, dx, dy);
-      cssAdapter.upsertStyle(`overlay-transform-${elementId}`, css);
+      const sc = getStageCrew();
+      const id = `overlay-transform-${elementId}`;
+      const corr = `mc-${Date.now().toString(36)}${Math.random()
+        .toString(36)
+        .slice(2, 6)}`;
+      sc.beginBeat(corr, { handlerName: "overlay.transform", elementId })
+        .upsertStyle(id, css)
+        .commit({ batch: true });
     },
     hide(elementId: string) {
       const css = overlayArrangement.hideRule(elementId);
-      cssAdapter.upsertStyle(`overlay-visibility-${elementId}`, css);
+      const sc = getStageCrew();
+      const id = `overlay-visibility-${elementId}`;
+      const corr = `mc-${Date.now().toString(36)}${Math.random()
+        .toString(36)
+        .slice(2, 6)}`;
+      sc.beginBeat(corr, { handlerName: "overlay.hide", elementId })
+        .upsertStyle(id, css)
+        .commit();
     },
     show(elementId: string) {
-      cssAdapter.removeStyle(`overlay-visibility-${elementId}`);
+      const sc = getStageCrew();
+      const id = `overlay-visibility-${elementId}`;
+      const corr = `mc-${Date.now().toString(36)}${Math.random()
+        .toString(36)
+        .slice(2, 6)}`;
+      sc.beginBeat(corr, { handlerName: "overlay.show", elementId })
+        .remove(`#${id}`)
+        .commit();
     },
-    commitInstance(elementId: string, position: { x: number; y: number }, size: { w?: number|string; h?: number|string }) {
+    commitInstance(
+      elementId: string,
+      position: { x: number; y: number },
+      size: { w?: number | string; h?: number | string }
+    ) {
       const css = overlayArrangement.instanceRule(elementId, position, size);
-      cssAdapter.upsertStyle(`overlay-instance-${elementId}`, css);
+      const sc = getStageCrew();
+      const id = `overlay-instance-${elementId}`;
+      const corr = `mc-${Date.now().toString(36)}${Math.random()
+        .toString(36)
+        .slice(2, 6)}`;
+      sc.beginBeat(corr, { handlerName: "overlay.commitInstance", elementId })
+        .upsertStyle(id, css)
+        .commit();
     },
   };
 }
-
