@@ -62,14 +62,13 @@ export function CanvasPage(props = {}) {
 
           // Dev-only stage:cue logging as per ADR-0017 guidelines
           try {
-            if (__isDev() && typeof conductor.on === "function") {
+            if (__isDev()) {
               if (!window.__rx_canvas_ui_stagecue_logger__) {
                 const pluginId = "Canvas.ui-symphony";
                 const handler = (cue) => {
                   try {
                     if (cue && cue.pluginId && cue.pluginId !== pluginId)
                       return;
-                    // Pretty log a compact view of the operations
                     const ops = (cue.ops || cue.operations || []).map((op) => {
                       const t = op.type || op.action || "";
                       if (t === "upsertStyle")
@@ -99,10 +98,35 @@ export function CanvasPage(props = {}) {
                     );
                   } catch {}
                 };
-                conductor.on("stage", "cue", handler);
+
+                const cleaners = [];
+                // Subscribe via on(channel, action)
+                try {
+                  if (typeof conductor.on === "function") {
+                    conductor.on("stage", "cue", handler);
+                    cleaners.push(() => {
+                      try {
+                        conductor.off && conductor.off("stage", "cue", handler);
+                      } catch {}
+                    });
+                  }
+                } catch {}
+                // Also try subscribe("stage:cue") if available
+                try {
+                  if (typeof conductor.subscribe === "function") {
+                    const unsub = conductor.subscribe("stage:cue", handler);
+                    if (typeof unsub === "function")
+                      cleaners.push(() => {
+                        try {
+                          unsub();
+                        } catch {}
+                      });
+                  }
+                } catch {}
+
                 window.__rx_canvas_ui_stagecue_logger__ = () => {
                   try {
-                    conductor.off && conductor.off("stage", "cue", handler);
+                    cleaners.forEach((fn) => fn && fn());
                   } catch {}
                   delete window.__rx_canvas_ui_stagecue_logger__;
                 };
