@@ -51,6 +51,25 @@ export const handlers = {
 
     context.logger?.info?.("🧩 Canvas.create", { id, type, position });
 
+    // Stage Crew: initial instance CSS (position etc.)
+    try {
+      const sc = context?.stageCrew;
+      if (sc && typeof sc.beginBeat === "function") {
+        const correlationId =
+          context?.correlationId ||
+          `mc-${Date.now().toString(36)}${Math.random()
+            .toString(36)
+            .slice(2, 6)}`;
+        const tagId = `component-instance-css-${id}`;
+        const cssText = `.${cssClass}{position:absolute;left:${
+          position.x || 0
+        }px;top:${position.y || 0}px;box-sizing:border-box;display:block;}`;
+        sc.beginBeat(correlationId, { handlerName: "create" })
+          .upsertStyle(tagId, cssText)
+          .commit();
+      }
+    } catch {}
+
     // Notify React Canvas via callback if available
     const onComponentCreated =
       context?.onComponentCreated || data?.onComponentCreated;

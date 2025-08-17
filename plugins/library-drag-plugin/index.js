@@ -64,7 +64,7 @@ export const handlers = {
 
   endDrag: (data, context) => {
     try {
-      context.logger?.log?.("📚 Library.drag:end", {
+      context.logger?.info?.("📚 Library.drag:end", {
         when: new Date().toISOString(),
       });
       return { ended: true };

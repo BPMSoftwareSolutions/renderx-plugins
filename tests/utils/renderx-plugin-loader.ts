@@ -170,6 +170,7 @@ export function loadRenderXPlugin(relativePathFromRepoRoot: string): any {
 
 export function createTestLogger() {
   return {
+    log: jest.fn(),
     info: jest.fn(),
     warn: jest.fn(),
     error: jest.fn(),

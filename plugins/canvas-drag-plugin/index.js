@@ -69,6 +69,27 @@ export const handlers = {
     const o = ctx.payload.drag?.origin || { x: 0, y: 0 };
     const position = { x: o.x + (delta?.dx || 0), y: o.y + (delta?.dy || 0) };
     ctx.logger?.log?.("dragMove", { elementId, delta, position });
+
+    // Stage Crew: update element position, batched to next frame
+    try {
+      const sc = ctx?.stageCrew;
+      if (sc && typeof sc.beginBeat === "function") {
+        const correlationId =
+          ctx?.correlationId ||
+          `mc-${Date.now().toString(36)}${Math.random()
+            .toString(36)
+            .slice(2, 6)}`;
+        sc.beginBeat(correlationId, { handlerName: "dragMove" })
+          .update(`#${elementId}`, {
+            style: {
+              left: `${Math.round(position.x)}px`,
+              top: `${Math.round(position.y)}px`,
+            },
+          })
+          .commit({ batch: true });
+      }
+    } catch {}
+
     try {
       onDragUpdate?.({ elementId, position });
     } catch {}

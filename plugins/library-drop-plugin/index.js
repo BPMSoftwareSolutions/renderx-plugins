@@ -65,7 +65,7 @@ export const handlers = {
     const dragData = data?.dragData ?? context?.dragData;
     const component = dragData?.componentData || dragData?.component || null;
 
-    context.logger?.log?.("📚 Library.drop:start", {
+    context.logger?.info?.("📚 Library.drop:start", {
       at: coordinates,
       name: component?.metadata?.name,
       type: component?.metadata?.type,
@@ -78,11 +78,14 @@ export const handlers = {
     const onComponentCreated =
       data?.onComponentCreated || context?.onComponentCreated;
 
-    context.logger?.log?.("🎯 Forwarding to Canvas.component-create-symphony", {
-      name: component?.metadata?.name,
-      type: component?.metadata?.type,
-      coordinates,
-    });
+    context.logger?.info?.(
+      "🎯 Forwarding to Canvas.component-create-symphony",
+      {
+        name: component?.metadata?.name,
+        type: component?.metadata?.type,
+        coordinates,
+      }
+    );
 
     // Preferred path: use conductor.play so callbacks are preserved
     try {
@@ -114,7 +117,7 @@ export const handlers = {
         .slice(2, 6)}`;
       const cssClass = id;
 
-      context.logger?.log?.("🧩 Local create fallback", {
+      context.logger?.info?.("🧩 Local create fallback", {
         id,
         type,
         coordinates,
@@ -139,7 +142,7 @@ export const handlers = {
   },
 
   handleDropComplete: (data, context) => {
-    context.logger?.log?.("✅ Library.drop:complete");
+    context.logger?.info?.("✅ Library.drop:complete");
     return { completed: true };
   },
 };

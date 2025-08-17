@@ -90,12 +90,31 @@ export function CanvasPage(props = {}) {
                       if (t === "remove") return { t, selector: op.selector };
                       return op;
                     });
-                    console.debug(
-                      "stage:cue",
-                      cue.correlationId || cue.id,
-                      cue.pluginId || pluginId,
-                      ops
-                    );
+                    try {
+                      const logger =
+                        window?.renderxCommunicationSystem?.conductor?.logger ||
+                        console;
+                      logger.log(
+                        "[StageCrew] stage:cue",
+                        cue.correlationId || cue.id,
+                        cue.pluginId || pluginId,
+                        ops
+                      );
+                    } catch {
+                      // No direct console in plugins per SPA Validator
+                      try {
+                        const logger =
+                          window?.renderxCommunicationSystem?.conductor?.logger;
+                        logger &&
+                          logger.log &&
+                          logger.log(
+                            "[StageCrew] stage:cue",
+                            cue.correlationId || cue.id,
+                            cue.pluginId || pluginId,
+                            ops
+                          );
+                      } catch {}
+                    }
                   } catch {}
                 };
 
