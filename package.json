@@ -1,6 +1,6 @@
 {
   "name": "@bpmsoftwaresolutions/renderx-plugins",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "RenderX plugins meta-package with unit tests and build + manifest generation",
   "license": "MIT",
   "type": "commonjs",
