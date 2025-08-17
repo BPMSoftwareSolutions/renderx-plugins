@@ -131,6 +131,11 @@ export function attachDragHandlers(node, deps = {}) {
           origin,
           el: e.currentTarget || null,
         });
+        try {
+          const w = (typeof window !== "undefined" && window) || {};
+          w.__rx_canvas_ui__ = w.__rx_canvas_ui__ || {};
+          w.__rx_canvas_ui__.__activeDragId = node.id;
+        } catch {}
         setRec({
           origin,
           start: getStartPos(),
@@ -303,6 +308,11 @@ export function attachDragHandlers(node, deps = {}) {
                   tag.textContent = css;
                 } catch {}
               } catch {}
+            } catch {}
+            try {
+              const w = (typeof window !== "undefined" && window) || {};
+              const ui = (w.__rx_canvas_ui__ = w.__rx_canvas_ui__ || {});
+              ui.__activeDragId = null;
             } catch {}
           },
         });

@@ -7,7 +7,10 @@ import {
 import { attachDragHandlers } from "../handlers/drag.js";
 import { buildOverlayForNode } from "../ui/overlay.js";
 import { renderCanvasNode } from "./renderCanvasNode.js";
-import { updateInstanceSizeCSS } from "../styles/instanceCss.js";
+import {
+  updateInstanceSizeCSS,
+  updateInstancePositionCSS,
+} from "../styles/instanceCss.js";
 
 export function CanvasPage(props = {}) {
   const providedNodes = Array.isArray(props.nodes) ? props.nodes : null;
@@ -251,6 +254,18 @@ export function CanvasPage(props = {}) {
             y: position?.y ?? n?.position?.y ?? 0,
           },
         };
+        // Commit component instance CSS as well so the element itself stays aligned
+        try {
+          const cls = String(n?.cssClass || n?.id || "").trim();
+          if (cls) {
+            updateInstancePositionCSS(
+              elementId,
+              cls,
+              nextNode.position.x,
+              nextNode.position.y
+            );
+          }
+        } catch {}
         overlayInjectInstanceCSS(
           nextNode,
           defaults.defaultWidth,
@@ -393,15 +408,21 @@ export function CanvasPage(props = {}) {
         const conductor = system && system.conductor;
         if (conductor && typeof conductor.play === "function") {
           const w = (typeof window !== "undefined" && window) || {};
-          const onDragEnd = w.__rx_canvas_ui__ && w.__rx_canvas_ui__.onDragEnd;
-          conductor.play(
-            "Canvas.component-drag-symphony",
-            "Canvas.component-drag-symphony",
-            {
-              source: "canvas-ui-plugin:mouseup",
-              onDragEnd,
-            }
-          );
+          const ui = (w.__rx_canvas_ui__ = w.__rx_canvas_ui__ || {});
+          const onDragEnd = ui.onDragEnd;
+          // Only emit a drag 'end' if we have an active element
+          if (ui.__activeDragId) {
+            conductor.play(
+              "Canvas.component-drag-symphony",
+              "Canvas.component-drag-symphony",
+              {
+                source: "canvas-ui-plugin:mouseup",
+                elementId: ui.__activeDragId,
+                onDragEnd,
+              }
+            );
+            ui.__activeDragId = null;
+          }
         }
       } catch {}
     };

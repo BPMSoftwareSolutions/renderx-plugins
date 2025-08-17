@@ -24,10 +24,21 @@ async function fileExists(p) {
     return false;
   }
 }
+async function ensureDir(p) {
+  try {
+    await fs.mkdir(p, { recursive: true });
+  } catch {}
+}
 
 async function collectPluginRelPaths(dir, relBase = "") {
   const list = [];
-  const entries = await fs.readdir(dir, { withFileTypes: true });
+  let entries = [];
+  try {
+    entries = await fs.readdir(dir, { withFileTypes: true });
+  } catch (e) {
+    // Missing directory or not readable — treat as no entries
+    return list;
+  }
   for (const ent of entries) {
     if (!ent.isDirectory()) continue;
     const abs = path.join(dir, ent.name);
@@ -36,6 +47,7 @@ async function collectPluginRelPaths(dir, relBase = "") {
     if (await fileExists(path.join(abs, "index.js"))) {
       list.push(`${rel}/`);
     }
+
     // Recurse to find nested plugin entries (e.g., header/*/index.js)
     const nested = await collectPluginRelPaths(abs, rel);
     for (const n of nested) list.push(n);
@@ -49,6 +61,9 @@ async function main() {
     await fs.readFile(path.join(root, "package.json"), "utf8")
   );
   const version = pkg.version || "0.1.0";
+
+  // Ensure dist exists so writes don't fail
+  await ensureDir(distDir);
 
   const relPaths = await collectPluginRelPaths(distDir, "");
   // De-duplicate
