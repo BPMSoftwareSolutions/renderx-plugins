@@ -12,6 +12,15 @@ describe("Canvas UI overlay visibility during drag and cursor policy", () => {
     const conductor = TestEnvironment.createMusicalConductor(eventBus);
     global.window = global.window || {};
     window.renderxCommunicationSystem = { conductor };
+    const {
+      registerCanvasConcertmasters,
+    } = require("../../../plugins/canvas-ui-plugin/bootstrap/concertmasters.bootstrap");
+    const cx = {
+      play: conductor.play.bind(conductor),
+      on: (chan, act, cb) => eventBus.subscribe(`${chan}:${act}`, cb),
+      off: (chan, act, cb) => eventBus.unsubscribe(`${chan}:${act}`, cb),
+    };
+    registerCanvasConcertmasters(cx);
 
     // React stub collects created elements
     const created = [];

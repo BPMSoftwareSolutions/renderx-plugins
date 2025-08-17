@@ -10,6 +10,11 @@ async function ensureDir(p) {
   await fs.mkdir(p, { recursive: true });
 }
 
+async function cleanDir(p) {
+  // Remove directory recursively if it exists
+  await fs.rm(p, { recursive: true, force: true });
+}
+
 async function copyFileBinary(src, dest) {
   const buf = await fs.readFile(src);
   await ensureDir(path.dirname(dest));
@@ -33,6 +38,8 @@ async function copyDir(srcDir, destDir) {
 }
 
 async function main() {
+  // Clean dist to avoid stale artifacts
+  await cleanDir(distDir);
   await ensureDir(distDir);
   const entries = await fs.readdir(pluginsDir, { withFileTypes: true });
   for (const ent of entries) {

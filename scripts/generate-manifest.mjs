@@ -44,6 +44,12 @@ async function collectPluginRelPaths(dir, relBase = "") {
 }
 
 async function main() {
+  // Read package version to sync manifest + plugin versions
+  const pkg = JSON.parse(
+    await fs.readFile(path.join(root, "package.json"), "utf8")
+  );
+  const version = pkg.version || "0.1.0";
+
   const relPaths = await collectPluginRelPaths(distDir, "");
   // De-duplicate
   const uniqueRelPaths = Array.from(new Set(relPaths));
@@ -58,13 +64,13 @@ async function main() {
     return {
       name: last.replace(/-/g, " "),
       path: relPath,
-      version: "0.1.0",
+      version,
       description: `${name} bundle`,
       autoMount: isHeaderUi ? false : true,
       ...(ui || {}),
     };
   });
-  const manifest = { version: "0.1.0", plugins };
+  const manifest = { version, plugins };
   await fs.writeFile(manifestPath, JSON.stringify(manifest, null, 2), "utf8");
   console.log("wrote", manifestPath);
 }
