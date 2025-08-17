@@ -14,7 +14,8 @@ function playCapability(conductor, node, capability, payload) {
       return binder.play(conductor, node, capability, payload);
     }
   } catch {}
-  return Promise.reject(new Error("CapabilityBinder not available"));
+  // Throw synchronously so callers' try/catch fallback runs immediately
+  throw new Error("CapabilityBinder not available");
 }
 
 export function attachDragHandlers(node, deps = {}) {
