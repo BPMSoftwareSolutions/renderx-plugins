@@ -48,11 +48,22 @@ export function buildOverlayForNode(React, n, key, selectedId) {
       const system = (window && window.renderxCommunicationSystem) || null;
       const conductor = system && system.conductor;
       if (conductor && typeof conductor.play === "function") {
-        conductor.play(
-          "Canvas.component-resize-symphony",
-          "Canvas.component-resize-symphony",
-          payload
-        );
+        // Try binder first
+        try {
+          const w = (typeof window !== "undefined" && window) || {};
+          const binder = w.__rx_capability_binder__;
+          if (binder && typeof binder.play === "function") {
+            return binder.play(conductor, n, "resize", payload);
+          }
+          throw new Error("no binder");
+        } catch {
+          // Legacy fallback
+          return conductor.play(
+            "Canvas.component-resize-symphony",
+            "Canvas.component-resize-symphony",
+            payload
+          );
+        }
       }
     } catch {}
   };

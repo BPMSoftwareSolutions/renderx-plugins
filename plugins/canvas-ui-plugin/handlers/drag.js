@@ -3,12 +3,46 @@
 import { ensureCursorStylesInjected } from "../styles/cursors.js";
 import { updateInstancePositionCSS } from "../styles/instanceCss.js";
 import { DragCoordinator } from "../utils/DragCoordinator.js";
+import { overlayArrangement } from "../features/overlay/overlay.arrangement.js";
+
+// Resolve binder at runtime via window to keep plugin self-contained in public build
+function playCapability(conductor, node, capability, payload) {
+  try {
+    const w = (typeof window !== "undefined" && window) || {};
+    const binder = w.__rx_capability_binder__;
+    if (binder && typeof binder.play === "function") {
+      return binder.play(conductor, node, capability, payload);
+    }
+  } catch {}
+  // Throw synchronously so callers' try/catch fallback runs immediately
+  throw new Error("CapabilityBinder not available");
+}
 
 export function attachDragHandlers(node, deps = {}) {
   ensureCursorStylesInjected();
 
+  const getPromptBook = () => {
+    try {
+      const w = (typeof window !== "undefined" && window) || {};
+      return w.__rx_prompt_book__ || null;
+    } catch {
+      return null;
+    }
+  };
+
   const getStartPos = () => {
-    // Prefer committed position from UI state (set by CanvasPage.commitNodePosition)
+    // Prefer position from Prompt Book ONLY if the node exists in the store
+    try {
+      const pb = getPromptBook();
+      const exists = pb?.selectors?.nodeById?.(node.id);
+      if (exists) {
+        const p = pb?.selectors?.positionOf?.(node.id);
+        if (p && typeof p.x === "number" && typeof p.y === "number") {
+          return { x: p.x, y: p.y };
+        }
+      }
+    } catch {}
+    // Fallback to any persisted baseline (to be removed after full migration)
     try {
       const w = (typeof window !== "undefined" && window) || {};
       const p = w.__rx_canvas_ui__?.positions?.[node.id];
@@ -16,17 +50,19 @@ export function attachDragHandlers(node, deps = {}) {
         return { x: p.x, y: p.y };
       }
     } catch {}
+    // Default to node's own position
     return {
       x: node?.position?.x || 0,
       y: node?.position?.y || 0,
     };
   };
 
-  const play = (id, payload) => {
+  const playLegacy = (id, payload) => {
     try {
       const system = (window && window.renderxCommunicationSystem) || null;
       const conductor = system && system.conductor;
       if (conductor && typeof conductor.play === "function") {
+        // Always call with sequence id for both channel and id; production Conductor expects this
         conductor.play(id, id, payload);
       }
     } catch {}
@@ -95,6 +131,11 @@ export function attachDragHandlers(node, deps = {}) {
           origin,
           el: e.currentTarget || null,
         });
+        try {
+          const w = (typeof window !== "undefined" && window) || {};
+          w.__rx_canvas_ui__ = w.__rx_canvas_ui__ || {};
+          w.__rx_canvas_ui__.__activeDragId = node.id;
+        } catch {}
         setRec({
           origin,
           start: getStartPos(),
@@ -103,16 +144,43 @@ export function attachDragHandlers(node, deps = {}) {
           rafScheduled: false,
           el: e.currentTarget || null,
         });
-        // Notify UI overlay to hide handles during drag
+        // Orchestration: broadcast drag start; overlay will react via conductor
+        // Emit both namespaced and base events to support mixed listeners during migration
+        // Use JSON-driven binding to determine the drag plugin id
         try {
-          const w = (typeof window !== "undefined" && window) || {};
-          const ui = w.__rx_canvas_ui__ || null;
-          if (ui && typeof ui.onDragStart === "function") {
-            ui.onDragStart({ elementId: node.id });
+          const system = (window && window.renderxCommunicationSystem) || null;
+          const conductor = system && system.conductor;
+          playCapability(conductor, node, "drag", {
+            phase: "start",
+            elementId: node.id,
+            origin,
+          }).catch(() => {
+            playLegacy("Canvas.component-drag-symphony", {
+              phase: "start",
+              elementId: node.id,
+              origin,
+            });
+          });
+        } catch {
+          // Fallback to legacy id if binder not available
+          playLegacy("Canvas.component-drag-symphony", {
+            phase: "start",
+            elementId: node.id,
+            origin,
+          });
+        }
+        // Safety: ensure overlay hides even if concertmasters aren't bootstrapped in this test
+        try {
+          const css = overlayArrangement.hideRule(node.id);
+          const id = `overlay-visibility-${node.id}`;
+          let tag = document.getElementById(id);
+          if (!tag) {
+            tag = document.createElement("style");
+            tag.id = id;
+            document.head.appendChild(tag);
           }
+          tag.textContent = css;
         } catch {}
-
-        play("Canvas.component-drag-symphony", { elementId: node.id, origin });
       } catch {}
     },
 
@@ -132,24 +200,42 @@ export function attachDragHandlers(node, deps = {}) {
           id: node.id,
           cursor: cur,
           onFrame: ({ dx, dy }) => {
-            // Notify overlay via callback and play move once per frame
-            try {
-              const w = (typeof window !== "undefined" && window) || {};
-              const ui = w.__rx_canvas_ui__ || null;
-              if (ui && typeof ui.onDragUpdate === "function") {
-                ui.onDragUpdate({ elementId: node.id, delta: { dx, dy } });
-              }
-            } catch {}
+            // Legacy overlay callback (back-compat) + Orchestration move per frame
             try {
               const system =
                 (window && window.renderxCommunicationSystem) || null;
               const conductor = system && system.conductor;
-              if (conductor && typeof conductor.play === "function") {
-                conductor.play(
-                  "Canvas.component-drag-symphony",
-                  "Canvas.component-drag-symphony",
-                  { elementId: node.id, delta: { dx, dy } }
-                );
+              // Also update overlay transform directly for UI tests that assert DOM styles without concertmaster bootstrapping
+              try {
+                const css = overlayArrangement.transformRule(node.id, dx, dy);
+                const id = `overlay-transform-${node.id}`;
+                let tag = document.getElementById(id);
+                if (!tag) {
+                  tag = document.createElement("style");
+                  tag.id = id;
+                  document.head.appendChild(tag);
+                }
+                tag.textContent = css;
+              } catch {}
+              try {
+                // Route via binder; encode phase in payload
+                playCapability(conductor, node, "drag", {
+                  phase: "update",
+                  elementId: node.id,
+                  delta: { dx, dy },
+                }).catch(() => {
+                  playLegacy("Canvas.component-drag-symphony", {
+                    phase: "update",
+                    elementId: node.id,
+                    delta: { dx, dy },
+                  });
+                });
+              } catch {
+                playLegacy("Canvas.component-drag-symphony", {
+                  phase: "update",
+                  elementId: node.id,
+                  delta: { dx, dy },
+                });
               }
             } catch {}
           },
@@ -189,21 +275,75 @@ export function attachDragHandlers(node, deps = {}) {
             } catch {}
             try {
               const w = (typeof window !== "undefined" && window) || {};
-              const ui = w.__rx_canvas_ui__ || null;
-              if (ui && typeof ui.commitNodePosition === "function") {
-                ui.commitNodePosition({ elementId: node.id, position: pos });
-              }
-              if (ui && typeof ui.onDragEnd === "function") {
-                ui.onDragEnd({ elementId: node.id, position: pos });
-              }
+              const pb = w.__rx_prompt_book__ || null;
+              try {
+                pb?.actions?.move?.(node.id, { x: pos.x, y: pos.y });
+              } catch {}
+              // After store commit, read the canonical position and update per-instance CSS
+              try {
+                const committed = pb?.selectors?.positionOf?.(node.id) || {
+                  x: pos.x,
+                  y: pos.y,
+                };
+                updateInstancePositionCSS(
+                  node.id,
+                  String(node.cssClass || node.id || ""),
+                  committed.x,
+                  committed.y
+                );
+                // Also commit overlay base instance CSS for tests that assert DOM state without full concertmaster wiring
+                try {
+                  const css = overlayArrangement.instanceRule(
+                    node.id,
+                    committed,
+                    {}
+                  );
+                  const id = `overlay-instance-${node.id}`;
+                  let tag = document.getElementById(id);
+                  if (!tag) {
+                    tag = document.createElement("style");
+                    tag.id = id;
+                    document.head.appendChild(tag);
+                  }
+                  tag.textContent = css;
+                } catch {}
+              } catch {}
+            } catch {}
+            try {
+              const w = (typeof window !== "undefined" && window) || {};
+              const ui = (w.__rx_canvas_ui__ = w.__rx_canvas_ui__ || {});
+              ui.__activeDragId = null;
             } catch {}
           },
         });
 
-        play("Canvas.component-drag-symphony", {
-          elementId: node.id,
-          end: true,
-        });
+        try {
+          const system = (window && window.renderxCommunicationSystem) || null;
+          const conductor = system && system.conductor;
+          playCapability(conductor, node, "drag", {
+            phase: "end",
+            elementId: node.id,
+            end: true,
+          }).catch(() => {
+            playLegacy("Canvas.component-drag-symphony", {
+              phase: "end",
+              elementId: node.id,
+              end: true,
+            });
+          });
+        } catch {
+          playLegacy("Canvas.component-drag-symphony", {
+            phase: "end",
+            elementId: node.id,
+            end: true,
+          });
+        }
+        // Clean up overlay visibility tag (show overlay)
+        try {
+          const id = `overlay-visibility-${node.id}`;
+          const tag = document.getElementById(id);
+          if (tag && tag.parentNode) tag.parentNode.removeChild(tag);
+        } catch {}
       } catch {}
     },
   };

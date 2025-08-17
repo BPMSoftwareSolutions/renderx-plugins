@@ -39,8 +39,11 @@ describe("Canvas UI Plugin - mouseup triggers drag:end", () => {
     // Render CanvasPage to register mouseup callback and workspace handler
     plugin.CanvasPage({ nodes: [] });
 
-    // Act: call workspace pointerUp handler (no DOM globals)
+    // Arrange: simulate active drag so guarded mouseup emits end
     const workspace = global.window.__rx_canvas_ui__ || {};
+    workspace.__activeDragId = "rx-test-1";
+
+    // Act: call workspace pointerUp handler (no DOM globals)
     if (typeof workspace.onWindowMouseUp === "function") {
       workspace.onWindowMouseUp();
     }

@@ -7,7 +7,10 @@ import {
 import { attachDragHandlers } from "../handlers/drag.js";
 import { buildOverlayForNode } from "../ui/overlay.js";
 import { renderCanvasNode } from "./renderCanvasNode.js";
-import { updateInstanceSizeCSS } from "../styles/instanceCss.js";
+import {
+  updateInstanceSizeCSS,
+  updateInstancePositionCSS,
+} from "../styles/instanceCss.js";
 
 export function CanvasPage(props = {}) {
   const providedNodes = Array.isArray(props.nodes) ? props.nodes : null;
@@ -58,6 +61,20 @@ export function CanvasPage(props = {}) {
       ? window.React.useState(providedNodes || [])
       : [providedNodes || [], function noop() {}];
 
+  // Subscribe to Prompt Book (store) if available to mirror nodes state
+  try {
+    const w = (typeof window !== "undefined" && window) || {};
+    const pb = w.__rx_prompt_book__;
+    if (pb && typeof pb.subscribe === "function") {
+      pb.subscribe(() => {
+        try {
+          const nextNodes = pb.selectors?.nodes?.() || [];
+          setNodes(Array.isArray(nextNodes) ? nextNodes : []);
+        } catch {}
+      });
+    }
+  } catch {}
+
   // Helper to get a node by id
   const getNodeById = (id) => {
     const arr = Array.isArray(nodes) ? nodes : [];
@@ -69,25 +86,80 @@ export function CanvasPage(props = {}) {
       ? window.React.useState(providedSelected ?? null)
       : [providedSelected ?? null, function noop() {}];
 
+  // Mirror selectedId from Prompt Book
+  try {
+    const w = (typeof window !== "undefined" && window) || {};
+    const pb = w.__rx_prompt_book__;
+    if (pb && typeof pb.subscribe === "function") {
+      pb.subscribe(() => {
+        try {
+          const sid = pb.selectors?.selectedId?.();
+          if (typeof sid === "string" || sid === null) setSelectedId(sid);
+        } catch {}
+      });
+    }
+  } catch {}
+
+  // Initialize Prompt Book with initial props on mount (avoid legacy bridges)
+  useEffect(() => {
+    try {
+      const w = (typeof window !== "undefined" && window) || {};
+      const pb = w.__rx_prompt_book__;
+      if (pb) {
+        if (Array.isArray(providedNodes)) pb.actions?.setNodes?.(providedNodes);
+        pb.actions?.select?.(providedSelected ?? null);
+      }
+    } catch {}
+  }, []);
+
+  // Sync Prompt Book when nodes prop changes (keeps baselines fresh after library drop)
+  useEffect(() => {
+    try {
+      const w = (typeof window !== "undefined" && window) || {};
+      const pb = w.__rx_prompt_book__;
+      if (pb && Array.isArray(providedNodes)) {
+        pb.actions?.setNodes?.(providedNodes);
+      }
+    } catch {}
+  }, [providedNodes]);
+
+  // Sync Prompt Book when selectedId changes
+  useEffect(() => {
+    try {
+      const w = (typeof window !== "undefined" && window) || {};
+      const pb = w.__rx_prompt_book__;
+      if (pb) pb.actions?.select?.(providedSelected ?? null);
+    } catch {}
+  }, [providedSelected]);
+
   useEffect(() => {
     // Expose UI setters for conductor callback wiring; not a global listener
     try {
       const w = (typeof window !== "undefined" && window) || {};
       w.__rx_canvas_ui__ = w.__rx_canvas_ui__ || {};
-      w.__rx_canvas_ui__.setSelectedId = (id) => setSelectedId(id || null);
+      // Bridge old UI setters to Prompt Book actions
+      w.__rx_canvas_ui__.setSelectedId = (id) => {
+        try {
+          const pb = w.__rx_prompt_book__;
+          pb?.actions?.select?.(id || null);
+        } catch {}
+        setSelectedId(id || null);
+      };
       // Allow drag handlers to persist final position for future drags and overlay sync
       w.__rx_canvas_ui__.positions = w.__rx_canvas_ui__.positions || {};
       w.__rx_canvas_ui__.commitNodePosition = ({ elementId, position }) => {
         try {
           if (!elementId || !position) return;
-          // Persist for subsequent drag baselines
+          // Persist for subsequent drag baselines (legacy)
           w.__rx_canvas_ui__.positions[elementId] = {
             x: position.x,
             y: position.y,
           };
         } catch {}
         try {
-          // Update CanvasPage local state so any re-rendered overlays/nodes use new position
+          // Update Prompt Book and local state
+          const pb = w.__rx_prompt_book__;
+          pb?.actions?.move?.(elementId, { x: position.x, y: position.y });
           setNodes((prev) => {
             const next = Array.isArray(prev) ? prev.slice() : [];
             for (let i = 0; i < next.length; i++) {
@@ -182,6 +254,18 @@ export function CanvasPage(props = {}) {
             y: position?.y ?? n?.position?.y ?? 0,
           },
         };
+        // Commit component instance CSS as well so the element itself stays aligned
+        try {
+          const cls = String(n?.cssClass || n?.id || "").trim();
+          if (cls) {
+            updateInstancePositionCSS(
+              elementId,
+              cls,
+              nextNode.position.x,
+              nextNode.position.y
+            );
+          }
+        } catch {}
         overlayInjectInstanceCSS(
           nextNode,
           defaults.defaultWidth,
@@ -324,15 +408,21 @@ export function CanvasPage(props = {}) {
         const conductor = system && system.conductor;
         if (conductor && typeof conductor.play === "function") {
           const w = (typeof window !== "undefined" && window) || {};
-          const onDragEnd = w.__rx_canvas_ui__ && w.__rx_canvas_ui__.onDragEnd;
-          conductor.play(
-            "Canvas.component-drag-symphony",
-            "Canvas.component-drag-symphony",
-            {
-              source: "canvas-ui-plugin:mouseup",
-              onDragEnd,
-            }
-          );
+          const ui = (w.__rx_canvas_ui__ = w.__rx_canvas_ui__ || {});
+          const onDragEnd = ui.onDragEnd;
+          // Only emit a drag 'end' if we have an active element
+          if (ui.__activeDragId) {
+            conductor.play(
+              "Canvas.component-drag-symphony",
+              "Canvas.component-drag-symphony",
+              {
+                source: "canvas-ui-plugin:mouseup",
+                elementId: ui.__activeDragId,
+                onDragEnd,
+              }
+            );
+            ui.__activeDragId = null;
+          }
         }
       } catch {}
     };

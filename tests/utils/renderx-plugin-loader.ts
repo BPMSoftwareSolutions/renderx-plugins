@@ -25,6 +25,7 @@ export function loadRenderXPlugin(relativePathFromRepoRoot: string): any {
     }
     if (!/\.m?js$/i.test(target)) {
       if (fs.existsSync(target + ".js")) return target + ".js";
+      if (fs.existsSync(target + ".json")) return target + ".json";
     }
     return target;
   }
@@ -119,13 +120,47 @@ export function loadRenderXPlugin(relativePathFromRepoRoot: string): any {
 
     const moduleExports: any = {};
     const scopedRequire = (spec: string) => {
+      // Allow Node built-ins and external packages to use native require
+      if (
+        !spec.startsWith(".") &&
+        !spec.startsWith("/") &&
+        !spec.startsWith("plugins/")
+      ) {
+        try {
+          return require(spec);
+        } catch {}
+      }
       const target = resolveFile(absPath, spec);
+      // If resolution didn't change and it's still a bare spec, fall back to native require
+      if (target === spec && !/[\\/]/.test(spec)) {
+        return require(spec);
+      }
       return transpileAndEval(target);
     };
-    const fn = new Function("moduleExports", "fetch", "require", transformed);
-    fn(moduleExports, (global as any).fetch, scopedRequire);
-    cache.set(absPath, moduleExports);
-    return moduleExports;
+    const moduleObj: any = { exports: moduleExports };
+    const fn = new Function(
+      "module",
+      "exports",
+      "moduleExports",
+      "fetch",
+      "require",
+      "__dirname",
+      "__filename",
+      transformed
+    );
+    const thisDir = path.dirname(absPath);
+    fn(
+      moduleObj,
+      moduleObj.exports,
+      moduleExports,
+      (global as any).fetch,
+      scopedRequire,
+      thisDir,
+      absPath
+    );
+    const result = moduleObj.exports || moduleExports;
+    cache.set(absPath, result);
+    return result;
   }
 
   const mapped = mapLegacyPath(relativePathFromRepoRoot);
