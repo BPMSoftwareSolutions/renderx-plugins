@@ -124,6 +124,21 @@ export function CanvasPage(props = {}) {
                   }
                 } catch {}
 
+                // Also subscribe directly to the local Stage Crew bus in dev, if exposed by runtime shim
+                try {
+                  const w = (typeof window !== "undefined" && window) || {};
+                  const bus = w.__rx_stage_crew_bus__;
+                  if (bus && typeof bus.subscribe === "function") {
+                    const unsub = bus.subscribe("stage:cue", handler);
+                    if (typeof unsub === "function")
+                      cleaners.push(() => {
+                        try {
+                          unsub();
+                        } catch {}
+                      });
+                  }
+                } catch {}
+
                 window.__rx_canvas_ui_stagecue_logger__ = () => {
                   try {
                     cleaners.forEach((fn) => fn && fn());
