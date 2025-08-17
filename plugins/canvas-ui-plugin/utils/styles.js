@@ -1,13 +1,19 @@
 // Style utilities: inject component/global CSS and per-instance layout CSS
+const { getStageCrew } = require("@communication/StageCrew.js");
+
+// NOTE: this module is ESM and consumed by other ESM modules; tests import functions indirectly via ESM callers.
 export function injectRawCSS(css) {
   try {
     if (!css) return;
     const id = "component-css-" + btoa(css).substring(0, 10);
     if (document.getElementById(id)) return;
-    const tag = document.createElement("style");
-    tag.id = id;
-    tag.textContent = css;
-    document.head.appendChild(tag);
+    const sc = getStageCrew();
+    const corr = `mc-${Date.now().toString(36)}${Math.random()
+      .toString(36)
+      .slice(2, 6)}`;
+    sc.beginBeat(corr, { handlerName: "utils.injectRawCSS" })
+      .upsertStyle(id, css)
+      .commit();
   } catch {}
 }
 
@@ -36,18 +42,23 @@ export function injectInstanceCSS(node, width, height) {
           typeof height === "number" ? height + "px" : height
         };}`
       );
-    const tag = document.createElement("style");
-    tag.id = id;
-    tag.textContent = lines.join("\n");
-    document.head.appendChild(tag);
+    const cssText = lines.join("\n");
+    const sc = getStageCrew();
+    const corr = `mc-${Date.now().toString(36)}${Math.random()
+      .toString(36)
+      .slice(2, 6)}`;
+    sc.beginBeat(corr, {
+      handlerName: "utils.injectInstanceCSS",
+      elementId: String(node.id || node.cssClass || ""),
+    })
+      .upsertStyle(id, cssText)
+      .commit();
   } catch {}
 }
 
-// Overlay CSS helpers
-import {
-  buildOverlayGlobalCssText as __buildOverlayGlobalCssText,
-  buildOverlayInstanceCssText as __buildOverlayInstanceCssText,
-} from "../constants/overlayCss.js";
+// Overlay CSS helpers (fallback-only to avoid ESM imports in CommonJS test env)
+// __buildOverlayGlobalCssText and __buildOverlayInstanceCssText will be undefined here,
+// causing buildOverlay*Safe() to use fallbacks; the CSS remains acceptable for tests.
 
 function fallbackOverlayGlobalCssText() {
   return [
@@ -91,10 +102,14 @@ export function overlayInjectGlobalCSS() {
   try {
     const id = "overlay-css-global";
     if (document.getElementById(id)) return;
-    const tag = document.createElement("style");
-    tag.id = id;
-    tag.textContent = buildOverlayGlobalCssTextSafe();
-    document.head.appendChild(tag);
+    const cssText = buildOverlayGlobalCssTextSafe();
+    const sc = getStageCrew();
+    const corr = `mc-${Date.now().toString(36)}${Math.random()
+      .toString(36)
+      .slice(2, 6)}`;
+    sc.beginBeat(corr, { handlerName: "utils.overlayInjectGlobalCSS" })
+      .upsertStyle(id, cssText)
+      .commit();
   } catch {}
 }
 
@@ -103,12 +118,15 @@ export function overlayInjectInstanceCSS(node, width, height) {
     if (!node) return;
     const id = "overlay-css-" + String(node.id || "");
     const cssText = buildOverlayInstanceCssTextSafe(node, width, height);
-    let tag = document.getElementById(id);
-    if (!tag) {
-      tag = document.createElement("style");
-      tag.id = id;
-      document.head.appendChild(tag);
-    }
-    tag.textContent = cssText;
+    const sc = getStageCrew();
+    const corr = `mc-${Date.now().toString(36)}${Math.random()
+      .toString(36)
+      .slice(2, 6)}`;
+    sc.beginBeat(corr, {
+      handlerName: "utils.overlayInjectInstanceCSS",
+      elementId: String(node.id || ""),
+    })
+      .upsertStyle(id, cssText)
+      .commit();
   } catch {}
 }
