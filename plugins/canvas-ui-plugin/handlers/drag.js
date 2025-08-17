@@ -5,6 +5,8 @@ import { updateInstancePositionCSS } from "../styles/instanceCss.js";
 import { DragCoordinator } from "../utils/DragCoordinator.js";
 import { overlayArrangement } from "../features/overlay/overlay.arrangement.js";
 
+import { play as playCapability } from "../../../core/binder/CapabilityBinder.js";
+
 export function attachDragHandlers(node, deps = {}) {
   ensureCursorStylesInjected();
 
@@ -49,17 +51,8 @@ export function attachDragHandlers(node, deps = {}) {
       const system = (window && window.renderxCommunicationSystem) || null;
       const conductor = system && system.conductor;
       if (conductor && typeof conductor.play === "function") {
+        // Always call with sequence id for both channel and id; production Conductor expects this
         conductor.play(id, id, payload);
-      }
-    } catch {}
-  };
-
-  const playPhase = (channel, action, payload) => {
-    try {
-      const system = (window && window.renderxCommunicationSystem) || null;
-      const conductor = system && system.conductor;
-      if (conductor && typeof conductor.play === "function") {
-        conductor.play(channel, action, payload);
       }
     } catch {}
   };
@@ -137,14 +130,29 @@ export function attachDragHandlers(node, deps = {}) {
         });
         // Orchestration: broadcast drag start; overlay will react via conductor
         // Emit both namespaced and base events to support mixed listeners during migration
-        playPhase("Canvas.component-drag-symphony", "start", {
-          elementId: node.id,
-          origin,
-        });
-        playLegacy("Canvas.component-drag-symphony", {
-          elementId: node.id,
-          origin,
-        });
+        // Use JSON-driven binding to determine the drag plugin id
+        try {
+          const system = (window && window.renderxCommunicationSystem) || null;
+          const conductor = system && system.conductor;
+          playCapability(conductor, node, "drag", {
+            phase: "start",
+            elementId: node.id,
+            origin,
+          }).catch(() => {
+            playLegacy("Canvas.component-drag-symphony", {
+              phase: "start",
+              elementId: node.id,
+              origin,
+            });
+          });
+        } catch {
+          // Fallback to legacy id if binder not available
+          playLegacy("Canvas.component-drag-symphony", {
+            phase: "start",
+            elementId: node.id,
+            origin,
+          });
+        }
         // Safety: ensure overlay hides even if concertmasters aren't bootstrapped in this test
         try {
           const css = overlayArrangement.hideRule(node.id);
@@ -193,14 +201,26 @@ export function attachDragHandlers(node, deps = {}) {
                 }
                 tag.textContent = css;
               } catch {}
-              playPhase("Canvas.component-drag-symphony", "update", {
-                elementId: node.id,
-                delta: { dx, dy },
-              });
-              playLegacy("Canvas.component-drag-symphony", {
-                elementId: node.id,
-                delta: { dx, dy },
-              });
+              try {
+                // Route via binder; encode phase in payload
+                playCapability(conductor, node, "drag", {
+                  phase: "update",
+                  elementId: node.id,
+                  delta: { dx, dy },
+                }).catch(() => {
+                  playLegacy("Canvas.component-drag-symphony", {
+                    phase: "update",
+                    elementId: node.id,
+                    delta: { dx, dy },
+                  });
+                });
+              } catch {
+                playLegacy("Canvas.component-drag-symphony", {
+                  phase: "update",
+                  elementId: node.id,
+                  delta: { dx, dy },
+                });
+              }
             } catch {}
           },
         });
@@ -276,14 +296,27 @@ export function attachDragHandlers(node, deps = {}) {
           },
         });
 
-        playPhase("Canvas.component-drag-symphony", "end", {
-          elementId: node.id,
-          end: true,
-        });
-        playLegacy("Canvas.component-drag-symphony", {
-          elementId: node.id,
-          end: true,
-        });
+        try {
+          const system = (window && window.renderxCommunicationSystem) || null;
+          const conductor = system && system.conductor;
+          playCapability(conductor, node, "drag", {
+            phase: "end",
+            elementId: node.id,
+            end: true,
+          }).catch(() => {
+            playLegacy("Canvas.component-drag-symphony", {
+              phase: "end",
+              elementId: node.id,
+              end: true,
+            });
+          });
+        } catch {
+          playLegacy("Canvas.component-drag-symphony", {
+            phase: "end",
+            elementId: node.id,
+            end: true,
+          });
+        }
         // Clean up overlay visibility tag (show overlay)
         try {
           const id = `overlay-visibility-${node.id}`;

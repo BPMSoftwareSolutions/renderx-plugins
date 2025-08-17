@@ -109,6 +109,26 @@ export function CanvasPage(props = {}) {
     } catch {}
   }, []);
 
+  // Sync Prompt Book when nodes prop changes (keeps baselines fresh after library drop)
+  useEffect(() => {
+    try {
+      const w = (typeof window !== "undefined" && window) || {};
+      const pb = w.__rx_prompt_book__;
+      if (pb && Array.isArray(providedNodes)) {
+        pb.actions?.setNodes?.(providedNodes);
+      }
+    } catch {}
+  }, [providedNodes]);
+
+  // Sync Prompt Book when selectedId changes
+  useEffect(() => {
+    try {
+      const w = (typeof window !== "undefined" && window) || {};
+      const pb = w.__rx_prompt_book__;
+      if (pb) pb.actions?.select?.(providedSelected ?? null);
+    } catch {}
+  }, [providedSelected]);
+
   useEffect(() => {
     // Expose UI setters for conductor callback wiring; not a global listener
     try {

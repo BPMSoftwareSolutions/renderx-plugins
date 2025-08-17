@@ -1,0 +1,23 @@
+{
+  "button": {
+    "drag": "Canvas.component-drag-symphony",
+    "resize": "Canvas.component-resize-symphony",
+    "overlay": "Canvas.ui-symphony",
+    "select": "Canvas.component-select-symphony"
+  },
+  "input": {
+    "drag": "Canvas.component-drag-symphony",
+    "resize": "Canvas.component-resize-symphony",
+    "overlay": "Canvas.ui-symphony",
+    "select": "Canvas.component-select-symphony"
+  },
+  "line": {
+    "drag": "Canvas.component-drag-symphony",
+    "resize": "Canvas.component-resize-symphony",
+    "overlay": "Canvas.ui-symphony",
+    "select": "Canvas.component-select-symphony"
+  },
+  "*": {
+    "select": "Canvas.component-select-symphony"
+  }
+}
