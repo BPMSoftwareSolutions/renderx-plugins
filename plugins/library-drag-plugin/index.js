@@ -48,10 +48,9 @@ export const handlers = {
   startDrag: (data, context) => {
     try {
       const component = context?.component || data?.component;
-      const dragToken = (
-        Date.now().toString(36) + Math.random().toString(36).slice(2, 6)
-      );
-      context.logger?.info?.("📚 Library.drag:start", {
+      const dragToken =
+        Date.now().toString(36) + Math.random().toString(36).slice(2, 6);
+      context.logger?.log?.("📚 Library.drag:start", {
         name: component?.metadata?.name,
         type: component?.metadata?.type,
         dragToken,
@@ -65,7 +64,7 @@ export const handlers = {
 
   endDrag: (data, context) => {
     try {
-      context.logger?.info?.("📚 Library.drag:end", {
+      context.logger?.log?.("📚 Library.drag:end", {
         when: new Date().toISOString(),
       });
       return { ended: true };
@@ -75,4 +74,3 @@ export const handlers = {
     }
   },
 };
-

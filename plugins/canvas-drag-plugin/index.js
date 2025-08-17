@@ -61,18 +61,21 @@ export const sequence = {
 };
 
 export const handlers = {
-  handleDragStart: ({ elementId, origin }, ctx) => ({
-    drag: { elementId, origin },
-  }),
+  handleDragStart: ({ elementId, origin }, ctx) => {
+    ctx.logger?.log?.("startDrag", { elementId, origin });
+    return { drag: { elementId, origin } };
+  },
   handleDragMove: ({ elementId, delta, onDragUpdate }, ctx) => {
     const o = ctx.payload.drag?.origin || { x: 0, y: 0 };
     const position = { x: o.x + (delta?.dx || 0), y: o.y + (delta?.dy || 0) };
+    ctx.logger?.log?.("dragMove", { elementId, delta, position });
     try {
       onDragUpdate?.({ elementId, position });
     } catch {}
     return { elementId, position };
   },
   handleDragEnd: ({ elementId, onDragEnd }, ctx) => {
+    ctx.logger?.log?.("endDrag", { elementId });
     try {
       onDragEnd?.({ elementId });
     } catch {}

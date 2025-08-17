@@ -139,15 +139,18 @@ export const sequence = {
 };
 
 export const handlers = {
-  handleResizeStart: ({ elementId, handle, start, tools, startBox }, ctx) => ({
-    resize: {
-      elementId,
-      handle,
-      start,
-      startBox: startBox || { x: 0, y: 0, w: 0, h: 0 },
-      constraints: tools?.resize?.constraints,
-    },
-  }),
+  handleResizeStart: ({ elementId, handle, start, tools, startBox }, ctx) => {
+    ctx.logger?.log?.("resizeStart", { elementId, handle, start });
+    return {
+      resize: {
+        elementId,
+        handle,
+        start,
+        startBox: startBox || { x: 0, y: 0, w: 0, h: 0 },
+        constraints: tools?.resize?.constraints,
+      },
+    };
+  },
   handleResizeMove: (
     { elementId, handle, delta, tools, onResizeUpdate },
     ctx
@@ -159,12 +162,14 @@ export const handlers = {
       computeResize(startBox, delta, handle),
       constraints
     );
+    ctx.logger?.log?.("resizeMove", { elementId, handle, delta, box });
     try {
       onResizeUpdate?.({ elementId, box });
     } catch {}
     return { elementId, box };
   },
   handleResizeEnd: ({ onResizeEnd }, ctx) => {
+    ctx.logger?.log?.("resizeEnd");
     try {
       onResizeEnd?.();
     } catch {}
