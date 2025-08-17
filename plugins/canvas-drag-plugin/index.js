@@ -72,7 +72,13 @@ export const handlers = {
 
     // Stage Crew: update element position, batched to next frame
     try {
-      const sc = ctx?.stageCrew;
+      let sc = ctx?.stageCrew;
+      if (!sc) {
+        try {
+          const mod = require("@communication/StageCrew");
+          sc = mod?.getStageCrew?.();
+        } catch {}
+      }
       if (sc && typeof sc.beginBeat === "function") {
         const correlationId =
           ctx?.correlationId ||

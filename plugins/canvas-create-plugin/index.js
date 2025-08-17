@@ -53,7 +53,13 @@ export const handlers = {
 
     // Stage Crew: initial instance CSS (position etc.)
     try {
-      const sc = context?.stageCrew;
+      let sc = context?.stageCrew;
+      if (!sc) {
+        try {
+          const mod = require("@communication/StageCrew");
+          sc = mod?.getStageCrew?.();
+        } catch {}
+      }
       if (sc && typeof sc.beginBeat === "function") {
         const correlationId =
           context?.correlationId ||
