@@ -58,6 +58,20 @@ export function CanvasPage(props = {}) {
       ? window.React.useState(providedNodes || [])
       : [providedNodes || [], function noop() {}];
 
+  // Subscribe to Prompt Book (store) if available to mirror nodes state
+  try {
+    const w = (typeof window !== "undefined" && window) || {};
+    const pb = w.__rx_prompt_book__;
+    if (pb && typeof pb.subscribe === "function") {
+      pb.subscribe(() => {
+        try {
+          const nextNodes = pb.selectors?.nodes?.() || [];
+          setNodes(Array.isArray(nextNodes) ? nextNodes : []);
+        } catch {}
+      });
+    }
+  } catch {}
+
   // Helper to get a node by id
   const getNodeById = (id) => {
     const arr = Array.isArray(nodes) ? nodes : [];
@@ -69,25 +83,60 @@ export function CanvasPage(props = {}) {
       ? window.React.useState(providedSelected ?? null)
       : [providedSelected ?? null, function noop() {}];
 
+  // Mirror selectedId from Prompt Book
+  try {
+    const w = (typeof window !== "undefined" && window) || {};
+    const pb = w.__rx_prompt_book__;
+    if (pb && typeof pb.subscribe === "function") {
+      pb.subscribe(() => {
+        try {
+          const sid = pb.selectors?.selectedId?.();
+          if (typeof sid === "string" || sid === null) setSelectedId(sid);
+        } catch {}
+      });
+    }
+  } catch {}
+
+  // Initialize Prompt Book with initial props on mount (avoid legacy bridges)
+  useEffect(() => {
+    try {
+      const w = (typeof window !== "undefined" && window) || {};
+      const pb = w.__rx_prompt_book__;
+      if (pb) {
+        if (Array.isArray(providedNodes)) pb.actions?.setNodes?.(providedNodes);
+        pb.actions?.select?.(providedSelected ?? null);
+      }
+    } catch {}
+  }, []);
+
   useEffect(() => {
     // Expose UI setters for conductor callback wiring; not a global listener
     try {
       const w = (typeof window !== "undefined" && window) || {};
       w.__rx_canvas_ui__ = w.__rx_canvas_ui__ || {};
-      w.__rx_canvas_ui__.setSelectedId = (id) => setSelectedId(id || null);
+      // Bridge old UI setters to Prompt Book actions
+      w.__rx_canvas_ui__.setSelectedId = (id) => {
+        try {
+          const pb = w.__rx_prompt_book__;
+          pb?.actions?.select?.(id || null);
+        } catch {}
+        setSelectedId(id || null);
+      };
       // Allow drag handlers to persist final position for future drags and overlay sync
       w.__rx_canvas_ui__.positions = w.__rx_canvas_ui__.positions || {};
       w.__rx_canvas_ui__.commitNodePosition = ({ elementId, position }) => {
         try {
           if (!elementId || !position) return;
-          // Persist for subsequent drag baselines
+          // Persist for subsequent drag baselines (legacy)
           w.__rx_canvas_ui__.positions[elementId] = {
             x: position.x,
             y: position.y,
           };
         } catch {}
         try {
-          // Update CanvasPage local state so any re-rendered overlays/nodes use new position
+          // Update Prompt Book and local state
+          const pb = w.__rx_prompt_book__;
+          pb?.actions?.move?.(elementId, { x: position.x, y: position.y });
           setNodes((prev) => {
             const next = Array.isArray(prev) ? prev.slice() : [];
             for (let i = 0; i < next.length; i++) {

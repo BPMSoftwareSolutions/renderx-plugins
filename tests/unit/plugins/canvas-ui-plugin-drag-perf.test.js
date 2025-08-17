@@ -107,9 +107,11 @@ describe("Canvas UI drag performance contract", () => {
   });
 
   test("does not update per-instance CSS or setNodes during drag; commits once on pointerup", async () => {
-    // Expose a commit callback to simulate CanvasPage state commit
-    window.__rx_canvas_ui__ = window.__rx_canvas_ui__ || {};
-    window.__rx_canvas_ui__.commitNodePosition = jest.fn();
+    // Provide Prompt Book shim to capture commits
+    window.__rx_prompt_book__ = {
+      actions: { move: jest.fn() },
+      selectors: { positionOf: () => ({ x: 0, y: 0 }) },
+    };
 
     const node = { id: "id-2", position: { x: 0, y: 0 }, cssClass: "id-2" };
     handlers = mod.attachDragHandlers(node);
@@ -140,7 +142,7 @@ describe("Canvas UI drag performance contract", () => {
 
     const tag = document.getElementById(tagId);
     expect(tag).not.toBeNull();
-    expect(window.__rx_canvas_ui__.commitNodePosition).toHaveBeenCalledTimes(1);
+    expect(window.__rx_prompt_book__.actions.move).toHaveBeenCalledTimes(1);
   });
 
   test("conductor.play counts: start=1, move ≤ frames, end=1", async () => {
