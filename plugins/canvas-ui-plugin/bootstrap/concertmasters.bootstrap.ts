@@ -6,6 +6,7 @@ import { dragArrangement } from "../features/drag/drag.arrangement";
 import { registerDragConcertmaster } from "../features/drag/drag.concertmaster";
 import { registerSelectionConcertmaster } from "../features/selection/selection.concertmaster";
 import { registerOverlayConcertmaster } from "../features/overlay/overlay.concertmaster";
+import { registerInstanceConcertmaster } from "../features/instance/instance.concertmaster";
 
 export type ConductorLike = {
   play: (
@@ -111,6 +112,9 @@ export function registerCanvasConcertmasters(
     },
   };
   registerOverlayConcertmaster(cx as any, { store, cssAdapter });
+
+  // Instance CSS (commit actual component positions on cues)
+  registerInstanceConcertmaster(cx as any, { store });
 
   // Future: resize
   // registerResizeConcertmaster(cx as any, { store, resizeArrangement });
