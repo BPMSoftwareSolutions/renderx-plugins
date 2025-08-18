@@ -1,3 +1,4 @@
+import { test, expect } from '@playwright/test';
 import { chromium, Page, LaunchOptions } from 'playwright';
 import fs from 'fs';
 import path from 'path';
@@ -18,6 +19,9 @@ function findChromiumExecutable(): string | null {
     const candidate = path.join(base, latest, 'chrome-linux', 'chrome');
     if (fs.existsSync(candidate)) return candidate;
   } catch {}
+  // Try common system paths for option #2
+  const systemCandidates = ['/usr/bin/chromium-browser', '/usr/bin/chromium', '/usr/bin/google-chrome', '/usr/bin/google-chrome-stable'];
+  for (const c of systemCandidates) { try { if (fs.existsSync(c)) return c; } catch {} }
   return null;
 }
 
@@ -35,16 +39,16 @@ async function saveConsoleLog(logs: string[]) {
   return p;
 }
 
-describe('E2E: Drag StageCrew commits appear in console logs', () => {
+test.describe('E2E: Drag StageCrew commits appear in console logs', () => {
   let browser: any;
 
-  beforeAll(async () => {
+  test.beforeAll(async () => {
     const execPath = findChromiumExecutable();
     const launchOptions: LaunchOptions = execPath ? { executablePath: execPath } : {};
     browser = await chromium.launch(launchOptions);
   });
 
-  afterAll(async () => {
+  test.afterAll(async () => {
     await browser?.close();
   });
 
