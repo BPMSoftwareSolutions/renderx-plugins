@@ -120,17 +120,7 @@ export const handlers = {
       }
     } catch {}
 
-    // Fallback for environments/tests without StageCrew
-    if (typeof document !== "undefined") {
-      document.documentElement.setAttribute("data-theme", t);
-      document.body.className = `theme-${t}`;
-      try {
-        document.documentElement.style.setProperty(
-          "--theme-transition-duration",
-          `${transitionDuration}ms`
-        );
-      } catch {}
-    }
+    // No legacy fallback: require StageCrew per ADR-0017 migration policy
     return { applied: true, theme: t };
   },
 

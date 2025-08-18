@@ -52,13 +52,43 @@ describe("RenderX Theme Management Plugin", () => {
       expect(res).toEqual({ validated: true, theme: "light" });
     });
 
-    test("applyTheme sets DOM attributes and class", () => {
+    test("applyTheme updates via StageCrew (no direct DOM)", () => {
+      // Prepare StageCrew mock
+      const ops: any[] = [];
+      const beginBeat = jest.fn((corrId: string, meta: any) => {
+        const txn: any = {
+          update: jest.fn((selector: string, payload: any) => {
+            ops.push({ type: "update", selector, payload });
+            return txn;
+          }),
+          commit: jest.fn((options?: any) => {
+            ops.push({ type: "commit", options });
+            return undefined;
+          }),
+        };
+        return txn;
+      });
+
       document.documentElement.setAttribute("data-theme", "");
       document.body.className = "";
-      const ctx: any = base({ targetTheme: "dark" });
+
+      const ctx: any = base({ targetTheme: "dark", stageCrew: { beginBeat } });
       const res = plugin.handlers.applyTheme({}, ctx);
-      expect(document.documentElement.getAttribute("data-theme")).toBe("dark");
-      expect(document.body.className).toBe("theme-dark");
+
+      // StageCrew path used
+      expect(beginBeat).toHaveBeenCalled();
+      const updateHtml = ops.find((o) => o.type === "update" && o.selector === "html");
+      const updateBody = ops.find((o) => o.type === "update" && o.selector === "body");
+      expect(updateHtml).toBeTruthy();
+      expect(updateHtml.payload?.attrs?.["data-theme"]).toBe("dark");
+      expect(updateHtml.payload?.style?.["--theme-transition-duration"]).toMatch(/ms$/);
+      expect(updateBody).toBeTruthy();
+      expect(updateBody.payload?.attrs?.class).toBe("theme-dark");
+      expect(ops.some((o) => o.type === "commit")).toBe(true);
+
+      // DOM not touched directly
+      expect(document.documentElement.getAttribute("data-theme")).toBe("");
+      expect(document.body.className).toBe("");
       expect(res).toEqual({ applied: true, theme: "dark" });
     });
 

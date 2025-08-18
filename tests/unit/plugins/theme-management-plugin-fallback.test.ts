@@ -32,8 +32,24 @@ describe("Theme Management: tolerant validation with fallback", () => {
     } catch {
       // Consumer chooses fallback
       ctx.targetTheme = "auto";
+      // Apply fallback via StageCrew (no direct DOM)
+      const ops: any[] = [];
+      const beginBeat = jest.fn((corrId: string, meta: any) => {
+        const txn: any = {
+          update: jest.fn((selector: string, payload: any) => {
+            ops.push({ type: "update", selector, payload });
+            return txn;
+          }),
+          commit: jest.fn(() => {
+            ops.push({ type: "commit" });
+          }),
+        };
+        return txn;
+      });
+      ctx.stageCrew = { beginBeat };
       plugin.handlers.applyTheme({}, ctx);
-      applied = document.body.className;
+      const updateBody = ops.find((o) => o.type === "update" && o.selector === "body");
+      applied = updateBody?.payload?.attrs?.class || "";
       ctx.logger.warn?.("Applied fallback theme 'auto'");
     }
     expect(applied).toBe("theme-auto");
