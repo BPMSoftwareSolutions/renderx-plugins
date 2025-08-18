@@ -7,7 +7,7 @@ import {
 import { attachDragHandlers } from "../handlers/drag.js";
 import { buildOverlayForNode } from "../ui/overlay.js";
 import { renderCanvasNode } from "./renderCanvasNode.js";
-import { updateInstanceSizeCSS } from "../styles/instanceCss.js";
+import { updateInstanceSizeCSS, updateInstancePositionCSS } from "../styles/instanceCss.js";
 
 export function CanvasPage(props = {}) {
   const providedNodes = Array.isArray(props.nodes) ? props.nodes : null;
@@ -188,6 +188,12 @@ export function CanvasPage(props = {}) {
           overlayEnsureGlobalCSS(stageCrew);
           overlayEnsureInstanceCSS(stageCrew, nextNode, defaults.defaultWidth, defaults.defaultHeight);
         } catch {}
+        try {
+          // Also update the instance CSS tag immediately to reflect committed left/top
+          const cls = String(n?.cssClass || n?.id || "").trim();
+          if (cls) updateInstancePositionCSS(elementId, cls, nextNode.position.x, nextNode.position.y);
+        } catch {}
+
         clearOverlayTransform();
         setOverlayHidden(false);
       } catch {}

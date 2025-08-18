@@ -50,13 +50,7 @@ function createDragCoordinator(win) {
           if (!cur || !cur.active) return;
           const dx = (cur.lastCursor.x || 0) - (cur.origin.x || 0);
           const dy = (cur.lastCursor.y || 0) - (cur.origin.y || 0);
-          if (el && el.style) {
-            try {
-              el.style.transform = `translate3d(${Math.round(
-                dx
-              )}px, ${Math.round(dy)}px, 0)`;
-            } catch {}
-          }
+          // Transform is applied via StageCrew in handler's onFrame; do not touch DOM here
           if (typeof onFrame === "function") {
             try {
               onFrame({ dx, dy });

@@ -71,7 +71,7 @@ export function renderCanvasNode(node) {
     }
   } catch {}
 
-  const dragHandlers = attachDragHandlers(node, { updateInstancePositionCSS });
+  const dragHandlers = attachDragHandlers(node);
 
   // Avoid passing children for void elements like <input/>
   const VOID_TAGS = new Set([
