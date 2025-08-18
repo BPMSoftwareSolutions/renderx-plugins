@@ -96,6 +96,31 @@ export const handlers = {
       (context && context.targetTheme) ??
       (data && data.targetTheme) ??
       "auto";
+
+    // Prefer StageCrew DOM mutation facade when available (ADR-0017)
+    try {
+      const sc = context && context.stageCrew;
+      if (sc && typeof sc.beginBeat === "function") {
+        const corrId = context?.correlationId || `theme:${t}`;
+        const meta = {
+          handlerName: "applyTheme",
+          sequenceId: context?.sequence?.id,
+          plugin: "theme-management-plugin",
+        };
+        const txn = sc.beginBeat(corrId, meta);
+        // Set html[data-theme] and transition var on :root/html
+        txn.update("html", {
+          attrs: { "data-theme": t },
+          style: { "--theme-transition-duration": `${transitionDuration}ms` },
+        });
+        // Overwrite body class to match previous semantics
+        txn.update("body", { attrs: { class: `theme-${t}` } });
+        txn.commit();
+        return { applied: true, theme: t };
+      }
+    } catch {}
+
+    // Fallback for environments/tests without StageCrew
     if (typeof document !== "undefined") {
       document.documentElement.setAttribute("data-theme", t);
       document.body.className = `theme-${t}`;
