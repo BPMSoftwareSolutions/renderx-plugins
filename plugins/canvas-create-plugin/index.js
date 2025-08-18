@@ -54,6 +54,10 @@ export const handlers = {
     // Stage Crew: initial instance CSS (position etc.)
     try {
       let sc = context?.stageCrew;
+      // Dev instrumentation: log whether stageCrew exists on context (null if absent)
+      try {
+        context.logger?.info?.("🔎 ctx.stageCrew (from context)", sc ?? null);
+      } catch {}
       if (!sc) {
         try {
           const mod = require("@communication/StageCrew");

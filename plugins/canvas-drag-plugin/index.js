@@ -73,6 +73,10 @@ export const handlers = {
     // Stage Crew: update element position, batched to next frame
     try {
       let sc = ctx?.stageCrew;
+      // Dev instrumentation: log whether stageCrew exists on context (null if absent)
+      try {
+        ctx.logger?.info?.("🔎 ctx.stageCrew (from context)", sc ?? null);
+      } catch {}
       if (!sc) {
         try {
           const mod = require("@communication/StageCrew");
