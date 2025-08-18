@@ -62,15 +62,8 @@ class StageCrewImpl {
           try {
             for (const op of ops) this.applyOp(op);
           } catch {}
-          try {
-            this.bus.emit("stage:cue", {
-              correlationId,
-              meta,
-              batch: !!(opts && opts.batch),
-              ops,
-              appliedAt: Date.now(),
-            });
-          } catch {}
+          // Emission removed to avoid SPA Guard violations in runtime shim.
+          // Stage cues must be emitted by Musical Conductor via the approved path.
         };
         const raf =
           (typeof globalThis !== "undefined" &&
