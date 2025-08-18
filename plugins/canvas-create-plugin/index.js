@@ -81,15 +81,49 @@ export const handlers = {
             hasUpsert
           );
         } catch {}
-        const txn = sc
-          .beginBeat(correlationId, { handlerName: "create" })
-          .upsertStyle(tagId, cssText);
+        const txn = sc.beginBeat(correlationId, { handlerName: "create" });
+        const txnHasUpsert = typeof txn?.upsertStyle === "function";
+        const txnHasUpdate = typeof txn?.update === "function";
+        try {
+          context.logger?.info?.("🔎 txn.upsertStyle available?", txnHasUpsert);
+        } catch {}
+        try {
+          context.logger?.info?.("🔎 txn.update available?", txnHasUpdate);
+        } catch {}
+        try {
+          if (txnHasUpsert) {
+            txn.upsertStyle(tagId, cssText);
+          } else if (txnHasUpdate) {
+            txn.update(`#${id}`, {
+              style: {
+                left: `${position.x || 0}px`,
+                top: `${position.y || 0}px`,
+              },
+            });
+          } else {
+            context.logger?.warn?.(
+              "⚠️ StageCrew txn has neither upsertStyle nor update; skipping commit"
+            );
+          }
+        } catch (e) {
+          context.logger?.warn?.(
+            "⚠️ StageCrew op failed (create)",
+            e?.message || e
+          );
+        }
         try {
           context.logger?.info?.("🎬 StageCrew.commit about to run (create)", {
             batch: false,
           });
         } catch {}
-        txn.commit();
+        try {
+          txn.commit();
+        } catch (e) {
+          context.logger?.warn?.(
+            "⚠️ StageCrew commit failed (create)",
+            e?.message || e
+          );
+        }
       }
     } catch {}
 
