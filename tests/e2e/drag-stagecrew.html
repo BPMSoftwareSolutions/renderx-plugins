@@ -1,0 +1,118 @@
+<!doctype html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <title>Drag StageCrew E2E</title>
+    <style>
+      body { font-family: sans-serif; }
+      .app { position: relative; width: 800px; height: 600px; border: 1px solid #ccc; margin: 16px auto; }
+    </style>
+    <script>
+      // Simple console tap to also mirror logs to DOM for debugging if needed
+      (function(){
+        const orig = console.log;
+        const acc = [];
+        console.log = function(...args){ try { acc.push(args.map(String).join(' ')); } catch{}; orig.apply(console, args); };
+        window.__logs__ = acc;
+      })();
+    </script>
+  </head>
+  <body>
+    <div class="app">
+      <div id="root"></div>
+    </div>
+
+    <script type="module">
+      // Minimal React stub for plugin's expected API
+      window.React = {
+        createElement: (type, props, ...children) => ({ type, props: props || {}, children }),
+        useEffect: (fn) => fn(),
+        useState: (init) => [init, () => {}],
+        cloneElement: (el, p) => ({ ...el, props: { ...(el.props||{}), ...(p||{}) } }),
+      };
+
+      // StageCrew recorder that logs beginBeat/update/commit
+      function makeStageCrew() {
+        return {
+          beginBeat(corrId, meta){
+            console.log('[StageCrew beginBeat]', corrId, JSON.stringify(meta||{}));
+            const txn = {
+              update(selector, payload){ console.log('[StageCrew update]', selector, JSON.stringify(payload||{})); return txn; },
+              upsertStyleTag(id, cssText){ console.log('[StageCrew upsertStyleTag]', id, String(cssText||'').slice(0, 120)); return txn; },
+              commit(options){ console.log('[StageCrew commit]', JSON.stringify(options||{})); },
+            };
+            return txn;
+          }
+        };
+      }
+
+      // Conductor stub
+      window.renderxCommunicationSystem = {
+        conductor: {
+          play: (a,b,payload) => console.log('[Conductor play]', a, JSON.stringify(payload||{})),
+          getStageCrew: () => makeStageCrew(),
+        },
+        stageCrew: makeStageCrew(),
+      };
+
+      // Utility to render plugin CanvasPage output into real DOM
+      function renderToDom(vnode, container) {
+        if (!vnode) return null;
+        if (typeof vnode === 'string') { const tn = document.createTextNode(vnode); container.appendChild(tn); return tn; }
+        const el = document.createElement(vnode.type || 'div');
+        const props = vnode.props || {};
+        for (const [k, v] of Object.entries(props)) {
+          if (k === 'className') el.setAttribute('class', v);
+          else if (k === 'id') el.id = v;
+          else if (k.startsWith('on')) el[k.toLowerCase()] = v;
+          else el.setAttribute(k, String(v));
+        }
+        (vnode.children||[]).forEach(child => renderToDom(child, el));
+        container.appendChild(el);
+        return el;
+      }
+
+      import * as plugin from '../../plugins/canvas-ui-plugin/index.js';
+
+      // Define a node to render
+      const node = {
+        id: 'rx-e2e-button',
+        cssClass: 'rx-e2e-button',
+        type: 'button',
+        position: { x: 10, y: 20 },
+        component: {
+          metadata: { name: 'Button', type: 'button' },
+          ui: { template: '<button class="rx-button">OK</button>', styles: { css: '.rx-button{color:#000}' } },
+          integration: { canvasIntegration: { defaultWidth: 100, defaultHeight: 30 } },
+        },
+      };
+
+      // Render page and node
+      const tree = plugin.CanvasPage({ nodes: [node], selectedId: node.id });
+      const root = document.getElementById('root');
+      renderToDom(tree, root);
+      const nodeElVNode = plugin.renderCanvasNode(node);
+      const nodeEl = renderToDom(nodeElVNode, root);
+
+      // Simulate a drag: down -> move -> up
+      function dispatchPointer(el, type, init){
+        const ev = new PointerEvent(type, { bubbles: true, cancelable: true, ...init });
+        el.dispatchEvent(ev);
+      }
+
+      // Some handlers rely on .currentTarget from React; we installed to DOM as onpointer* properties
+      // Dispatch native events which call the same handlers
+      setTimeout(() => {
+        dispatchPointer(nodeEl, 'pointerdown', { clientX: 0, clientY: 0, pointerId: 1 });
+        dispatchPointer(nodeEl, 'pointermove', { clientX: 12, clientY: 9, buttons: 1 });
+        requestAnimationFrame(() => {
+          setTimeout(() => {
+            dispatchPointer(nodeEl, 'pointerup', { clientX: 12, clientY: 9, pointerId: 1 });
+            console.log('[E2E] done');
+          }, 20);
+        });
+      }, 50);
+    </script>
+  </body>
+</html>
+
