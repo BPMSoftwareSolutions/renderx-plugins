@@ -89,14 +89,24 @@ export const handlers = {
           `mc-${Date.now().toString(36)}${Math.random()
             .toString(36)
             .slice(2, 6)}`;
-        sc.beginBeat(correlationId, { handlerName: "dragMove" })
+        const hasUpdate = typeof sc?.update === "function";
+        try {
+          ctx.logger?.info?.("🔎 StageCrew.update available?", hasUpdate);
+        } catch {}
+        const txn = sc
+          .beginBeat(correlationId, { handlerName: "dragMove" })
           .update(`#${elementId}`, {
             style: {
               left: `${Math.round(position.x)}px`,
               top: `${Math.round(position.y)}px`,
             },
-          })
-          .commit({ batch: true });
+          });
+        try {
+          ctx.logger?.info?.("🎬 StageCrew.commit about to run (dragMove)", {
+            batch: true,
+          });
+        } catch {}
+        txn.commit({ batch: true });
       }
     } catch {}
 

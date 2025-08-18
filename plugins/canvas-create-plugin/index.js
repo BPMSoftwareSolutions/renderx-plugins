@@ -74,9 +74,22 @@ export const handlers = {
         const cssText = `.${cssClass}{position:absolute;left:${
           position.x || 0
         }px;top:${position.y || 0}px;box-sizing:border-box;display:block;}`;
-        sc.beginBeat(correlationId, { handlerName: "create" })
-          .upsertStyle(tagId, cssText)
-          .commit();
+        const hasUpsert = typeof sc?.upsertStyle === "function";
+        try {
+          context.logger?.info?.(
+            "🔎 StageCrew.upsertStyle available?",
+            hasUpsert
+          );
+        } catch {}
+        const txn = sc
+          .beginBeat(correlationId, { handlerName: "create" })
+          .upsertStyle(tagId, cssText);
+        try {
+          context.logger?.info?.("🎬 StageCrew.commit about to run (create)", {
+            batch: false,
+          });
+        } catch {}
+        txn.commit();
       }
     } catch {}
 
