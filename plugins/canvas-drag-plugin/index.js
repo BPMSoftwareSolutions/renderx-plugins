@@ -78,9 +78,12 @@ export const handlers = {
         ctx.logger?.info?.("🔎 ctx.stageCrew (from context)", sc ?? null);
       } catch {}
       if (!sc) {
+        // Per Conductor guidance: do not fallback or wrap StageCrew/EventBus.
+        // If ctx.stageCrew is absent, skip StageCrew ops (no emits).
         try {
-          const mod = require("@communication/StageCrew");
-          sc = mod?.getStageCrew?.();
+          ctx.logger?.warn?.(
+            "⚠️ ctx.stageCrew missing; skipping StageCrew ops in dragMove"
+          );
         } catch {}
       }
       if (sc && typeof sc.beginBeat === "function") {
