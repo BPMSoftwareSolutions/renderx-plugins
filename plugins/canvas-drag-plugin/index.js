@@ -93,20 +93,41 @@ export const handlers = {
         try {
           ctx.logger?.info?.("🔎 StageCrew.update available?", hasUpdate);
         } catch {}
-        const txn = sc
-          .beginBeat(correlationId, { handlerName: "dragMove" })
-          .update(`#${elementId}`, {
-            style: {
-              left: `${Math.round(position.x)}px`,
-              top: `${Math.round(position.y)}px`,
-            },
-          });
+        const txn = sc.beginBeat(correlationId, { handlerName: "dragMove" });
+        const txnHasUpdate = typeof txn?.update === "function";
+        try {
+          ctx.logger?.info?.("🔎 txn.update available?", txnHasUpdate);
+        } catch {}
+        try {
+          if (txnHasUpdate) {
+            txn.update(`#${elementId}`, {
+              style: {
+                left: `${Math.round(position.x)}px`,
+                top: `${Math.round(position.y)}px`,
+              },
+            });
+          } else {
+            ctx.logger?.warn?.("⚠️ StageCrew txn.update missing; skipping op");
+          }
+        } catch (e) {
+          ctx.logger?.warn?.(
+            "⚠️ StageCrew op failed (dragMove)",
+            e?.message || e
+          );
+        }
         try {
           ctx.logger?.info?.("🎬 StageCrew.commit about to run (dragMove)", {
-            batch: true,
+            batch: false,
           });
         } catch {}
-        txn.commit({ batch: true });
+        try {
+          txn.commit();
+        } catch (e) {
+          ctx.logger?.warn?.(
+            "⚠️ StageCrew commit failed (dragMove)",
+            e?.message || e
+          );
+        }
       }
     } catch {}
 
