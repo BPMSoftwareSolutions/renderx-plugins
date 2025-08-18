@@ -40,9 +40,24 @@ describe("Canvas UI - resize handle matrix (overlay + commit)", () => {
       const resize: any = loadRenderXPlugin("RenderX/public/plugins/canvas-resize-plugin/index.js");
       await conductor.mount(resize.sequence, resize.handlers, resize.sequence.id);
 
-      // Expose conductor
+      // Expose conductor + StageCrew recorder
       (global as any).window = (global as any).window || {};
-      (global as any).window.renderxCommunicationSystem = { conductor } as any;
+      const ops: any[] = [];
+      const beginBeat = jest.fn((corrId: string, meta: any) => {
+        const txn: any = {
+          upsertStyleTag: jest.fn((id: string, cssText: string) => {
+            ops.push({ type: "upsertStyleTag", id, cssText });
+            return txn;
+          }),
+          commit: jest.fn((options?: any) => {
+            ops.push({ type: "commit", options });
+            return undefined;
+          }),
+        };
+        ops.push({ type: "beginBeat", corrId, meta });
+        return txn;
+      });
+      (global as any).window.renderxCommunicationSystem = { conductor, stageCrew: { beginBeat }, __ops: ops } as any;
 
       // React stub
       const created: any[] = [];
@@ -77,11 +92,12 @@ describe("Canvas UI - resize handle matrix (overlay + commit)", () => {
       created.length = 0;
       uiPlugin.CanvasPage({ nodes: [node], selectedId: node.id });
 
-      // Initial overlay CSS matches baseline
+      // Initial overlay CSS upsert recorded via StageCrew matches baseline
       const overlayCssId = `overlay-css-${node.id}`;
-      let overlayTag = document.getElementById(overlayCssId) as HTMLStyleElement | null;
-      expect(overlayTag).toBeTruthy();
-      const initialCss = strip(overlayTag!.textContent || "");
+      let opsArr = (global as any).window.renderxCommunicationSystem.__ops as any[];
+      const firstUpsert = opsArr.find((o) => o.type === "upsertStyleTag" && o.id === overlayCssId);
+      expect(firstUpsert).toBeTruthy();
+      const initialCss = strip(firstUpsert?.cssText || "");
       expect(initialCss).toContain(strip(`.rx-overlay-${node.id}{position:absolute;left:${base.x}px;top:${base.y}px;width:${base.w}px;height:${base.h}px;`));
 
       // Find handle element by direction class
@@ -94,9 +110,10 @@ describe("Canvas UI - resize handle matrix (overlay + commit)", () => {
       await handleEl.props.onPointerMove({ clientX: dx, clientY: dy, buttons: 1 });
       await new Promise((r) => setTimeout(r, 30));
 
-      // Validate overlay reflects expected x/y/w/h
-      overlayTag = document.getElementById(overlayCssId) as HTMLStyleElement | null;
-      const overlayCss = strip(overlayTag?.textContent || "");
+      // Validate overlay upsert reflects expected x/y/w/h
+      opsArr = (global as any).window.renderxCommunicationSystem.__ops as any[];
+      const updatedUpsert = [...opsArr].reverse().find((o) => o.type === "upsertStyleTag" && o.id === overlayCssId);
+      const overlayCss = strip(updatedUpsert?.cssText || "");
       const expectedOverlayStart = strip(`.rx-overlay-${node.id}{position:absolute;left:${expectBox.x}px;top:${expectBox.y}px;width:${expectBox.w}px;height:${expectBox.h}px;`);
       expect(overlayCss).toContain(expectedOverlayStart);
 

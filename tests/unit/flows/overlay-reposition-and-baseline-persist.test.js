@@ -23,7 +23,16 @@ describe("Canvas UI: overlay repositions on drop and baseline persists across dr
 
     const eventBus = TestEnvironment.createEventBus();
     const conductor = TestEnvironment.createMusicalConductor(eventBus);
-    window.renderxCommunicationSystem = { conductor };
+    const ops = [];
+    const beginBeat = jest.fn((corrId, meta) => {
+      const txn = {
+        upsertStyleTag: jest.fn((id, cssText) => { ops.push({ type: 'upsertStyleTag', id, cssText }); return txn; }),
+        commit: jest.fn((options) => { ops.push({ type: 'commit', options }); }),
+      };
+      ops.push({ type: 'beginBeat', corrId, meta });
+      return txn;
+    });
+    window.renderxCommunicationSystem = { conductor, stageCrew: { beginBeat }, __ops: ops };
 
     // React stub
     const created = [];
@@ -57,9 +66,10 @@ describe("Canvas UI: overlay repositions on drop and baseline persists across dr
     const c1 = (inst1?.textContent||'').replace(/\s+/g, '');
     expect(c1).toContain(`.${node.cssClass}{position:absolute;left:25px;top:32px;`.replace(/\s+/g, ''));
 
-    // Overlay base CSS should now reflect (25,32)
-    const ov1 = document.getElementById(`overlay-css-${node.id}`);
-    const o1 = (ov1?.textContent||'').replace(/\s+/g, '');
+    // Overlay base CSS upsert should now reflect (25,32)
+    const opsArr1 = window.renderxCommunicationSystem.__ops;
+    const up1 = [...opsArr1].reverse().find(o => o.type === 'upsertStyleTag' && o.id === `overlay-css-${node.id}`);
+    const o1 = (up1?.cssText||'').replace(/\s+/g, '');
     expect(o1).toContain(`.rx-overlay-${node.id}{position:absolute;left:25px;top:32px;`.replace(/\s+/g, ''));
 
     // Second drag: move by (dx2, dy2) = (5, 7)
@@ -73,8 +83,9 @@ describe("Canvas UI: overlay repositions on drop and baseline persists across dr
     const c2 = (inst2?.textContent||'').replace(/\s+/g, '');
     expect(c2).toContain(`.${node.cssClass}{position:absolute;left:30px;top:39px;`.replace(/\s+/g, ''));
 
-    const ov2 = document.getElementById(`overlay-css-${node.id}`);
-    const o2 = (ov2?.textContent||'').replace(/\s+/g, '');
+    const opsArr2 = window.renderxCommunicationSystem.__ops;
+    const up2 = [...opsArr2].reverse().find(o => o.type === 'upsertStyleTag' && o.id === `overlay-css-${node.id}`);
+    const o2 = (up2?.cssText||'').replace(/\s+/g, '');
     expect(o2).toContain(`.rx-overlay-${node.id}{position:absolute;left:30px;top:39px;`.replace(/\s+/g, ''));
   });
 });

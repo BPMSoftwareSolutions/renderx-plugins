@@ -7,6 +7,22 @@ describe("Canvas UI Plugin - overlay width/height updates during resize", () => 
 
     // Minimal window + React stub
     (global as any).window = (global as any).window || {};
+    const ops: any[] = [];
+    const beginBeat = jest.fn((corrId: string, meta: any) => {
+      const txn: any = {
+        upsertStyleTag: jest.fn((id: string, cssText: string) => {
+          ops.push({ type: "upsertStyleTag", id, cssText });
+          return txn;
+        }),
+        commit: jest.fn((options?: any) => {
+          ops.push({ type: "commit", options });
+          return undefined;
+        }),
+      };
+      ops.push({ type: "beginBeat", corrId, meta });
+      return txn;
+    });
+    (global as any).window.renderxCommunicationSystem = { stageCrew: { beginBeat }, __ops: ops } as any;
 
     const created: any[] = [];
     const ReactStub = {
@@ -42,11 +58,11 @@ describe("Canvas UI Plugin - overlay width/height updates during resize", () => 
     created.length = 0;
     plugin.CanvasPage({ nodes: [node], selectedId: node.id });
 
-    // Assert overlay base CSS exists with defaults
-    const overlayCssId = `overlay-css-${node.id}`;
-    let overlayTag = document.getElementById(overlayCssId) as HTMLStyleElement | null;
-    expect(overlayTag).toBeTruthy();
-    const initialCss = (overlayTag?.textContent || "").replace(/\s+/g, "");
+    // Assert overlay base CSS upsert recorded via StageCrew
+    let opsArr = (global as any).window.renderxCommunicationSystem.__ops as any[];
+    const firstUpsert = opsArr.find((o) => o.type === "upsertStyleTag" && o.id === `overlay-css-${node.id}`);
+    expect(firstUpsert).toBeTruthy();
+    const initialCss = (firstUpsert?.cssText || "").replace(/\s+/g, "");
     expect(initialCss).toContain(`.rx-overlay-${node.id}{`.replace(/\s+/g, ""));
     expect(initialCss).toContain(`width:100px`.replace(/\s+/g, ""));
     expect(initialCss).toContain(`height:30px`.replace(/\s+/g, ""));
@@ -58,9 +74,10 @@ describe("Canvas UI Plugin - overlay width/height updates during resize", () => 
       box: { x: node.position.x, y: node.position.y, w: 140, h: 50 },
     });
 
-    overlayTag = document.getElementById(overlayCssId) as HTMLStyleElement | null;
-    expect(overlayTag).toBeTruthy();
-    const updatedCss = (overlayTag?.textContent || "").replace(/\s+/g, "");
+    // Verify overlay CSS upsert updated via StageCrew
+    opsArr = (global as any).window.renderxCommunicationSystem.__ops as any[];
+    const updatedUpsert = [...opsArr].reverse().find((o) => o.type === "upsertStyleTag" && o.id === `overlay-css-${node.id}`);
+    const updatedCss = (updatedUpsert?.cssText || "").replace(/\s+/g, "");
     expect(updatedCss).toContain(`.rx-overlay-${node.id}{`.replace(/\s+/g, ""));
     expect(updatedCss).toContain(`width:140px`.replace(/\s+/g, ""));
     expect(updatedCss).toContain(`height:50px`.replace(/\s+/g, ""));

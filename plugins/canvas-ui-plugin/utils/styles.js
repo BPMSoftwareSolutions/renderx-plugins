@@ -112,3 +112,40 @@ export function overlayInjectInstanceCSS(node, width, height) {
     tag.textContent = cssText;
   } catch {}
 }
+
+
+// StageCrew-only overlay CSS ensure functions (ADR-0017)
+export function overlayEnsureGlobalCSS(stageCrew, context) {
+  if (!stageCrew || typeof stageCrew.beginBeat !== "function") {
+    throw new Error("StageCrew is required for overlayEnsureGlobalCSS");
+  }
+  const corrId = context?.correlationId || "overlay:global";
+  const meta = {
+    handlerName: "overlayStyles",
+    plugin: "canvas-ui-plugin",
+    sequenceId: context?.sequence?.id,
+  };
+  const txn = stageCrew.beginBeat(corrId, meta);
+  const cssText = buildOverlayGlobalCssTextSafe();
+  txn.upsertStyleTag("overlay-css-global", cssText);
+  txn.commit();
+}
+
+export function overlayEnsureInstanceCSS(stageCrew, node, width, height, context) {
+  if (!stageCrew || typeof stageCrew.beginBeat !== "function") {
+    throw new Error("StageCrew is required for overlayEnsureInstanceCSS");
+  }
+  if (!node) throw new Error("Node is required for overlayEnsureInstanceCSS");
+  const id = String(node.id || "");
+  const corrId = context?.correlationId || `overlay:${id}`;
+  const meta = {
+    handlerName: "overlayStyles",
+    plugin: "canvas-ui-plugin",
+    sequenceId: context?.sequence?.id,
+    nodeId: id,
+  };
+  const txn = stageCrew.beginBeat(corrId, meta);
+  const cssText = buildOverlayInstanceCssTextSafe(node, width, height);
+  txn.upsertStyleTag("overlay-css-" + id, cssText);
+  txn.commit();
+}

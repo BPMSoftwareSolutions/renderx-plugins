@@ -17,7 +17,23 @@ describe("Canvas UI Plugin - selection overlay and resize handles", () => {
 
     // Expose conductor
     (global as any).window = (global as any).window || {};
-    (global as any).window.renderxCommunicationSystem = { conductor } as any;
+    // Install StageCrew recorder and expose through renderxCommunicationSystem
+    const ops: any[] = [];
+    const beginBeat = jest.fn((corrId: string, meta: any) => {
+      const txn: any = {
+        upsertStyleTag: jest.fn((id: string, cssText: string) => {
+          ops.push({ type: "upsertStyleTag", id, cssText });
+          return txn;
+        }),
+        commit: jest.fn((options?: any) => {
+          ops.push({ type: "commit", options });
+          return undefined;
+        }),
+      };
+      ops.push({ type: "beginBeat", corrId, meta });
+      return txn;
+    });
+    (global as any).window.renderxCommunicationSystem = { conductor, stageCrew: { beginBeat }, __ops: ops } as any;
 
     // React stub
     const created: any[] = [];
@@ -91,25 +107,17 @@ describe("Canvas UI Plugin - selection overlay and resize handles", () => {
       ).toBe(true)
     );
 
-    // CSS: global overlay CSS present
-    const styles = Array.from(
-      document.head.querySelectorAll("style")
-    ) as HTMLStyleElement[];
-    const cssText = styles.map((s) => s.textContent || "").join("\n");
-    expect(/\.rx-resize-overlay\b/.test(cssText)).toBe(true);
-    expect(/\.rx-resize-handle\b/.test(cssText)).toBe(true);
+    // CSS: verify StageCrew recorded upsertStyleTag calls for global + instance
+    const opsArr = (global as any).window.renderxCommunicationSystem.__ops as any[];
+    const globalUpsert = opsArr.find((o) => o.type === "upsertStyleTag" && o.id === "overlay-css-global");
+    expect(globalUpsert).toBeTruthy();
+    expect(globalUpsert.cssText).toMatch(/\.rx-resize-overlay\b/);
+    expect(globalUpsert.cssText).toMatch(/\.rx-resize-handle\b/);
 
-    // Per-instance overlay CSS present with exact values
-    const inst = document.getElementById(
-      `overlay-css-${node.id}`
-    ) as HTMLStyleElement | null;
-    expect(inst).toBeTruthy();
-    const instCss = (inst?.textContent || "").replace(/\s+/g, "");
-    expect(instCss).toContain(
-      `.rx-overlay-${node.id}{position:absolute;left:10px;top:20px;width:120px;height:40px;z-index:10;}`.replace(
-        /\s+/g,
-        ""
-      )
+    const instUpsert = opsArr.find((o) => o.type === "upsertStyleTag" && o.id === `overlay-css-${node.id}`);
+    expect(instUpsert).toBeTruthy();
+    expect(instUpsert.cssText.replace(/\s+/g, "")).toContain(
+      `.rx-overlay-${node.id}{position:absolute;left:10px;top:20px;width:120px;height:40px;z-index:10;}`.replace(/\s+/g, "")
     );
   });
 

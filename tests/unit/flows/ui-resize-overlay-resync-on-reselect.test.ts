@@ -14,7 +14,16 @@ describe("Canvas UI - overlay resyncs to committed size on reselect", () => {
     await conductor.mount(resize.sequence, resize.handlers, resize.sequence.id);
 
     (global as any).window = (global as any).window || {};
-    (global as any).window.renderxCommunicationSystem = { conductor } as any;
+    const ops: any[] = [];
+    const beginBeat = jest.fn((corrId: string, meta: any) => {
+      const txn: any = {
+        upsertStyleTag: jest.fn((id: string, cssText: string) => { ops.push({ type: 'upsertStyleTag', id, cssText }); return txn; }),
+        commit: jest.fn((options?: any) => { ops.push({ type: 'commit', options }); }),
+      };
+      ops.push({ type: 'beginBeat', corrId, meta });
+      return txn;
+    });
+    (global as any).window.renderxCommunicationSystem = { conductor, stageCrew: { beginBeat }, __ops: ops } as any;
 
     const created: any[] = [];
     const ReactStub = {
@@ -59,8 +68,9 @@ describe("Canvas UI - overlay resyncs to committed size on reselect", () => {
     created.length = 0;
     uiPlugin.CanvasPage({ nodes: [node], selectedId: node.id });
 
-    const overlayTag = document.getElementById(overlayCssId) as HTMLStyleElement | null;
-    const overlayCss = strip(overlayTag?.textContent || "");
+    const opsArr = (global as any).window.renderxCommunicationSystem.__ops as any[];
+    const up = [...opsArr].reverse().find((o) => o.type === 'upsertStyleTag' && o.id === overlayCssId);
+    const overlayCss = strip((up?.cssText || ""));
 
     // Expect committed size (140x50), not defaults (120x40)
     expect(overlayCss).toContain(strip(`.rx-overlay-${node.id}{position:absolute;left:10px;top:20px;width:140px;height:50px;`));

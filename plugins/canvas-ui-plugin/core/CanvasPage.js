@@ -1,8 +1,8 @@
 import { handleCanvasDrop } from "../handlers/drop.js";
 import { makeRxCompClass } from "../utils/idUtils.js";
 import {
-  overlayInjectGlobalCSS,
-  overlayInjectInstanceCSS,
+  overlayEnsureGlobalCSS,
+  overlayEnsureInstanceCSS,
 } from "../utils/styles.js";
 import { attachDragHandlers } from "../handlers/drag.js";
 import { buildOverlayForNode } from "../ui/overlay.js";
@@ -182,11 +182,12 @@ export function CanvasPage(props = {}) {
             y: position?.y ?? n?.position?.y ?? 0,
           },
         };
-        overlayInjectInstanceCSS(
-          nextNode,
-          defaults.defaultWidth,
-          defaults.defaultHeight
-        );
+        try {
+          const system = (typeof window !== "undefined" && window.renderxCommunicationSystem) || null;
+          const stageCrew = system?.stageCrew;
+          overlayEnsureGlobalCSS(stageCrew);
+          overlayEnsureInstanceCSS(stageCrew, nextNode, defaults.defaultWidth, defaults.defaultHeight);
+        } catch {}
         clearOverlayTransform();
         setOverlayHidden(false);
       } catch {}
@@ -219,11 +220,16 @@ export function CanvasPage(props = {}) {
             w.__rx_canvas_ui__.__lastH = box.h;
           }
         } catch {}
-        overlayInjectInstanceCSS(
-          nextNode,
-          box?.w ?? defaults.defaultWidth,
-          box?.h ?? defaults.defaultHeight
-        );
+        try {
+          const system = (typeof window !== "undefined" && window.renderxCommunicationSystem) || null;
+          const stageCrew = system?.stageCrew;
+          overlayEnsureInstanceCSS(
+            stageCrew,
+            nextNode,
+            box?.w ?? defaults.defaultWidth,
+            box?.h ?? defaults.defaultHeight
+          );
+        } catch {}
         // Also live-update the actual component instance CSS so the element resizes during drag
         try {
           const cls = String(n?.cssClass || n?.id || "").trim();
@@ -272,23 +278,22 @@ export function CanvasPage(props = {}) {
               typeof finalBox.y === "number" ? finalBox.y : n?.position?.y ?? 0,
           }
         );
-        overlayInjectInstanceCSS(
-          {
-            id: elementId,
-            position: {
-              x:
-                typeof finalBox.x === "number"
-                  ? finalBox.x
-                  : n?.position?.x ?? 0,
-              y:
-                typeof finalBox.y === "number"
-                  ? finalBox.y
-                  : n?.position?.y ?? 0,
+        try {
+          const system = (typeof window !== "undefined" && window.renderxCommunicationSystem) || null;
+          const stageCrew = system?.stageCrew;
+          overlayEnsureInstanceCSS(
+            stageCrew,
+            {
+              id: elementId,
+              position: {
+                x: typeof finalBox.x === "number" ? finalBox.x : n?.position?.x ?? 0,
+                y: typeof finalBox.y === "number" ? finalBox.y : n?.position?.y ?? 0,
+              },
             },
-          },
-          finalBox.w,
-          finalBox.h
-        );
+            finalBox.w,
+            finalBox.h
+          );
+        } catch {}
       } catch {}
     };
     try {
