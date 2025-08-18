@@ -61,18 +61,86 @@ export const sequence = {
 };
 
 export const handlers = {
-  handleDragStart: ({ elementId, origin }, ctx) => ({
-    drag: { elementId, origin },
-  }),
+  handleDragStart: ({ elementId, origin }, ctx) => {
+    ctx.logger?.log?.("startDrag", { elementId, origin });
+    return { drag: { elementId, origin } };
+  },
   handleDragMove: ({ elementId, delta, onDragUpdate }, ctx) => {
     const o = ctx.payload.drag?.origin || { x: 0, y: 0 };
     const position = { x: o.x + (delta?.dx || 0), y: o.y + (delta?.dy || 0) };
+    ctx.logger?.log?.("dragMove", { elementId, delta, position });
+
+    // Stage Crew: update element position, batched to next frame
+    try {
+      let sc = ctx?.stageCrew;
+      // Dev instrumentation: log whether stageCrew exists on context (null if absent)
+      try {
+        ctx.logger?.info?.("🔎 ctx.stageCrew (from context)", sc ?? null);
+      } catch {}
+      if (!sc) {
+        // Per Conductor guidance: do not fallback or wrap StageCrew/EventBus.
+        // If ctx.stageCrew is absent, skip StageCrew ops (no emits).
+        try {
+          ctx.logger?.warn?.(
+            "⚠️ ctx.stageCrew missing; skipping StageCrew ops in dragMove"
+          );
+        } catch {}
+      }
+      if (sc && typeof sc.beginBeat === "function") {
+        const correlationId =
+          ctx?.correlationId ||
+          `mc-${Date.now().toString(36)}${Math.random()
+            .toString(36)
+            .slice(2, 6)}`;
+        const hasUpdate = typeof sc?.update === "function";
+        try {
+          ctx.logger?.info?.("🔎 StageCrew.update available?", hasUpdate);
+        } catch {}
+        const txn = sc.beginBeat(correlationId, { handlerName: "dragMove" });
+        const txnHasUpdate = typeof txn?.update === "function";
+        try {
+          ctx.logger?.info?.("🔎 txn.update available?", txnHasUpdate);
+        } catch {}
+        try {
+          if (txnHasUpdate) {
+            txn.update(`#${elementId}`, {
+              style: {
+                left: `${Math.round(position.x)}px`,
+                top: `${Math.round(position.y)}px`,
+              },
+            });
+          } else {
+            ctx.logger?.warn?.("⚠️ StageCrew txn.update missing; skipping op");
+          }
+        } catch (e) {
+          ctx.logger?.warn?.(
+            "⚠️ StageCrew op failed (dragMove)",
+            e?.message || e
+          );
+        }
+        try {
+          ctx.logger?.info?.("🎬 StageCrew.commit about to run (dragMove)", {
+            batch: false,
+          });
+        } catch {}
+        try {
+          txn.commit();
+        } catch (e) {
+          ctx.logger?.warn?.(
+            "⚠️ StageCrew commit failed (dragMove)",
+            e?.message || e
+          );
+        }
+      }
+    } catch {}
+
     try {
       onDragUpdate?.({ elementId, position });
     } catch {}
     return { elementId, position };
   },
   handleDragEnd: ({ elementId, onDragEnd }, ctx) => {
+    ctx.logger?.log?.("endDrag", { elementId });
     try {
       onDragEnd?.({ elementId });
     } catch {}

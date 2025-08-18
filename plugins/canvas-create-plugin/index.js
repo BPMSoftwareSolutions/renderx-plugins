@@ -51,6 +51,85 @@ export const handlers = {
 
     context.logger?.info?.("🧩 Canvas.create", { id, type, position });
 
+    // Stage Crew: initial instance CSS (position etc.)
+    try {
+      let sc = context?.stageCrew;
+      // Dev instrumentation: log whether stageCrew exists on context (null if absent)
+      try {
+        context.logger?.info?.("🔎 ctx.stageCrew (from context)", sc ?? null);
+      } catch {}
+      if (!sc) {
+        // Per Conductor guidance: do not fallback or wrap StageCrew/EventBus.
+        // If ctx.stageCrew is absent, skip StageCrew ops (no emits).
+        try {
+          context.logger?.warn?.(
+            "⚠️ ctx.stageCrew missing; skipping StageCrew ops in create"
+          );
+        } catch {}
+      }
+      if (sc && typeof sc.beginBeat === "function") {
+        const correlationId =
+          context?.correlationId ||
+          `mc-${Date.now().toString(36)}${Math.random()
+            .toString(36)
+            .slice(2, 6)}`;
+        const tagId = `component-instance-css-${id}`;
+        const cssText = `.${cssClass}{position:absolute;left:${
+          position.x || 0
+        }px;top:${position.y || 0}px;box-sizing:border-box;display:block;}`;
+        const hasUpsert = typeof sc?.upsertStyle === "function";
+        try {
+          context.logger?.info?.(
+            "🔎 StageCrew.upsertStyle available?",
+            hasUpsert
+          );
+        } catch {}
+        const txn = sc.beginBeat(correlationId, { handlerName: "create" });
+        const txnHasUpsert = typeof txn?.upsertStyle === "function";
+        const txnHasUpdate = typeof txn?.update === "function";
+        try {
+          context.logger?.info?.("🔎 txn.upsertStyle available?", txnHasUpsert);
+        } catch {}
+        try {
+          context.logger?.info?.("🔎 txn.update available?", txnHasUpdate);
+        } catch {}
+        try {
+          if (txnHasUpsert) {
+            txn.upsertStyle(tagId, cssText);
+          } else if (txnHasUpdate) {
+            txn.update(`#${id}`, {
+              style: {
+                left: `${position.x || 0}px`,
+                top: `${position.y || 0}px`,
+              },
+            });
+          } else {
+            context.logger?.warn?.(
+              "⚠️ StageCrew txn has neither upsertStyle nor update; skipping commit"
+            );
+          }
+        } catch (e) {
+          context.logger?.warn?.(
+            "⚠️ StageCrew op failed (create)",
+            e?.message || e
+          );
+        }
+        try {
+          context.logger?.info?.("🎬 StageCrew.commit about to run (create)", {
+            batch: false,
+          });
+        } catch {}
+        try {
+          txn.commit();
+        } catch (e) {
+          context.logger?.warn?.(
+            "⚠️ StageCrew commit failed (create)",
+            e?.message || e
+          );
+        }
+      }
+    } catch {}
+
     // Notify React Canvas via callback if available
     const onComponentCreated =
       context?.onComponentCreated || data?.onComponentCreated;

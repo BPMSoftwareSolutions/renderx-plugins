@@ -107,9 +107,11 @@ describe("Canvas UI drag performance contract", () => {
   });
 
   test("does not update per-instance CSS or setNodes during drag; commits once on pointerup", async () => {
-    // Expose a commit callback to simulate CanvasPage state commit
-    window.__rx_canvas_ui__ = window.__rx_canvas_ui__ || {};
-    window.__rx_canvas_ui__.commitNodePosition = jest.fn();
+    // Provide Prompt Book shim to capture commits
+    window.__rx_prompt_book__ = {
+      actions: { move: jest.fn() },
+      selectors: { positionOf: () => ({ x: 0, y: 0 }) },
+    };
 
     const node = { id: "id-2", position: { x: 0, y: 0 }, cssClass: "id-2" };
     handlers = mod.attachDragHandlers(node);
@@ -140,11 +142,16 @@ describe("Canvas UI drag performance contract", () => {
 
     const tag = document.getElementById(tagId);
     expect(tag).not.toBeNull();
-    expect(window.__rx_canvas_ui__.commitNodePosition).toHaveBeenCalledTimes(1);
+    expect(window.__rx_prompt_book__.actions.move).toHaveBeenCalledTimes(1);
   });
 
   test("conductor.play counts: start=1, move ≤ frames, end=1", async () => {
-    const node = { id: "id-3", position: { x: 0, y: 0 }, cssClass: "id-3" };
+    const node = {
+      id: "id-3",
+      position: { x: 0, y: 0 },
+      cssClass: "id-3",
+      component: { metadata: { type: "button", name: "Button" } },
+    };
     handlers = mod.attachDragHandlers(node);
 
     const calls = [];
@@ -198,4 +205,126 @@ describe("Canvas UI drag performance contract", () => {
     expect(moveCount).toBeLessThanOrEqual(2); // one per rAF frame
     expect(endCount).toBe(1);
   });
+});
+
+describe("Canvas UI drag performance contract (id shape)", () => {
+  test("conductor.play only uses sequence id (no phase id)", async () => {
+    // Local setup to avoid relying on outer describe
+    const localBus = TestEnvironment.createEventBus();
+    const localConductor = TestEnvironment.createMusicalConductor(localBus);
+    global.window = global.window || {};
+    global.document = global.document || window.document;
+    window.renderxCommunicationSystem = { conductor: localConductor };
+
+    const localEl = document.createElement("div");
+    document.body.appendChild(localEl);
+    const callbacks = [];
+    window.__testRafCallbacks = callbacks;
+    window.requestAnimationFrame = (cb) => {
+      callbacks.push(cb);
+      return callbacks.length;
+    };
+
+    const localMod = loadRenderXPlugin(dragHandlersModulePath);
+    const node = { id: "id-4", position: { x: 0, y: 0 }, cssClass: "id-4" };
+    const localHandlers = localMod.attachDragHandlers(node);
+
+    const calls = [];
+    jest
+      .spyOn(localConductor, "play")
+      .mockImplementation((channel, id, payload) => {
+        let mod;
+
+        calls.push({ channel, id, payload });
+        return Promise.resolve();
+      });
+
+    // Start drag
+    localHandlers.onPointerDown(
+      makeEvent("pointerdown", {
+        currentTarget: localEl,
+        clientX: 0,
+        clientY: 0,
+      })
+    );
+    // Move a bit and flush a frame
+    localHandlers.onPointerMove(
+      makeEvent("pointermove", {
+        currentTarget: localEl,
+        clientX: 10,
+        clientY: 5,
+      })
+    );
+    // Local flush (avoid depending on outer describe helper)
+    const localFlush = (times = 1) => {
+      for (let i = 0; i < times; i++) {
+        const cbs = window.__testRafCallbacks.splice(0);
+        cbs.forEach((cb) => cb(performance.now()));
+      }
+    };
+    localFlush(1);
+    // End
+    localHandlers.onPointerUp(
+      makeEvent("pointerup", {
+        currentTarget: localEl,
+        clientX: 10,
+        clientY: 5,
+      })
+    );
+
+    // Allow async binder fallback to resolve
+    await Promise.resolve();
+    // Assert: every call uses the sequence id as id (not 'start'/'update'/'end')
+    expect(calls.length).toBeGreaterThanOrEqual(2); // start + end at minimum
+    for (const c of calls) {
+      expect(c.id).toBe("Canvas.component-drag-symphony");
+    }
+  });
+});
+
+test("drag uses CapabilityBinder-resolved plugin id (default)", async () => {
+  // Local setup
+  const localBus = TestEnvironment.createEventBus();
+  const localConductor = TestEnvironment.createMusicalConductor(localBus);
+  global.window = global.window || {};
+  global.document = global.document || window.document;
+  window.renderxCommunicationSystem = { conductor: localConductor };
+
+  const localEl = document.createElement("div");
+  document.body.appendChild(localEl);
+
+  const localMod = loadRenderXPlugin(dragHandlersModulePath);
+  const node = {
+    id: "id-binder-1",
+    position: { x: 0, y: 0 },
+    cssClass: "id-binder-1",
+    component: { metadata: { type: "button", name: "Button" } },
+  };
+  const localHandlers = localMod.attachDragHandlers(node);
+
+  const calls = [];
+  jest
+    .spyOn(localConductor, "play")
+    .mockImplementation((channel, id, payload) => {
+      calls.push({ channel, id, payload });
+      return Promise.resolve();
+    });
+
+  localHandlers.onPointerDown(
+    makeEvent("pointerdown", { currentTarget: localEl, clientX: 0, clientY: 0 })
+  );
+  localHandlers.onPointerMove(
+    makeEvent("pointermove", { currentTarget: localEl, clientX: 5, clientY: 5 })
+  );
+  // Flush one frame
+  const cbs = window.__testRafCallbacks.splice(0);
+  cbs.forEach((cb) => cb(performance.now()));
+
+  localHandlers.onPointerUp(
+    makeEvent("pointerup", { currentTarget: localEl, clientX: 5, clientY: 5 })
+  );
+
+  // Expect at least start and end and that id equals defaults for button.drag
+  const ids = calls.map((c) => c.id);
+  expect(ids.every((x) => x === "Canvas.component-drag-symphony")).toBe(true);
 });

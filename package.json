@@ -1,16 +1,37 @@
 {
-  "name": "renderx-plugins",
-  "version": "0.1.0",
-  "private": true,
+  "name": "@bpmsoftwaresolutions/renderx-plugins",
+  "version": "1.0.2",
   "description": "RenderX plugins meta-package with unit tests and build + manifest generation",
   "license": "MIT",
   "type": "commonjs",
+  "main": "dist/manifest.json",
+  "files": [
+    "dist",
+    "README.md"
+  ],
+  "publishConfig": {
+    "access": "public"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/BPMSoftwareSolutions/renderx-plugins.git"
+  },
+  "bugs": {
+    "url": "https://github.com/BPMSoftwareSolutions/renderx-plugins/issues"
+  },
+  "homepage": "https://github.com/BPMSoftwareSolutions/renderx-plugins#readme",
+  "keywords": [
+    "renderx",
+    "plugins",
+    "musical-conductor"
+  ],
   "scripts": {
     "test": "jest --passWithNoTests",
     "test:ci": "jest --ci",
     "build:plugins": "node ./scripts/build-plugins.mjs",
     "build:manifest": "node ./scripts/generate-manifest.mjs",
-    "build": "npm run build:plugins && npm run build:manifest"
+    "build": "npm run build:plugins && npm run build:manifest",
+    "prepack": "npm run build"
   },
   "devDependencies": {
     "@types/jest": "^30.0.0",

@@ -1,6 +1,6 @@
 # ADR-0001: Orchestral Architecture for Scalable Plugins
 
-- Status: Proposed
+- Status: Superseded by ADR-0002
 - Date: 2025-08-16
 - Owners: Plugin Architecture Working Group
 - Related: Musical Conductor pattern; QA Theme Symphony tests
