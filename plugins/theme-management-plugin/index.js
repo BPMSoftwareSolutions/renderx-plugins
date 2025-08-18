@@ -100,28 +100,38 @@ export const handlers = {
     // Prefer StageCrew DOM mutation facade when available (ADR-0017)
     try {
       const sc = context && context.stageCrew;
-      if (sc && typeof sc.beginBeat === "function") {
-        const corrId = context?.correlationId || `theme:${t}`;
-        const meta = {
-          handlerName: "applyTheme",
-          sequenceId: context?.sequence?.id,
-          plugin: "theme-management-plugin",
-        };
-        const txn = sc.beginBeat(corrId, meta);
-        // Set html[data-theme] and transition var on :root/html
-        txn.update("html", {
-          attrs: { "data-theme": t },
-          style: { "--theme-transition-duration": `${transitionDuration}ms` },
-        });
-        // Overwrite body class to match previous semantics
-        txn.update("body", { attrs: { class: `theme-${t}` } });
-        txn.commit();
-        return { applied: true, theme: t };
+      if (!sc || typeof sc.beginBeat !== "function") {
+        throw new Error("StageCrew is required for applyTheme");
       }
-    } catch {}
-
-    // No legacy fallback: require StageCrew per ADR-0017 migration policy
-    return { applied: true, theme: t };
+      const corrId = context?.correlationId || `theme:${t}`;
+      const meta = {
+        handlerName: "applyTheme",
+        sequenceId: context?.sequence?.id,
+        plugin: "theme-management-plugin",
+      };
+      const txn = sc.beginBeat(corrId, meta);
+      // Set html[data-theme] and transition var on :root/html
+      txn.update("html", {
+        attrs: { "data-theme": t },
+        style: { "--theme-transition-duration": `${transitionDuration}ms` },
+      });
+      // Overwrite body class to match previous semantics
+      txn.update("body", { attrs: { class: `theme-${t}` } });
+      txn.commit();
+      return { applied: true, theme: t };
+    } catch (err) {
+      // Log info for diagnostics and rethrow
+      context.logger?.info?.(
+        "applyTheme failed via StageCrew",
+        {
+          error: err?.message,
+          theme: t,
+          corrId: context?.correlationId,
+          sequenceId: context?.sequence?.id,
+        }
+      );
+      throw err;
+    }
   },
 
   persistTheme: (data, context) => {
