@@ -61,9 +61,14 @@ describe("Canvas UI: overlay repositions on drop and baseline persists across dr
     await new Promise(r => setTimeout(r, 25));
     el.props.onPointerUp({ currentTarget: domEl, clientX: 15, clientY: 12, pointerId: 1, target: { releasePointerCapture(){} } });
 
-    // After first drop: instance CSS updated to (25,32)
-    const inst1 = document.getElementById(`component-instance-css-${node.id}`);
-    const c1 = (inst1?.textContent||'').replace(/\s+/g, '');
+    // After first drop: instance CSS updated to (25,32) via StageCrew upsert
+    const opsArr0 = window.renderxCommunicationSystem.__ops;
+    const upInst1 = [...opsArr0].reverse().find(o => o.type === 'upsertStyleTag' && o.id === `component-instance-css-${node.id}`);
+    let c1 = (upInst1?.cssText||'').replace(/\s+/g, '');
+    if (!c1) {
+      const inst1 = document.getElementById(`component-instance-css-${node.id}`);
+      c1 = (inst1?.textContent||'').replace(/\s+/g, '');
+    }
     expect(c1).toContain(`.${node.cssClass}{position:absolute;left:25px;top:32px;`.replace(/\s+/g, ''));
 
     // Overlay base CSS upsert should now reflect (25,32)

@@ -34,6 +34,30 @@ export function updateInstancePositionCSS(id, cls, x, y) {
   } catch {}
 }
 
+
+// Build per-instance position CSS text while preserving existing width/height, without mutating DOM
+export function buildInstancePositionCssText(id, cls, x, y) {
+  try {
+    if (!id || !cls) return "";
+    const tagId = "component-instance-css-" + String(id || "");
+    const tag = document.getElementById(tagId);
+    // Preserve width/height from existing tag if present
+    let widthDecl = "";
+    let heightDecl = "";
+    if (tag && tag.textContent) {
+      const text = tag.textContent;
+      const w = text.match(new RegExp(`\\.${cls}\\s*\\{[^}]*width\\s*:\\s*([^;]+);`, "i"));
+      const h = text.match(new RegExp(`\\.${cls}\\s*\\{[^}]*height\\s*:\\s*([^;]+);`, "i"));
+      widthDecl = w ? `.${cls}{width:${w[1].trim()};}` : "";
+      heightDecl = h ? `.${cls}{height:${h[1].trim()};}` : "";
+    }
+    const posDecl = `.${cls}{position:absolute;left:${Math.round(x || 0)}px;top:${Math.round(y || 0)}px;box-sizing:border-box;display:block;}`;
+    return [posDecl, widthDecl, heightDecl].filter(Boolean).join("\n");
+  } catch {
+    return "";
+  }
+}
+
 // Update per-instance width/height while preserving existing left/top (if present)
 export function updateInstanceSizeCSS(id, cls, widthPx, heightPx, pos) {
   try {
