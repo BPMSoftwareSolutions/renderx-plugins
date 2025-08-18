@@ -1,8 +1,25 @@
-import { chromium, Page } from 'playwright';
+import { chromium, Page, LaunchOptions } from 'playwright';
 import fs from 'fs';
 import path from 'path';
+import os from 'os';
 
 const PORT = process.env.PORT ? Number(process.env.PORT) : 5007;
+
+function findChromiumExecutable(): string | null {
+  // Prefer explicit env override
+  if (process.env.CHROMIUM_EXECUTABLE && fs.existsSync(process.env.CHROMIUM_EXECUTABLE)) return process.env.CHROMIUM_EXECUTABLE;
+  try {
+    const home = os.homedir();
+    const base = path.join(home, '.cache', 'ms-playwright');
+    if (!fs.existsSync(base)) return null;
+    const entries = fs.readdirSync(base).filter((d) => d.startsWith('chromium-'));
+    entries.sort(); // pick latest
+    const latest = entries[entries.length - 1];
+    const candidate = path.join(base, latest, 'chrome-linux', 'chrome');
+    if (fs.existsSync(candidate)) return candidate;
+  } catch {}
+  return null;
+}
 
 function timestamp() {
   const d = new Date();
@@ -22,7 +39,9 @@ describe('E2E: Drag StageCrew commits appear in console logs', () => {
   let browser: any;
 
   beforeAll(async () => {
-    browser = await chromium.launch();
+    const execPath = findChromiumExecutable();
+    const launchOptions: LaunchOptions = execPath ? { executablePath: execPath } : {};
+    browser = await chromium.launch(launchOptions);
   });
 
   afterAll(async () => {
