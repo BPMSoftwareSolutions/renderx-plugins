@@ -11,7 +11,7 @@ function timestamp() {
 }
 
 async function saveConsoleLog(logs: string[]) {
-  const dir = path.resolve(process.cwd(), '.logs');
+  const dir = path.resolve(process.cwd(), 'docs');
   if (!fs.existsSync(dir)) fs.mkdirSync(dir, { recursive: true });
   const p = path.join(dir, `console.${timestamp()}.log`);
   fs.writeFileSync(p, logs.join('\n'), 'utf8');
