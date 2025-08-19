@@ -4,15 +4,17 @@ import {
 } from "../utils/styles.js";
 import { ResizeCoordinator } from "../utils/ResizeCoordinator.js";
 
-
 export function buildOverlayForNode(React, n, key, selectedId) {
   if (!(selectedId && (n.id === selectedId || n.elementId === selectedId)))
     return null;
   try {
-    // Ensure overlay global CSS via StageCrew (caller must supply in context)
-    const system = (typeof window !== "undefined" && window.renderxCommunicationSystem) || null;
+    // Ensure overlay global CSS via StageCrew (provide minimal sequence context)
+    const system =
+      (typeof window !== "undefined" && window.renderxCommunicationSystem) ||
+      null;
     const stageCrew = system?.stageCrew;
-    overlayEnsureGlobalCSS(stageCrew);
+    const ctx = { sequence: { id: "Canvas.ui-symphony" } };
+    overlayEnsureGlobalCSS(stageCrew, ctx);
     const defaults =
       (n.component &&
         n.component.integration &&
@@ -36,7 +38,13 @@ export function buildOverlayForNode(React, n, key, selectedId) {
       if (mw) w = parseFloat(mw[1]);
       if (mh) h = parseFloat(mh[1]);
     } catch {}
-    overlayEnsureInstanceCSS(stageCrew, { id: n.id, position: n.position }, w, h);
+    overlayEnsureInstanceCSS(
+      stageCrew,
+      { id: n.id, position: n.position },
+      w,
+      h,
+      ctx
+    );
   } catch {}
   const overlayClass = `rx-resize-overlay rx-overlay-${n.id || n.elementId}`;
   const handles = ["nw", "n", "ne", "e", "se", "s", "sw", "w"];

@@ -46,14 +46,51 @@ export const sequence = {
 
 export const handlers = {
   handleSelect: ({ elementId, onSelectionChange }, ctx) => {
+    // Notify selection change
     try {
       onSelectionChange?.(elementId);
+    } catch {}
+    // StageCrew: mark element as selected (classes/styles can be extended later)
+    try {
+      const sc = ctx && ctx.stageCrew;
+      if (sc && typeof sc.beginBeat === "function" && elementId) {
+        const txn = sc.beginBeat(`selection:show:${elementId}`, {
+          handlerName: "handleSelect",
+          plugin: "canvas-selection-plugin",
+          sequenceId: ctx?.sequence?.id,
+          nodeId: elementId,
+        });
+        txn.update(`#${elementId}`, { classes: { add: ["rx-comp-selected"] } });
+        txn.commit();
+      }
     } catch {}
     return { elementId, selected: true };
   },
   handleFinalize: ({ elementId, clearSelection, onSelectionChange }, ctx) => {
+    // Optionally clear selection via callback
     try {
       if (clearSelection === true) onSelectionChange?.(null);
+    } catch {}
+    // StageCrew: remove selected class if clearing selection
+    try {
+      const sc = ctx && ctx.stageCrew;
+      if (
+        sc &&
+        typeof sc.beginBeat === "function" &&
+        elementId &&
+        clearSelection === true
+      ) {
+        const txn = sc.beginBeat(`selection:hide:${elementId}`, {
+          handlerName: "handleFinalize",
+          plugin: "canvas-selection-plugin",
+          sequenceId: ctx?.sequence?.id,
+          nodeId: elementId,
+        });
+        txn.update(`#${elementId}`, {
+          classes: { remove: ["rx-comp-selected"] },
+        });
+        txn.commit();
+      }
     } catch {}
     return { elementId: elementId ?? null, cleared: clearSelection === true };
   },
