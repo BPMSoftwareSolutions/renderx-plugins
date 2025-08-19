@@ -2,6 +2,11 @@
  * Canvas Component Selection Plugin (callback-first)
  */
 
+import {
+  buildOverlayGlobalCssText,
+  buildOverlayInstanceCssText,
+} from "../canvas-ui-plugin/constants/overlayCss.js";
+
 export const sequence = {
   id: "Canvas.component-select-symphony",
   name: "Canvas Component Selection Symphony",
@@ -83,21 +88,10 @@ export const handlers = {
             plugin: "canvas-selection-plugin",
             sequenceId: ctx?.sequence?.id,
           });
-          try {
-            // Use UI overlayCss builders for now; later move into canvas-component overlay feature
-            const {
-              buildOverlayGlobalCssText,
-            } = require("../canvas-ui-plugin/constants/overlayCss.js");
-            txnG.upsertStyleTag(
-              "overlay-css-global",
-              buildOverlayGlobalCssText()
-            );
-          } catch {
-            txnG.upsertStyleTag(
-              "overlay-css-global",
-              ".rx-resize-overlay{position:absolute;pointer-events:none;}.rx-resize-handle{position:absolute;}"
-            );
-          }
+          txnG.upsertStyleTag(
+            "overlay-css-global",
+            buildOverlayGlobalCssText()
+          );
           txnG.commit();
           const txnI = sc.beginBeat(`overlay:${elementId}`, {
             handlerName: "overlayEnsure",
@@ -105,24 +99,10 @@ export const handlers = {
             sequenceId: ctx?.sequence?.id,
             nodeId: elementId,
           });
-          try {
-            const {
-              buildOverlayInstanceCssText,
-            } = require("../canvas-ui-plugin/constants/overlayCss.js");
-            txnI.upsertStyleTag(
-              `overlay-css-${elementId}`,
-              buildOverlayInstanceCssText(
-                { id: elementId, position: pos },
-                w,
-                h
-              )
-            );
-          } catch {
-            const cls = `.rx-overlay-${elementId}{position:absolute;left:${
-              pos.x || 0
-            }px;top:${pos.y || 0}px;width:${w}px;height:${h}px;z-index:10;}`;
-            txnI.upsertStyleTag(`overlay-css-${elementId}`, cls);
-          }
+          txnI.upsertStyleTag(
+            `overlay-css-${elementId}`,
+            buildOverlayInstanceCssText({ id: elementId, position: pos }, w, h)
+          );
           txnI.commit();
         } catch {}
       }
