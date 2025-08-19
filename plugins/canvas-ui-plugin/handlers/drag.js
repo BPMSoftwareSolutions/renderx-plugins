@@ -23,8 +23,6 @@ export function attachDragHandlers(node, deps = {}) {
     };
   };
 
-
-
   const play = (id, payload) => {
     try {
       const system = (window && window.renderxCommunicationSystem) || null;
@@ -57,9 +55,13 @@ export function attachDragHandlers(node, deps = {}) {
       try {
         const rec = getRec();
         if (!rec || !rec.active) {
-          // Ensure only hover affordance is present
-          e.currentTarget?.classList?.remove("rx-comp-grabbing");
-          e.currentTarget?.classList?.add("rx-comp-draggable");
+          // Stash currentTarget for StageCrew stubs fallback
+          setRec({ ...(rec || {}), el: e.currentTarget || null });
+          // Route hover affordance via StageCrew
+          play("Canvas.component-drag-symphony", {
+            elementId: node.id,
+            event: "canvas:element:hover:enter",
+          });
         }
       } catch {}
     },
@@ -68,8 +70,11 @@ export function attachDragHandlers(node, deps = {}) {
       try {
         const rec = getRec();
         if (!rec || !rec.active) {
-          e.currentTarget?.classList?.remove("rx-comp-draggable");
-          e.currentTarget?.classList?.remove("rx-comp-grabbing");
+          // Route hover leave affordance via StageCrew
+          play("Canvas.component-drag-symphony", {
+            elementId: node.id,
+            event: "canvas:element:hover:leave",
+          });
         }
       } catch {}
     },
@@ -98,14 +103,7 @@ export function attachDragHandlers(node, deps = {}) {
           el: e.currentTarget || null,
         });
         // Minimal local affordance; StageCrew-driven side effects now happen in handlers
-        try {
-          e.currentTarget?.classList?.remove("rx-comp-draggable");
-          e.currentTarget?.classList?.add("rx-comp-grabbing");
-          if (e.currentTarget && e.currentTarget.style) {
-            e.currentTarget.style.touchAction = "none";
-            e.currentTarget.style.willChange = "transform";
-          }
-        } catch {}
+        // UI drag listeners no longer mutate DOM directly; StageCrew handlers apply classes/styles
         // Notify UI overlay to hide handles during drag
         try {
           const w = (typeof window !== "undefined" && window) || {};
@@ -113,7 +111,11 @@ export function attachDragHandlers(node, deps = {}) {
           if (ui && typeof ui.onDragStart === "function")
             ui.onDragStart({ elementId: node.id });
         } catch {}
-        play("Canvas.component-drag-symphony", { elementId: node.id, origin, event: "canvas:element:drag:start" });
+        play("Canvas.component-drag-symphony", {
+          elementId: node.id,
+          origin,
+          event: "canvas:element:drag:start",
+        });
       } catch {}
     },
 
@@ -135,13 +137,18 @@ export function attachDragHandlers(node, deps = {}) {
                 ui.onDragUpdate({ elementId: node.id, delta: { dx, dy } });
             } catch {}
             try {
-              const system = (window && window.renderxCommunicationSystem) || null;
+              const system =
+                (window && window.renderxCommunicationSystem) || null;
               const conductor = system && system.conductor;
               if (conductor && typeof conductor.play === "function") {
                 conductor.play(
                   "Canvas.component-drag-symphony",
                   "Canvas.component-drag-symphony",
-                  { elementId: node.id, delta: { dx, dy }, event: "canvas:element:moved" }
+                  {
+                    elementId: node.id,
+                    delta: { dx, dy },
+                    event: "canvas:element:moved",
+                  }
                 );
               }
             } catch {}
@@ -153,15 +160,7 @@ export function attachDragHandlers(node, deps = {}) {
     onPointerUp: (e) => {
       try {
         // Minimal local affordance; StageCrew-driven cleanup happens in handlers
-        try {
-          e.currentTarget?.classList?.remove("rx-comp-grabbing");
-          e.currentTarget?.classList?.add("rx-comp-draggable");
-          if (e.currentTarget && e.currentTarget.style) {
-            e.currentTarget.style.willChange = "";
-            e.currentTarget.style.touchAction = "";
-            e.currentTarget.style.transform = "";
-          }
-        } catch {}
+        // UI drag listeners no longer clear classes/styles directly; StageCrew handleDragEnd applies cleanup
         try {
           e.target?.releasePointerCapture?.(e.pointerId);
         } catch {}

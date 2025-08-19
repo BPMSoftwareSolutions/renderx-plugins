@@ -82,7 +82,10 @@ export const handlers = {
     return res;
   },
   handleDragMove: ({ elementId, delta, onDragUpdate }, ctx) => {
-    const o = (ctx && ctx.payload && ctx.payload.drag && ctx.payload.drag.origin) || { x: 0, y: 0 };
+    const o = (ctx &&
+      ctx.payload &&
+      ctx.payload.drag &&
+      ctx.payload.drag.origin) || { x: 0, y: 0 };
     const dx = Math.round(delta?.dx || 0);
     const dy = Math.round(delta?.dy || 0);
     const position = { x: o.x + dx, y: o.y + dy };
@@ -112,26 +115,74 @@ export const handlers = {
       const sc = ctx && ctx.stageCrew;
       if (sc && typeof sc.beginBeat === "function") {
         const cls = String(instanceClass || elementId || "");
-        const txn = sc.beginBeat(`instance:pos:${elementId}`, {
+        // First, emit a drag:end cleanup beat to clear inline styles/classes
+        const endTxn = sc.beginBeat(`drag:end:${elementId}`, {
           handlerName: "handleDragEnd",
           plugin: "canvas-drag-plugin",
           sequenceId: ctx?.sequence?.id,
           nodeId: elementId,
         });
-        // Clear inline transform/classes on the element
-        txn.update(`#${elementId}`, {
+        endTxn.update(`#${elementId}`, {
           classes: { add: ["rx-comp-draggable"], remove: ["rx-comp-grabbing"] },
           style: { transform: "", willChange: "", touchAction: "" },
         });
-        // Upsert per-instance position CSS
+        endTxn.commit();
+
+        // Then, upsert the per-instance absolute position CSS in a separate beat
         const x = Math.round(position?.x || 0);
         const y = Math.round(position?.y || 0);
         const cssText = `.${cls}{position:absolute;left:${x}px;top:${y}px;box-sizing:border-box;display:block;}`;
-        txn.upsertStyleTag(`component-instance-css-${elementId}`, cssText);
+        const posTxn = sc.beginBeat(`instance:pos:${elementId}`, {
+          handlerName: "handleDragEnd",
+          plugin: "canvas-drag-plugin",
+          sequenceId: ctx?.sequence?.id,
+          nodeId: elementId,
+        });
+        posTxn.upsertStyleTag(`component-instance-css-${elementId}`, cssText);
+        posTxn.commit();
+      }
+    } catch {}
+    try {
+      onDragEnd?.({ elementId, position });
+    } catch {}
+    return {};
+  },
+
+  // Hover affordance handlers (StageCrew-only)
+  handleHoverEnter: ({ elementId }, ctx) => {
+    try {
+      const sc = ctx && ctx.stageCrew;
+      if (sc && typeof sc.beginBeat === "function") {
+        const txn = sc.beginBeat(`hover:enter:${elementId}`, {
+          handlerName: "handleHoverEnter",
+          plugin: "canvas-drag-plugin",
+          sequenceId: ctx?.sequence?.id,
+          nodeId: elementId,
+        });
+        txn.update(`#${elementId}`, {
+          classes: { add: ["rx-comp-draggable"], remove: ["rx-comp-grabbing"] },
+        });
         txn.commit();
       }
     } catch {}
-    try { onDragEnd?.({ elementId, position }); } catch {}
+    return {};
+  },
+  handleHoverLeave: ({ elementId }, ctx) => {
+    try {
+      const sc = ctx && ctx.stageCrew;
+      if (sc && typeof sc.beginBeat === "function") {
+        const txn = sc.beginBeat(`hover:leave:${elementId}`, {
+          handlerName: "handleHoverLeave",
+          plugin: "canvas-drag-plugin",
+          sequenceId: ctx?.sequence?.id,
+          nodeId: elementId,
+        });
+        txn.update(`#${elementId}`, {
+          classes: { remove: ["rx-comp-draggable", "rx-comp-grabbing"] },
+        });
+        txn.commit();
+      }
+    } catch {}
     return {};
   },
 };

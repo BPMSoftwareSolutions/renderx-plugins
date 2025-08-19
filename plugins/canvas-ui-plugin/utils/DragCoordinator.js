@@ -26,13 +26,7 @@ function createDragCoordinator(win) {
         el: el || null,
       };
       setRec(id, rec);
-      // Apply drag affordances
-      try {
-        if (el && el.style) {
-          el.style.touchAction = "none";
-          el.style.willChange = "transform";
-        }
-      } catch {}
+      // Drag affordances are applied by StageCrew in canvas-drag-plugin handlers; no direct DOM writes here
     },
 
     move({ id, cursor, onFrame }) {
@@ -78,15 +72,7 @@ function createDragCoordinator(win) {
         x: (rec.start?.x || 0) + dx,
         y: (rec.start?.y || 0) + dy,
       };
-      // Clear affordances
-      try {
-        const el = rec.el;
-        if (el && el.style) {
-          el.style.transform = "";
-          el.style.willChange = "";
-          el.style.touchAction = "";
-        }
-      } catch {}
+      // Cleanup affordances is handled by StageCrew (handleDragEnd); no direct DOM writes here
       if (typeof onCommit === "function") {
         try {
           onCommit(finalPos);
