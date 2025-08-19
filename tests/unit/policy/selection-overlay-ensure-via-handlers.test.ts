@@ -11,7 +11,8 @@ import { TestEnvironment } from "../../utils/test-helpers";
 describe("Selection overlay ensure via handlers", () => {
   test("click selection upserts global + instance overlay CSS with proper meta", async () => {
     // Clean DOM styles
-    while (document.head.firstChild) document.head.removeChild(document.head.firstChild);
+    while (document.head.firstChild)
+      document.head.removeChild(document.head.firstChild);
 
     // Conductor + selection plugin mounted
     const eventBus = TestEnvironment.createEventBus();
@@ -19,7 +20,11 @@ describe("Selection overlay ensure via handlers", () => {
     const selection: any = loadRenderXPlugin(
       "RenderX/public/plugins/canvas-selection-plugin/index.js"
     );
-    await conductor.mount(selection.sequence, selection.handlers, selection.sequence.id);
+    await conductor.mount(
+      selection.sequence,
+      selection.handlers,
+      selection.sequence.id
+    );
 
     // StageCrew recorder
     const ops: any[] = [];
@@ -37,25 +42,68 @@ describe("Selection overlay ensure via handlers", () => {
           ops.push({ type: "removeStyleTag", id });
           return txn;
         }),
-        commit: jest.fn(() => { ops.push({ type: "commit" }); }),
+        commit: jest.fn(() => {
+          ops.push({ type: "commit" });
+        }),
       };
       ops.push({ type: "beginBeat", corrId, meta });
       return txn;
     });
     (global as any).window = (global as any).window || {};
-    (global as any).window.renderxCommunicationSystem = { conductor, stageCrew: { beginBeat }, __ops: ops } as any;
+    (global as any).window.renderxCommunicationSystem = {
+      conductor,
+      stageCrew: { beginBeat },
+      __ops: ops,
+    } as any;
+
+    // Route selection play to handlers with StageCrew ctx
+    const playSpy = jest
+      .spyOn(conductor as any, "play")
+      .mockImplementation((_p: string, seqId: string, payload: any) => {
+        if (seqId !== "Canvas.component-select-symphony") return;
+        const ctx: any = {
+          payload: (conductor as any).__ctxPayload || {},
+          stageCrew: { beginBeat },
+          sequence: selection.sequence,
+        };
+        const res = selection.handlers.handleSelect(
+          {
+            elementId: payload?.elementId,
+            onSelectionChange: payload?.onSelectionChange,
+            position: payload?.position,
+            defaults: payload?.defaults,
+          },
+          ctx
+        );
+        (conductor as any).__ctxPayload = {
+          ...(ctx.payload || {}),
+          ...(res || {}),
+        };
+        selection.handlers.handleFinalize(
+          { elementId: payload?.elementId, clearSelection: false },
+          ctx
+        );
+      });
 
     // React stub
     const created: any[] = [];
     (global as any).window.React = {
-      createElement: (type: any, props: any, ...children: any[]) => { created.push({ type, props, children }); return { type, props, children }; },
+      createElement: (type: any, props: any, ...children: any[]) => {
+        created.push({ type, props, children });
+        return { type, props, children };
+      },
       useEffect: (fn: any) => fn(),
       useState: (init: any) => [init, () => {}],
-      cloneElement: (el: any, p?: any) => ({ ...el, props: { ...(el.props||{}), ...(p||{}) } }),
+      cloneElement: (el: any, p?: any) => ({
+        ...el,
+        props: { ...(el.props || {}), ...(p || {}) },
+      }),
     } as any;
 
     // Load UI plugin and render page with a node
-    const ui: any = loadRenderXPlugin("RenderX/public/plugins/canvas-ui-plugin/index.js");
+    const ui: any = loadRenderXPlugin(
+      "RenderX/public/plugins/canvas-ui-plugin/index.js"
+    );
     const node = {
       id: "rx-comp-button-selov1",
       cssClass: "rx-comp-button-selov1",
@@ -63,8 +111,13 @@ describe("Selection overlay ensure via handlers", () => {
       position: { x: 25, y: 35 },
       component: {
         metadata: { name: "Button", type: "button" },
-        ui: { template: '<button class="rx-button">OK</button>', styles: { css: ".rx-button{color:#000}" } },
-        integration: { canvasIntegration: { defaultWidth: 110, defaultHeight: 32 } },
+        ui: {
+          template: '<button class="rx-button">OK</button>',
+          styles: { css: ".rx-button{color:#000}" },
+        },
+        integration: {
+          canvasIntegration: { defaultWidth: 110, defaultHeight: 32 },
+        },
       },
     };
 
@@ -72,26 +125,42 @@ describe("Selection overlay ensure via handlers", () => {
     created.length = 0;
     ui.CanvasPage({ nodes: [node], selectedId: null });
 
-    const { onElementClick } = loadRenderXPlugin("RenderX/public/plugins/canvas-ui-plugin/handlers/select.js");
+    const { onElementClick } = loadRenderXPlugin(
+      "RenderX/public/plugins/canvas-ui-plugin/handlers/select.js"
+    );
     const clickHandler = onElementClick(node);
     clickHandler({ stopPropagation() {} });
 
     // Assertions
-    const arr = (global as any).window.renderxCommunicationSystem.__ops as any[];
-    const globalUpsert = arr.find(o => o.type === "upsertStyleTag" && o.id === "overlay-css-global");
+    const arr = (global as any).window.renderxCommunicationSystem
+      .__ops as any[];
+    const globalUpsert = arr.find(
+      (o) => o.type === "upsertStyleTag" && o.id === "overlay-css-global"
+    );
     expect(globalUpsert).toBeTruthy();
 
-    const instUpsert = arr.find(o => o.type === "upsertStyleTag" && o.id === `overlay-css-${node.id}`);
+    const instUpsert = arr.find(
+      (o) => o.type === "upsertStyleTag" && o.id === `overlay-css-${node.id}`
+    );
     expect(instUpsert).toBeTruthy();
     const css = String(instUpsert?.cssText || "").replace(/\s+/g, "");
     expect(css).toContain(`.rx-overlay-${node.id}{`.replace(/\s+/g, ""));
 
-    const selectBegin = arr.find(o => o.type === "beginBeat" && o.meta?.plugin === "canvas-selection-plugin");
+    const selectBegin = arr.find(
+      (o) =>
+        o.type === "beginBeat" && o.meta?.plugin === "canvas-selection-plugin"
+    );
     expect(selectBegin).toBeTruthy();
-    expect(selectBegin.meta?.sequenceId).toBe("Canvas.component-select-symphony");
+    expect(selectBegin.meta?.sequenceId).toBe(
+      "Canvas.component-select-symphony"
+    );
 
-    const uiOverlayBegins = arr.filter(o => o.type === "beginBeat" && o.meta?.plugin === "canvas-ui-plugin" && o.meta?.handlerName === "overlayStyles");
+    const uiOverlayBegins = arr.filter(
+      (o) =>
+        o.type === "beginBeat" &&
+        o.meta?.plugin === "canvas-ui-plugin" &&
+        o.meta?.handlerName === "overlayStyles"
+    );
     expect(uiOverlayBegins.length).toBe(0);
   });
 });
-
