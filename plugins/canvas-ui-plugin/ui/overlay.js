@@ -7,45 +7,6 @@ import { ResizeCoordinator } from "../utils/ResizeCoordinator.js";
 export function buildOverlayForNode(React, n, key, selectedId) {
   if (!(selectedId && (n.id === selectedId || n.elementId === selectedId)))
     return null;
-  try {
-    // Ensure overlay global CSS via StageCrew (provide minimal sequence context)
-    const system =
-      (typeof window !== "undefined" && window.renderxCommunicationSystem) ||
-      null;
-    const stageCrew = system?.stageCrew;
-    const ctx = { sequence: { id: "Canvas.ui-symphony" } };
-    overlayEnsureGlobalCSS(stageCrew, ctx);
-    const defaults =
-      (n.component &&
-        n.component.integration &&
-        n.component.integration.canvasIntegration) ||
-      {};
-    // Try to read committed size from instance CSS so overlay matches on reselect
-    let w = defaults.defaultWidth;
-    let h = defaults.defaultHeight;
-    try {
-      const cls = String(n.cssClass || n.id || "");
-      const tagId =
-        "component-instance-css-" + String(n.id || n.elementId || "");
-      const tag = document.getElementById(tagId);
-      const text = (tag && tag.textContent) || "";
-      const mw = text.match(
-        new RegExp(`\\.${cls}\\s*\\{[^}]*width\\s*:\\s*([0-9.-]+)px;`, "i")
-      );
-      const mh = text.match(
-        new RegExp(`\\.${cls}\\s*\\{[^}]*height\\s*:\\s*([0-9.-]+)px;`, "i")
-      );
-      if (mw) w = parseFloat(mw[1]);
-      if (mh) h = parseFloat(mh[1]);
-    } catch {}
-    overlayEnsureInstanceCSS(
-      stageCrew,
-      { id: n.id, position: n.position },
-      w,
-      h,
-      ctx
-    );
-  } catch {}
   const overlayClass = `rx-resize-overlay rx-overlay-${n.id || n.elementId}`;
   const handles = ["nw", "n", "ne", "e", "se", "s", "sw", "w"];
   const elementId = n.id || n.elementId;
