@@ -64,20 +64,38 @@ export const handlers = {
         txn.commit();
         // Ensure overlay CSS (global + instance) via StageCrew
         try {
-          const defaults = (ctx?.payload?.defaults) || (ctx?.component?.integration?.canvasIntegration) || {};
+          const defaults =
+            ctx?.payload?.defaults ||
+            ctx?.component?.integration?.canvasIntegration ||
+            {};
           const pos = ctx?.payload?.position || { x: 0, y: 0 };
-          const w = typeof defaults?.defaultWidth === 'number' ? defaults.defaultWidth : 0;
-          const h = typeof defaults?.defaultHeight === 'number' ? defaults.defaultHeight : 0;
+          const w =
+            typeof defaults?.defaultWidth === "number"
+              ? defaults.defaultWidth
+              : 0;
+          const h =
+            typeof defaults?.defaultHeight === "number"
+              ? defaults.defaultHeight
+              : 0;
           const txnG = sc.beginBeat(`overlay:global`, {
             handlerName: "overlayEnsure",
             plugin: "canvas-selection-plugin",
             sequenceId: ctx?.sequence?.id,
           });
           try {
-            const { buildOverlayGlobalCssText } = await import("../canvas-ui-plugin/constants/overlayCss.js");
-            txnG.upsertStyleTag("overlay-css-global", buildOverlayGlobalCssText());
+            // Use UI overlayCss builders for now; later move into canvas-component overlay feature
+            const {
+              buildOverlayGlobalCssText,
+            } = require("../canvas-ui-plugin/constants/overlayCss.js");
+            txnG.upsertStyleTag(
+              "overlay-css-global",
+              buildOverlayGlobalCssText()
+            );
           } catch {
-            txnG.upsertStyleTag("overlay-css-global", ".rx-resize-overlay{position:absolute;pointer-events:none;}.rx-resize-handle{position:absolute;}");
+            txnG.upsertStyleTag(
+              "overlay-css-global",
+              ".rx-resize-overlay{position:absolute;pointer-events:none;}.rx-resize-handle{position:absolute;}"
+            );
           }
           txnG.commit();
           const txnI = sc.beginBeat(`overlay:${elementId}`, {
@@ -87,10 +105,21 @@ export const handlers = {
             nodeId: elementId,
           });
           try {
-            const { buildOverlayInstanceCssText } = await import("../canvas-ui-plugin/constants/overlayCss.js");
-            txnI.upsertStyleTag(`overlay-css-${elementId}`, buildOverlayInstanceCssText({ id: elementId, position: pos }, w, h));
+            const {
+              buildOverlayInstanceCssText,
+            } = require("../canvas-ui-plugin/constants/overlayCss.js");
+            txnI.upsertStyleTag(
+              `overlay-css-${elementId}`,
+              buildOverlayInstanceCssText(
+                { id: elementId, position: pos },
+                w,
+                h
+              )
+            );
           } catch {
-            const cls = `.rx-overlay-${elementId}{position:absolute;left:${pos.x||0}px;top:${pos.y||0}px;width:${w}px;height:${h}px;z-index:10;}`;
+            const cls = `.rx-overlay-${elementId}{position:absolute;left:${
+              pos.x || 0
+            }px;top:${pos.y || 0}px;width:${w}px;height:${h}px;z-index:10;}`;
             txnI.upsertStyleTag(`overlay-css-${elementId}`, cls);
           }
           txnI.commit();

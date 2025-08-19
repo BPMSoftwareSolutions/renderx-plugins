@@ -11,6 +11,8 @@ export function onElementClick(node) {
           "Canvas.component-select-symphony",
           {
             elementId: node.id,
+            position: node?.position || { x: 0, y: 0 },
+            defaults: node?.component?.integration?.canvasIntegration || {},
             onSelectionChange: (id) => {
               try {
                 const ui = (window && window.__rx_canvas_ui__) || null;
