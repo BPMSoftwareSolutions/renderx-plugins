@@ -116,7 +116,10 @@ export const handlers = {
           throw err;
         }
       }
-    } catch {}
+    } catch (err) {
+      console.error("[selection] StageCrew failure", err);
+      throw err;
+    }
     return { elementId, selected: true };
   },
   handleFinalize: ({ elementId, clearSelection, onSelectionChange }, ctx) => {
