@@ -139,4 +139,9 @@ vite.config.js.timestamp-*
 vite.config.ts.timestamp-*
 /.vs
 /.logs
+
+# Allow committed docs logs
+!docs/logs/
+!docs/logs/*.md
+
 /.*
