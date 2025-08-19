@@ -87,13 +87,22 @@ describe("Canvas UI Plugin - selection overlay and resize handles", () => {
     const click = onElementClick(node);
     click({ stopPropagation() {} });
 
-    // Find overlay element
-    const overlay = created.find(
-      (e) =>
-        e.type === "div" &&
-        typeof e.props?.className === "string" &&
-        e.props.className.includes("rx-resize-overlay")
-    );
+    // Find overlay element (it is rendered as a child of the selected node)
+    const overlay =
+      created.find(
+        (e) =>
+          e.type === "div" &&
+          typeof e.props?.className === "string" &&
+          e.props.className.includes("rx-resize-overlay")
+      ) ||
+      created
+        .flatMap((e) => e.children || [])
+        .find(
+          (e: any) =>
+            e?.type === "div" &&
+            typeof e?.props?.className === "string" &&
+            e.props.className.includes("rx-resize-overlay")
+        );
     expect(overlay).toBeTruthy();
 
     // No inline style on overlay
