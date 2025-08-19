@@ -13,35 +13,63 @@ describe("Policy: Overlay StageCrew ops must be inside play() handlers (selectio
     const conductor = TestEnvironment.createMusicalConductor(eventBus as any);
 
     // Mount selection plugin so UI click plays the sequence
-    const selection: any = loadRenderXPlugin("RenderX/public/plugins/canvas-selection-plugin/index.js");
-    await conductor.mount(selection.sequence, selection.handlers, selection.sequence.id);
+    const selection: any = loadRenderXPlugin(
+      "RenderX/public/plugins/canvas-selection-plugin/index.js"
+    );
+    await conductor.mount(
+      selection.sequence,
+      selection.handlers,
+      selection.sequence.id
+    );
 
     const ops: any[] = [];
     const beginBeat = jest.fn((corrId: string, meta: any) => {
       const txn: any = {
-        upsertStyleTag: (id: string, cssText: string) => { ops.push({ type: "upsertStyleTag", id, cssText, meta }); return txn; },
-        update: (selector: string, payload: any) => { ops.push({ type: "update", selector, payload, meta }); return txn; },
-        commit: () => { ops.push({ type: "commit", meta }); },
+        upsertStyleTag: (id: string, cssText: string) => {
+          ops.push({ type: "upsertStyleTag", id, cssText, meta });
+          return txn;
+        },
+        update: (selector: string, payload: any) => {
+          ops.push({ type: "update", selector, payload, meta });
+          return txn;
+        },
+        commit: () => {
+          ops.push({ type: "commit", meta });
+        },
       };
       ops.push({ type: "beginBeat", corrId, meta });
       return txn;
     });
 
     (global as any).window = (global as any).window || {};
-    (global as any).window.renderxCommunicationSystem = { conductor, stageCrew: { beginBeat }, __ops: ops } as any;
+    (global as any).window.renderxCommunicationSystem = {
+      conductor,
+      stageCrew: { beginBeat },
+      __ops: ops,
+    } as any;
 
     // React stub
     const created: any[] = [];
     (global as any).window.React = {
-      createElement: (type: any, props: any, ...children: any[]) => { created.push({ type, props, children }); return { type, props, children }; },
+      createElement: (type: any, props: any, ...children: any[]) => {
+        created.push({ type, props, children });
+        return { type, props, children };
+      },
       useEffect: (fn: any) => fn(),
       useState: (init: any) => [init, () => {}],
-      cloneElement: (el: any, p?: any) => ({ ...el, props: { ...(el.props||{}), ...(p||{}) } }),
+      cloneElement: (el: any, p?: any) => ({
+        ...el,
+        props: { ...(el.props || {}), ...(p || {}) },
+      }),
     } as any;
 
     // UI
-    const ui: any = loadRenderXPlugin("RenderX/public/plugins/canvas-ui-plugin/index.js");
-    const clickHandlers: any = loadRenderXPlugin("RenderX/public/plugins/canvas-ui-plugin/handlers/select.js");
+    const ui: any = loadRenderXPlugin(
+      "RenderX/public/plugins/canvas-ui-plugin/index.js"
+    );
+    const clickHandlers: any = loadRenderXPlugin(
+      "RenderX/public/plugins/canvas-ui-plugin/handlers/select.js"
+    );
     const node = {
       id: "rx-overlay-scope-2",
       cssClass: "rx-overlay-scope-2",
@@ -49,8 +77,13 @@ describe("Policy: Overlay StageCrew ops must be inside play() handlers (selectio
       position: { x: 10, y: 20 },
       component: {
         metadata: { name: "Button", type: "button" },
-        ui: { template: '<button class="rx-button">OK</button>', styles: { css: ".rx-button{color:#000}" } },
-        integration: { canvasIntegration: { defaultWidth: 100, defaultHeight: 30 } },
+        ui: {
+          template: '<button class="rx-button">OK</button>',
+          styles: { css: ".rx-button{color:#000}" },
+        },
+        integration: {
+          canvasIntegration: { defaultWidth: 100, defaultHeight: 30 },
+        },
       },
     };
 
@@ -61,16 +94,18 @@ describe("Policy: Overlay StageCrew ops must be inside play() handlers (selectio
     const click = clickHandlers.onElementClick(node);
     await click({ stopPropagation() {} });
 
-    // Find overlay beginBeats from UI overlay ensures
-    const overlayBegins = ops.filter(
-      (o) => o.type === "beginBeat" && o.meta?.handlerName === "overlayStyles" && o.meta?.plugin === "canvas-ui-plugin"
+    // Find overlay ensure transactions from selection handlers
+    const overlayEnsures = ops.filter(
+      (o) =>
+        o.type === "beginBeat" &&
+        o.meta?.handlerName === "overlayEnsure" &&
+        o.meta?.plugin === "canvas-selection-plugin"
     );
-    expect(overlayBegins.length).toBeGreaterThan(0);
+    expect(overlayEnsures.length).toBeGreaterThan(0);
 
     // POLICY: must carry sequenceId (scope of play handler)
-    overlayBegins.forEach((b) => {
-      expect(b.meta?.sequenceId).toBeTruthy(); // Expected to FAIL today
+    overlayEnsures.forEach((b) => {
+      expect(b.meta?.sequenceId).toBe("Canvas.component-select-symphony");
     });
   });
 });
-

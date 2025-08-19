@@ -33,7 +33,11 @@ describe("Canvas UI Plugin - selection overlay and resize handles", () => {
       ops.push({ type: "beginBeat", corrId, meta });
       return txn;
     });
-    (global as any).window.renderxCommunicationSystem = { conductor, stageCrew: { beginBeat }, __ops: ops } as any;
+    (global as any).window.renderxCommunicationSystem = {
+      conductor,
+      stageCrew: { beginBeat },
+      __ops: ops,
+    } as any;
 
     // React stub
     const created: any[] = [];
@@ -74,7 +78,14 @@ describe("Canvas UI Plugin - selection overlay and resize handles", () => {
 
     // Render CanvasPage with nodes + selectedId overrides
     created.length = 0;
-    plugin.CanvasPage({ nodes: [node], selectedId: node.id });
+    plugin.CanvasPage({ nodes: [node], selectedId: null });
+
+    // Click to trigger selection symphony which ensures overlay via handlers
+    const { onElementClick } = loadRenderXPlugin(
+      "RenderX/public/plugins/canvas-ui-plugin/handlers/select.js"
+    );
+    const click = onElementClick(node);
+    click({ stopPropagation() {} });
 
     // Find overlay element
     const overlay = created.find(
@@ -108,16 +119,24 @@ describe("Canvas UI Plugin - selection overlay and resize handles", () => {
     );
 
     // CSS: verify StageCrew recorded upsertStyleTag calls for global + instance
-    const opsArr = (global as any).window.renderxCommunicationSystem.__ops as any[];
-    const globalUpsert = opsArr.find((o) => o.type === "upsertStyleTag" && o.id === "overlay-css-global");
+    const opsArr = (global as any).window.renderxCommunicationSystem
+      .__ops as any[];
+    const globalUpsert = opsArr.find(
+      (o) => o.type === "upsertStyleTag" && o.id === "overlay-css-global"
+    );
     expect(globalUpsert).toBeTruthy();
     expect(globalUpsert.cssText).toMatch(/\.rx-resize-overlay\b/);
     expect(globalUpsert.cssText).toMatch(/\.rx-resize-handle\b/);
 
-    const instUpsert = opsArr.find((o) => o.type === "upsertStyleTag" && o.id === `overlay-css-${node.id}`);
+    const instUpsert = opsArr.find(
+      (o) => o.type === "upsertStyleTag" && o.id === `overlay-css-${node.id}`
+    );
     expect(instUpsert).toBeTruthy();
     expect(instUpsert.cssText.replace(/\s+/g, "")).toContain(
-      `.rx-overlay-${node.id}{position:absolute;left:10px;top:20px;width:120px;height:40px;z-index:10;}`.replace(/\s+/g, "")
+      `.rx-overlay-${node.id}{position:absolute;left:10px;top:20px;width:120px;height:40px;z-index:10;}`.replace(
+        /\s+/g,
+        ""
+      )
     );
   });
 

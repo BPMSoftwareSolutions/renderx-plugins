@@ -36,7 +36,11 @@ describe("Canvas UI - resize via overlay handle updates overlay + commits instan
       ops.push({ type: "beginBeat", corrId, meta });
       return txn;
     });
-    (global as any).window.renderxCommunicationSystem = { conductor, stageCrew: { beginBeat }, __ops: ops } as any;
+    (global as any).window.renderxCommunicationSystem = {
+      conductor,
+      stageCrew: { beginBeat },
+      __ops: ops,
+    } as any;
 
     // React stub that captures created elements
     const created: any[] = [];
@@ -75,17 +79,26 @@ describe("Canvas UI - resize via overlay handle updates overlay + commits instan
       },
     };
 
-    // Render with selection so overlay is present
+    // Render and click to select so overlay is ensured via handlers
     created.length = 0;
-    uiPlugin.CanvasPage({ nodes: [node], selectedId: node.id });
+    uiPlugin.CanvasPage({ nodes: [node], selectedId: null });
+    const { onElementClick } = loadRenderXPlugin(
+      "RenderX/public/plugins/canvas-ui-plugin/handlers/select.js"
+    );
+    onElementClick(node)({ stopPropagation() {} });
 
     // Initial overlay CSS upsert recorded via StageCrew matches defaults
     const overlayCssId = `overlay-css-${node.id}`;
-    let opsArr = (global as any).window.renderxCommunicationSystem.__ops as any[];
-    const firstUpsert = opsArr.find((o) => o.type === "upsertStyleTag" && o.id === overlayCssId);
+    let opsArr = (global as any).window.renderxCommunicationSystem
+      .__ops as any[];
+    const firstUpsert = opsArr.find(
+      (o) => o.type === "upsertStyleTag" && o.id === overlayCssId
+    );
     expect(firstUpsert).toBeTruthy();
     expect(strip(firstUpsert.cssText || "")).toContain(
-      strip(`.rx-overlay-${node.id}{position:absolute;left:10px;top:20px;width:120px;height:40px;z-index:10;}`)
+      strip(
+        `.rx-overlay-${node.id}{position:absolute;left:10px;top:20px;width:120px;height:40px;z-index:10;}`
+      )
     );
 
     // Find overlay and its SE handle
@@ -115,7 +128,9 @@ describe("Canvas UI - resize via overlay handle updates overlay + commits instan
 
     // Overlay CSS upsert should reflect 140x50 (was 120x40 + 20x10)
     opsArr = (global as any).window.renderxCommunicationSystem.__ops as any[];
-    const updatedUpsert = [...opsArr].reverse().find((o) => o.type === "upsertStyleTag" && o.id === overlayCssId);
+    const updatedUpsert = [...opsArr]
+      .reverse()
+      .find((o) => o.type === "upsertStyleTag" && o.id === overlayCssId);
     const overlayCss = strip(updatedUpsert?.cssText || "");
     expect(overlayCss).toContain(strip(`.rx-overlay-${node.id}{`));
     expect(overlayCss).toContain(strip(`width:140px`));

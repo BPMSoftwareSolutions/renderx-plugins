@@ -3,7 +3,8 @@ import { loadRenderXPlugin } from "../../utils/renderx-plugin-loader";
 describe("Canvas UI Plugin - overlay width/height updates during resize", () => {
   test("overlay css updates on onResizeUpdate and component instance css commits on onResizeEnd", async () => {
     // Reset head styles
-    while (document.head.firstChild) document.head.removeChild(document.head.firstChild);
+    while (document.head.firstChild)
+      document.head.removeChild(document.head.firstChild);
 
     // Minimal window + React stub
     (global as any).window = (global as any).window || {};
@@ -22,7 +23,10 @@ describe("Canvas UI Plugin - overlay width/height updates during resize", () => 
       ops.push({ type: "beginBeat", corrId, meta });
       return txn;
     });
-    (global as any).window.renderxCommunicationSystem = { stageCrew: { beginBeat }, __ops: ops } as any;
+    (global as any).window.renderxCommunicationSystem = {
+      stageCrew: { beginBeat },
+      __ops: ops,
+    } as any;
 
     const created: any[] = [];
     const ReactStub = {
@@ -40,7 +44,9 @@ describe("Canvas UI Plugin - overlay width/height updates during resize", () => 
     (global as any).window.React = ReactStub as any;
 
     // Load UI plugin
-    const plugin: any = loadRenderXPlugin("RenderX/public/plugins/canvas-ui-plugin/index.js");
+    const plugin: any = loadRenderXPlugin(
+      "RenderX/public/plugins/canvas-ui-plugin/index.js"
+    );
 
     const node = {
       id: "rx-resize-1",
@@ -49,18 +55,30 @@ describe("Canvas UI Plugin - overlay width/height updates during resize", () => 
       position: { x: 50, y: 60 },
       component: {
         metadata: { name: "Button", type: "button" },
-        ui: { template: '<button class="rx-button">OK</button>', styles: { css: ".rx-button{color:#000}" } },
-        integration: { canvasIntegration: { defaultWidth: 100, defaultHeight: 30 } },
+        ui: {
+          template: '<button class="rx-button">OK</button>',
+          styles: { css: ".rx-button{color:#000}" },
+        },
+        integration: {
+          canvasIntegration: { defaultWidth: 100, defaultHeight: 30 },
+        },
       },
     };
 
-    // Initial render with selectedId so overlay is created
+    // Initial render and click to select so overlay is created via handlers
     created.length = 0;
-    plugin.CanvasPage({ nodes: [node], selectedId: node.id });
+    plugin.CanvasPage({ nodes: [node], selectedId: null });
+    const { onElementClick } = loadRenderXPlugin(
+      "RenderX/public/plugins/canvas-ui-plugin/handlers/select.js"
+    );
+    onElementClick(node)({ stopPropagation() {} });
 
     // Assert overlay base CSS upsert recorded via StageCrew
-    let opsArr = (global as any).window.renderxCommunicationSystem.__ops as any[];
-    const firstUpsert = opsArr.find((o) => o.type === "upsertStyleTag" && o.id === `overlay-css-${node.id}`);
+    let opsArr = (global as any).window.renderxCommunicationSystem
+      .__ops as any[];
+    const firstUpsert = opsArr.find(
+      (o) => o.type === "upsertStyleTag" && o.id === `overlay-css-${node.id}`
+    );
     expect(firstUpsert).toBeTruthy();
     const initialCss = (firstUpsert?.cssText || "").replace(/\s+/g, "");
     expect(initialCss).toContain(`.rx-overlay-${node.id}{`.replace(/\s+/g, ""));
@@ -76,7 +94,11 @@ describe("Canvas UI Plugin - overlay width/height updates during resize", () => 
 
     // Verify overlay CSS upsert updated via StageCrew
     opsArr = (global as any).window.renderxCommunicationSystem.__ops as any[];
-    const updatedUpsert = [...opsArr].reverse().find((o) => o.type === "upsertStyleTag" && o.id === `overlay-css-${node.id}`);
+    const updatedUpsert = [...opsArr]
+      .reverse()
+      .find(
+        (o) => o.type === "upsertStyleTag" && o.id === `overlay-css-${node.id}`
+      );
     const updatedCss = (updatedUpsert?.cssText || "").replace(/\s+/g, "");
     expect(updatedCss).toContain(`.rx-overlay-${node.id}{`.replace(/\s+/g, ""));
     expect(updatedCss).toContain(`width:140px`.replace(/\s+/g, ""));
@@ -89,12 +111,17 @@ describe("Canvas UI Plugin - overlay width/height updates during resize", () => 
     });
 
     const instanceCssId = `component-instance-css-${node.id}`;
-    const instanceTag = document.getElementById(instanceCssId) as HTMLStyleElement | null;
+    const instanceTag = document.getElementById(
+      instanceCssId
+    ) as HTMLStyleElement | null;
     expect(instanceTag).toBeTruthy();
     const instanceCss = (instanceTag?.textContent || "").replace(/\s+/g, "");
     // Ensure width/height declarations for the instance class reflect new size
-    expect(instanceCss).toContain(`.${node.cssClass}{width:140px;}`.replace(/\s+/g, ""));
-    expect(instanceCss).toContain(`.${node.cssClass}{height:50px;}`.replace(/\s+/g, ""));
+    expect(instanceCss).toContain(
+      `.${node.cssClass}{width:140px;}`.replace(/\s+/g, "")
+    );
+    expect(instanceCss).toContain(
+      `.${node.cssClass}{height:50px;}`.replace(/\s+/g, "")
+    );
   });
 });
-
