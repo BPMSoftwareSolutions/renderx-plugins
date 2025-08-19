@@ -3,7 +3,10 @@
 import { ensureCursorStylesInjected } from "../styles/cursors.js";
 
 import { DragCoordinator } from "../utils/DragCoordinator.js";
-import { buildInstancePositionCssText, updateInstancePositionCSS } from "../styles/instanceCss.js";
+import {
+  buildInstancePositionCssText,
+  updateInstancePositionCSS,
+} from "../styles/instanceCss.js";
 
 export function attachDragHandlers(node, deps = {}) {
   ensureCursorStylesInjected();
@@ -21,6 +24,20 @@ export function attachDragHandlers(node, deps = {}) {
       x: node?.position?.x || 0,
       y: node?.position?.y || 0,
     };
+  };
+
+  // Resolve StageCrew from injected deps, handler ctx, or the global system
+  const resolveStageCrew = () => {
+    try {
+      if (deps?.stageCrew) return deps.stageCrew;
+      if (deps?.ctx?.stageCrew) return deps.ctx.stageCrew;
+      const system =
+        (typeof window !== "undefined" && window.renderxCommunicationSystem) ||
+        null;
+      return system?.stageCrew || system?.conductor?.getStageCrew?.() || null;
+    } catch {
+      return null;
+    }
   };
 
   const play = (id, payload) => {
@@ -76,13 +93,26 @@ export function attachDragHandlers(node, deps = {}) {
       try {
         e?.stopPropagation?.();
         // Prefer StageCrew for UI state classes/styles when available
-        const system = (typeof window !== "undefined" && window.renderxCommunicationSystem) || null;
-        const stageCrew = (system?.stageCrew) || (system?.conductor?.getStageCrew?.());
-        try { e.target?.setPointerCapture?.(e.pointerId); } catch {}
+        const stageCrew = resolveStageCrew();
+        try {
+          e.target?.setPointerCapture?.(e.pointerId);
+        } catch {}
         const origin = { x: e.clientX || 0, y: e.clientY || 0 };
         // Set rec BEFORE committing so StageCrew DOM-applier can fallback to currentTarget when selector not found
-        DragCoordinator.start({ id: node.id, start: getStartPos(), origin, el: e.currentTarget || null });
-        setRec({ origin, start: getStartPos(), active: true, lastCursor: origin, rafScheduled: false, el: e.currentTarget || null });
+        DragCoordinator.start({
+          id: node.id,
+          start: getStartPos(),
+          origin,
+          el: e.currentTarget || null,
+        });
+        setRec({
+          origin,
+          start: getStartPos(),
+          active: true,
+          lastCursor: origin,
+          rafScheduled: false,
+          el: e.currentTarget || null,
+        });
         if (stageCrew?.beginBeat) {
           try {
             const txn = stageCrew.beginBeat(`drag:start:${node.id}`, {
@@ -92,7 +122,10 @@ export function attachDragHandlers(node, deps = {}) {
             });
             if (typeof txn.update === "function")
               txn.update(`#${node.id}`, {
-                classes: { remove: ["rx-comp-draggable"], add: ["rx-comp-grabbing"] },
+                classes: {
+                  remove: ["rx-comp-draggable"],
+                  add: ["rx-comp-grabbing"],
+                },
                 style: { touchAction: "none", willChange: "transform" },
               });
             if (typeof txn.commit === "function") txn.commit();
@@ -112,7 +145,8 @@ export function attachDragHandlers(node, deps = {}) {
         try {
           const w = (typeof window !== "undefined" && window) || {};
           const ui = w.__rx_canvas_ui__ || null;
-          if (ui && typeof ui.onDragStart === "function") ui.onDragStart({ elementId: node.id });
+          if (ui && typeof ui.onDragStart === "function")
+            ui.onDragStart({ elementId: node.id });
         } catch {}
         play("Canvas.component-drag-symphony", { elementId: node.id, origin });
       } catch {}
@@ -120,8 +154,7 @@ export function attachDragHandlers(node, deps = {}) {
 
     onPointerMove: (e) => {
       try {
-        const system = (typeof window !== "undefined" && window.renderxCommunicationSystem) || null;
-        const stageCrew = (system?.stageCrew) || (system?.conductor?.getStageCrew?.());
+        const stageCrew = resolveStageCrew();
         const cur = { x: e.clientX || 0, y: e.clientY || 0 };
         const rec = getRec();
         if (!rec || !rec.active) return;
@@ -139,8 +172,15 @@ export function attachDragHandlers(node, deps = {}) {
                   nodeId: node.id,
                 });
                 txn.update(`#${node.id}`, {
-                  classes: { remove: ["rx-comp-draggable"], add: ["rx-comp-grabbing"] },
-                  style: { transform: `translate3d(${Math.round(dx)}px, ${Math.round(dy)}px, 0)` },
+                  classes: {
+                    remove: ["rx-comp-draggable"],
+                    add: ["rx-comp-grabbing"],
+                  },
+                  style: {
+                    transform: `translate3d(${Math.round(dx)}px, ${Math.round(
+                      dy
+                    )}px, 0)`,
+                  },
                 });
                 txn.commit();
               }
@@ -149,10 +189,12 @@ export function attachDragHandlers(node, deps = {}) {
             try {
               const w = (typeof window !== "undefined" && window) || {};
               const ui = w.__rx_canvas_ui__ || null;
-              if (ui && typeof ui.onDragUpdate === "function") ui.onDragUpdate({ elementId: node.id, delta: { dx, dy } });
+              if (ui && typeof ui.onDragUpdate === "function")
+                ui.onDragUpdate({ elementId: node.id, delta: { dx, dy } });
             } catch {}
             try {
-              const system = (window && window.renderxCommunicationSystem) || null;
+              const system =
+                (window && window.renderxCommunicationSystem) || null;
               const conductor = system && system.conductor;
               if (conductor && typeof conductor.play === "function") {
                 conductor.play(
@@ -169,8 +211,7 @@ export function attachDragHandlers(node, deps = {}) {
 
     onPointerUp: (e) => {
       try {
-        const system = (typeof window !== "undefined" && window.renderxCommunicationSystem) || null;
-        const stageCrew = (system?.stageCrew) || (system?.conductor?.getStageCrew?.());
+        const stageCrew = resolveStageCrew();
         if (stageCrew?.beginBeat) {
           try {
             const txn = stageCrew.beginBeat(`drag:end:${node.id}`, {
@@ -180,7 +221,10 @@ export function attachDragHandlers(node, deps = {}) {
             });
             if (typeof txn.update === "function")
               txn.update(`#${node.id}`, {
-                classes: { remove: ["rx-comp-grabbing"], add: ["rx-comp-draggable"] },
+                classes: {
+                  remove: ["rx-comp-grabbing"],
+                  add: ["rx-comp-draggable"],
+                },
                 style: { willChange: "", touchAction: "", transform: "" },
               });
             if (typeof txn.commit === "function") txn.commit();
@@ -197,7 +241,9 @@ export function attachDragHandlers(node, deps = {}) {
             }
           } catch {}
         }
-        try { e.target?.releasePointerCapture?.(e.pointerId); } catch {}
+        try {
+          e.target?.releasePointerCapture?.(e.pointerId);
+        } catch {}
 
         const upClient = { x: e.clientX || 0, y: e.clientY || 0 };
         DragCoordinator.end({
@@ -212,9 +258,17 @@ export function attachDragHandlers(node, deps = {}) {
                   plugin: "canvas-ui-plugin",
                   nodeId: node.id,
                 });
-                const cssText = buildInstancePositionCssText(node.id, cls, pos.x, pos.y);
+                const cssText = buildInstancePositionCssText(
+                  node.id,
+                  cls,
+                  pos.x,
+                  pos.y
+                );
                 if (typeof txn.upsertStyleTag === "function")
-                  txn.upsertStyleTag("component-instance-css-" + node.id, cssText);
+                  txn.upsertStyleTag(
+                    "component-instance-css-" + node.id,
+                    cssText
+                  );
                 if (typeof txn.commit === "function") txn.commit();
               } else {
                 // No StageCrew: update overlay and instance CSS directly for baseline persistence in tests
@@ -233,13 +287,18 @@ export function attachDragHandlers(node, deps = {}) {
             try {
               const w = (typeof window !== "undefined" && window) || {};
               const ui = w.__rx_canvas_ui__ || null;
-              if (ui && typeof ui.commitNodePosition === "function") ui.commitNodePosition({ elementId: node.id, position: pos });
-              if (ui && typeof ui.onDragEnd === "function") ui.onDragEnd({ elementId: node.id, position: pos });
+              if (ui && typeof ui.commitNodePosition === "function")
+                ui.commitNodePosition({ elementId: node.id, position: pos });
+              if (ui && typeof ui.onDragEnd === "function")
+                ui.onDragEnd({ elementId: node.id, position: pos });
             } catch {}
           },
         });
 
-        play("Canvas.component-drag-symphony", { elementId: node.id, end: true });
+        play("Canvas.component-drag-symphony", {
+          elementId: node.id,
+          end: true,
+        });
       } catch {}
     },
   };
