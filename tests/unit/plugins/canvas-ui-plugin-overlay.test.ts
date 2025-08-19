@@ -87,6 +87,9 @@ describe("Canvas UI Plugin - selection overlay and resize handles", () => {
     const click = onElementClick(node);
     click({ stopPropagation() {} });
 
+    // Simulate re-render with selectedId applied by UI state
+    plugin.CanvasPage({ nodes: [node], selectedId: node.id });
+
     // Find overlay element (it is rendered as a child of the selected node)
     const overlay =
       created.find(
