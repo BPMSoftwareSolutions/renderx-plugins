@@ -12,7 +12,7 @@ describe("Policy: Overlay StageCrew ops must be inside play() handlers (selectio
     const eventBus = TestEnvironment.createEventBus();
     const conductor = TestEnvironment.createMusicalConductor(eventBus as any);
 
-    // Mount selection plugin so UI click plays the sequence
+    // Mount selection plugin and route play() to handlers so ctx.stageCrew/sequenceId are available
     const selection: any = loadRenderXPlugin(
       "RenderX/public/plugins/canvas-selection-plugin/index.js"
     );
@@ -47,6 +47,35 @@ describe("Policy: Overlay StageCrew ops must be inside play() handlers (selectio
       stageCrew: { beginBeat },
       __ops: ops,
     } as any;
+
+    // Route selection play() to handlers with StageCrew ctx so beginBeat carries sequenceId
+    jest
+      .spyOn(conductor as any, "play")
+      .mockImplementation((_p: string, seqId: string, payload: any) => {
+        if (seqId !== "Canvas.component-select-symphony") return;
+        const ctx: any = {
+          payload: (conductor as any).__ctxPayload || {},
+          stageCrew: { beginBeat },
+          sequence: selection.sequence,
+        };
+        const res = selection.handlers.handleSelect(
+          {
+            elementId: payload?.elementId,
+            onSelectionChange: payload?.onSelectionChange,
+            position: payload?.position,
+            defaults: payload?.defaults,
+          },
+          ctx
+        );
+        (conductor as any).__ctxPayload = {
+          ...(ctx.payload || {}),
+          ...(res || {}),
+        };
+        selection.handlers.handleFinalize(
+          { elementId: payload?.elementId, clearSelection: false },
+          ctx
+        );
+      });
 
     // React stub
     const created: any[] = [];
