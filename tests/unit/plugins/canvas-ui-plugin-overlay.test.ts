@@ -39,6 +39,43 @@ describe("Canvas UI Plugin - selection overlay and resize handles", () => {
       __ops: ops,
     } as any;
 
+    // Mount selection plugin and route play() to handlers so ctx.stageCrew is passed
+    const selection: any = loadRenderXPlugin(
+      "RenderX/public/plugins/canvas-selection-plugin/index.js"
+    );
+    await conductor.mount(
+      selection.sequence,
+      selection.handlers,
+      selection.sequence.id
+    );
+    jest
+      .spyOn(conductor as any, "play")
+      .mockImplementation((_p: string, seqId: string, payload: any) => {
+        if (seqId !== "Canvas.component-select-symphony") return;
+        const ctx: any = {
+          payload: (conductor as any).__ctxPayload || {},
+          stageCrew: { beginBeat },
+          sequence: selection.sequence,
+        };
+        const res = selection.handlers.handleSelect(
+          {
+            elementId: payload?.elementId,
+            onSelectionChange: payload?.onSelectionChange,
+            position: payload?.position,
+            defaults: payload?.defaults,
+          },
+          ctx
+        );
+        (conductor as any).__ctxPayload = {
+          ...(ctx.payload || {}),
+          ...(res || {}),
+        };
+        selection.handlers.handleFinalize(
+          { elementId: payload?.elementId, clearSelection: false },
+          ctx
+        );
+      });
+
     // React stub
     const created: any[] = [];
     const ReactStub = {
