@@ -1,17 +1,17 @@
 {
-  "version": "1.2.4",
+  "version": "1.2.5",
   "plugins": [
     {
       "name": "Theme Management Plugin",
       "path": "theme-management-plugin/",
-      "version": "1.2.4",
+      "version": "1.2.5",
       "description": "Theme switching and management plugin for SPA integration",
       "autoMount": true
     },
     {
       "name": "Component Library Plugin",
       "path": "component-library-plugin/",
-      "version": "1.2.4",
+      "version": "1.2.5",
       "description": "Component library loading and preparation plugin",
       "autoMount": true,
       "ui": {
@@ -22,49 +22,49 @@
     {
       "name": "Library.component-drag-symphony",
       "path": "library-drag-plugin/",
-      "version": "1.2.4",
+      "version": "1.2.5",
       "description": "Handles drag start/end from the Element Library",
       "autoMount": true
     },
     {
       "name": "Library.component-drop-symphony",
       "path": "library-drop-plugin/",
-      "version": "1.2.4",
+      "version": "1.2.5",
       "description": "Handles library element drop onto the canvas and forwards create",
       "autoMount": true
     },
     {
       "name": "Canvas.component-create-symphony",
       "path": "canvas-create-plugin/",
-      "version": "1.2.4",
+      "version": "1.2.5",
       "description": "Creates a new canvas component on drop",
       "autoMount": true
     },
     {
       "name": "Canvas.component-select-symphony",
       "path": "canvas-selection-plugin/",
-      "version": "1.2.4",
+      "version": "1.2.5",
       "description": "Select/deselect a canvas component with callback updates",
       "autoMount": true
     },
     {
       "name": "Canvas.component-drag-symphony",
       "path": "canvas-drag-plugin/",
-      "version": "1.2.4",
+      "version": "1.2.5",
       "description": "Drag/move a canvas component with callback updates",
       "autoMount": true
     },
     {
       "name": "Canvas.component-resize-symphony",
       "path": "canvas-resize-plugin/",
-      "version": "1.2.4",
+      "version": "1.2.5",
       "description": "Resize a canvas component with callback updates",
       "autoMount": true
     },
     {
       "name": "Control Panel UI Plugin",
       "path": "control-panel-plugin/",
-      "version": "1.2.4",
+      "version": "1.2.5",
       "description": "Properties panel UI for the right slot",
       "autoMount": true,
       "ui": {
@@ -75,7 +75,7 @@
     {
       "name": "Canvas UI Plugin",
       "path": "canvas-ui-plugin/",
-      "version": "1.2.4",
+      "version": "1.2.5",
       "description": "Canvas UI (center slot) - scaffold",
       "autoMount": true,
       "ui": {
@@ -86,7 +86,7 @@
     {
       "name": "Header Left Branding",
       "path": "header/left/",
-      "version": "1.2.4",
+      "version": "1.2.5",
       "description": "Header left slot branding/status UI",
       "autoMount": false,
       "ui": {
@@ -97,7 +97,7 @@
     {
       "name": "Header Center Toggles",
       "path": "header/center/",
-      "version": "1.2.4",
+      "version": "1.2.5",
       "description": "Header center slot panel toggles UI",
       "autoMount": false,
       "ui": {
@@ -108,7 +108,7 @@
     {
       "name": "Header Right Controls",
       "path": "header/right/",
-      "version": "1.2.4",
+      "version": "1.2.5",
       "description": "Header right slot action buttons UI",
       "autoMount": false,
       "ui": {
