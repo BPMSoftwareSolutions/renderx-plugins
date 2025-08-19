@@ -50,6 +50,35 @@ describe("Selection overlay bounds via StageCrew", () => {
       __ops: ops,
     } as any;
 
+    // Route selection play() to handlers with StageCrew ctx
+    jest
+      .spyOn(conductor as any, "play")
+      .mockImplementation((_p: string, seqId: string, payload: any) => {
+        if (seqId !== "Canvas.component-select-symphony") return;
+        const ctx: any = {
+          payload: (conductor as any).__ctxPayload || {},
+          stageCrew: { beginBeat },
+          sequence: selection.sequence,
+        };
+        const res = selection.handlers.handleSelect(
+          {
+            elementId: payload?.elementId,
+            onSelectionChange: payload?.onSelectionChange,
+            position: payload?.position,
+            defaults: payload?.defaults,
+          },
+          ctx
+        );
+        (conductor as any).__ctxPayload = {
+          ...(ctx.payload || {}),
+          ...(res || {}),
+        };
+        selection.handlers.handleFinalize(
+          { elementId: payload?.elementId, clearSelection: false },
+          ctx
+        );
+      });
+
     // React stub
     const created: any[] = [];
     (global as any).window.React = {
