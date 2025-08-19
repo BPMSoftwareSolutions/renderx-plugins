@@ -68,21 +68,21 @@ export const handlers = {
         txn.update(`#${elementId}`, { classes: { add: ["rx-comp-selected"] } });
         txn.commit();
         // Ensure overlay CSS (global + instance) via StageCrew
+        // Compute geometry strictly from event payload; do not rely on ctx.payload here
+        const effDefaults =
+          defaults || ctx?.component?.integration?.canvasIntegration || {};
+        const pos = position || { x: 0, y: 0 };
+        const w =
+          typeof effDefaults?.defaultWidth === "number"
+            ? effDefaults.defaultWidth
+            : 0;
+        const h =
+          typeof effDefaults?.defaultHeight === "number"
+            ? effDefaults.defaultHeight
+            : 0;
+
+        // Upsert global CSS; do not swallow errors
         try {
-          const effDefaults =
-            defaults ||
-            ctx?.payload?.defaults ||
-            ctx?.component?.integration?.canvasIntegration ||
-            {};
-          const pos = position || ctx?.payload?.position || { x: 0, y: 0 };
-          const w =
-            typeof effDefaults?.defaultWidth === "number"
-              ? effDefaults.defaultWidth
-              : 0;
-          const h =
-            typeof effDefaults?.defaultHeight === "number"
-              ? effDefaults.defaultHeight
-              : 0;
           const txnG = sc.beginBeat(`overlay:global`, {
             handlerName: "overlayEnsure",
             plugin: "canvas-selection-plugin",
@@ -93,6 +93,13 @@ export const handlers = {
             buildOverlayGlobalCssText()
           );
           txnG.commit();
+        } catch (err) {
+          console.error("[overlayEnsure] global failed", err);
+          throw err;
+        }
+
+        // Upsert per-instance CSS; do not swallow errors
+        try {
           const txnI = sc.beginBeat(`overlay:${elementId}`, {
             handlerName: "overlayEnsure",
             plugin: "canvas-selection-plugin",
@@ -104,7 +111,10 @@ export const handlers = {
             buildOverlayInstanceCssText({ id: elementId, position: pos }, w, h)
           );
           txnI.commit();
-        } catch {}
+        } catch (err) {
+          console.error("[overlayEnsure] instance failed", err);
+          throw err;
+        }
       }
     } catch {}
     return { elementId, selected: true };
