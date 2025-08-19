@@ -45,7 +45,7 @@ export const sequence = {
 };
 
 export const handlers = {
-  handleSelect: ({ elementId, onSelectionChange }, ctx) => {
+  handleSelect: ({ elementId, onSelectionChange, position, defaults }, ctx) => {
     // Notify selection change
     try {
       onSelectionChange?.(elementId);
@@ -64,18 +64,19 @@ export const handlers = {
         txn.commit();
         // Ensure overlay CSS (global + instance) via StageCrew
         try {
-          const defaults =
+          const effDefaults =
+            defaults ||
             ctx?.payload?.defaults ||
             ctx?.component?.integration?.canvasIntegration ||
             {};
-          const pos = ctx?.payload?.position || { x: 0, y: 0 };
+          const pos = position || ctx?.payload?.position || { x: 0, y: 0 };
           const w =
-            typeof defaults?.defaultWidth === "number"
-              ? defaults.defaultWidth
+            typeof effDefaults?.defaultWidth === "number"
+              ? effDefaults.defaultWidth
               : 0;
           const h =
-            typeof defaults?.defaultHeight === "number"
-              ? defaults.defaultHeight
+            typeof effDefaults?.defaultHeight === "number"
+              ? effDefaults.defaultHeight
               : 0;
           const txnG = sc.beginBeat(`overlay:global`, {
             handlerName: "overlayEnsure",
