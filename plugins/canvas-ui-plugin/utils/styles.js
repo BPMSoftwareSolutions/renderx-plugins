@@ -113,7 +113,6 @@ export function overlayInjectInstanceCSS(node, width, height) {
   } catch {}
 }
 
-
 // StageCrew-only overlay CSS ensure functions (ADR-0017)
 export function overlayEnsureGlobalCSS(stageCrew, context) {
   if (!stageCrew || typeof stageCrew.beginBeat !== "function") {
@@ -127,11 +126,22 @@ export function overlayEnsureGlobalCSS(stageCrew, context) {
   };
   const txn = stageCrew.beginBeat(corrId, meta);
   const cssText = buildOverlayGlobalCssTextSafe();
-  txn.upsertStyleTag("overlay-css-global", cssText);
-  txn.commit();
+  if (typeof txn.upsertStyleTag === "function") {
+    txn.upsertStyleTag("overlay-css-global", cssText);
+    txn.commit();
+  } else {
+    // Fallback to DOM injection in environments without txn.upsertStyleTag
+    overlayInjectGlobalCSS();
+  }
 }
 
-export function overlayEnsureInstanceCSS(stageCrew, node, width, height, context) {
+export function overlayEnsureInstanceCSS(
+  stageCrew,
+  node,
+  width,
+  height,
+  context
+) {
   if (!stageCrew || typeof stageCrew.beginBeat !== "function") {
     throw new Error("StageCrew is required for overlayEnsureInstanceCSS");
   }
@@ -146,6 +156,11 @@ export function overlayEnsureInstanceCSS(stageCrew, node, width, height, context
   };
   const txn = stageCrew.beginBeat(corrId, meta);
   const cssText = buildOverlayInstanceCssTextSafe(node, width, height);
-  txn.upsertStyleTag("overlay-css-" + id, cssText);
-  txn.commit();
+  if (typeof txn.upsertStyleTag === "function") {
+    txn.upsertStyleTag("overlay-css-" + id, cssText);
+    txn.commit();
+  } else {
+    // Fallback to DOM injection in environments without txn.upsertStyleTag
+    overlayInjectInstanceCSS(node, width, height);
+  }
 }

@@ -2,6 +2,15 @@
  * Canvas Component Selection Plugin (callback-first)
  */
 
+import {
+  buildOverlayGlobalCssText,
+  buildOverlayInstanceCssText,
+} from "../canvas-ui-plugin/constants/overlayCss.js";
+import {
+  overlayInjectGlobalCSS,
+  overlayInjectInstanceCSS,
+} from "../canvas-ui-plugin/utils/styles.js";
+
 export const sequence = {
   id: "Canvas.component-select-symphony",
   name: "Canvas Component Selection Symphony",
@@ -45,15 +54,129 @@ export const sequence = {
 };
 
 export const handlers = {
-  handleSelect: ({ elementId, onSelectionChange }, ctx) => {
+  handleSelect: ({ elementId, onSelectionChange, position, defaults }, ctx) => {
+    // Notify selection change
     try {
       onSelectionChange?.(elementId);
     } catch {}
+    // StageCrew: mark element as selected (classes/styles can be extended later)
+    try {
+      const sc = ctx && ctx.stageCrew;
+      if (sc && typeof sc.beginBeat === "function" && elementId) {
+        const txn = sc.beginBeat(`selection:show:${elementId}`, {
+          handlerName: "handleSelect",
+          plugin: "canvas-selection-plugin",
+          sequenceId: ctx?.sequence?.id,
+          nodeId: elementId,
+        });
+        txn.update(`#${elementId}`, { classes: { add: ["rx-comp-selected"] } });
+        txn.commit();
+        // Ensure overlay CSS (global + instance) via StageCrew
+        // Compute geometry strictly from event payload; do not rely on ctx.payload here
+        const effDefaults =
+          defaults || ctx?.component?.integration?.canvasIntegration || {};
+        const pos = position || { x: 0, y: 0 };
+        const w =
+          typeof effDefaults?.defaultWidth === "number"
+            ? effDefaults.defaultWidth
+            : 0;
+        const h =
+          typeof effDefaults?.defaultHeight === "number"
+            ? effDefaults.defaultHeight
+            : 0;
+
+        // Upsert global CSS; do not swallow errors
+        try {
+          const txnG = sc.beginBeat(`overlay:global`, {
+            handlerName: "overlayEnsure",
+            plugin: "canvas-selection-plugin",
+            sequenceId: ctx?.sequence?.id,
+          });
+          if (typeof txnG.upsertStyleTag === "function") {
+            txnG.upsertStyleTag(
+              "overlay-css-global",
+              buildOverlayGlobalCssText()
+            );
+            txnG.commit();
+          } else {
+            try {
+              ctx?.logger?.info?.(
+                "[overlayEnsure] StageCrew missing upsertStyleTag; using UI fallback"
+              );
+            } catch {}
+            overlayInjectGlobalCSS();
+          }
+        } catch (err) {
+          try {
+            ctx?.logger?.error?.("[overlayEnsure] global failed", err);
+          } catch {}
+          throw err;
+        }
+
+        // Upsert per-instance CSS; do not swallow errors
+        try {
+          const txnI = sc.beginBeat(`overlay:${elementId}`, {
+            handlerName: "overlayEnsure",
+            plugin: "canvas-selection-plugin",
+            sequenceId: ctx?.sequence?.id,
+            nodeId: elementId,
+          });
+          const cssInstance = buildOverlayInstanceCssText(
+            { id: elementId, position: pos },
+            w,
+            h
+          );
+          if (typeof txnI.upsertStyleTag === "function") {
+            txnI.upsertStyleTag(`overlay-css-${elementId}`, cssInstance);
+            txnI.commit();
+          } else {
+            try {
+              ctx?.logger?.info?.(
+                "[overlayEnsure] StageCrew missing upsertStyleTag; using UI fallback (instance)"
+              );
+            } catch {}
+            overlayInjectInstanceCSS({ id: elementId, position: pos }, w, h);
+          }
+        } catch (err) {
+          try {
+            ctx?.logger?.error?.("[overlayEnsure] instance failed", err);
+          } catch {}
+          throw err;
+        }
+      }
+    } catch (err) {
+      try {
+        ctx?.logger?.error?.("[selection] StageCrew failure", err);
+      } catch {}
+      throw err;
+    }
     return { elementId, selected: true };
   },
   handleFinalize: ({ elementId, clearSelection, onSelectionChange }, ctx) => {
+    // Optionally clear selection via callback
     try {
       if (clearSelection === true) onSelectionChange?.(null);
+    } catch {}
+    // StageCrew: remove selected class if clearing selection
+    try {
+      const sc = ctx && ctx.stageCrew;
+      if (
+        sc &&
+        typeof sc.beginBeat === "function" &&
+        elementId &&
+        clearSelection === true
+      ) {
+        const txn = sc.beginBeat(`selection:hide:${elementId}`, {
+          handlerName: "handleFinalize",
+          plugin: "canvas-selection-plugin",
+          sequenceId: ctx?.sequence?.id,
+          nodeId: elementId,
+        });
+        txn.update(`#${elementId}`, {
+          classes: { remove: ["rx-comp-selected"] },
+        });
+        txn.commit();
+      }
     } catch {}
     return { elementId: elementId ?? null, cleared: clearSelection === true };
   },

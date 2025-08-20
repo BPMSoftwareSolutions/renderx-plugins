@@ -1,6 +1,6 @@
 {
   "name": "renderx-plugins",
-  "version": "1.1.5",
+  "version": "1.2.14",
   "private": false,
   "description": "RenderX plugins meta-package with unit tests and build + manifest generation",
   "files": [
@@ -14,10 +14,15 @@
     "test": "jest --passWithNoTests",
     "test:ci": "jest --ci",
     "e2e": "playwright test",
+    "prebuild": "node ./scripts/prebuild-version.mjs",
     "build:plugins": "node ./scripts/build-plugins.mjs",
     "build:manifest": "node ./scripts/generate-manifest.mjs",
     "build:sync-plugins-manifest": "node ./scripts/update-plugins-manifest.mjs",
-    "build": "npm run build:plugins && npm run build:manifest && npm run build:sync-plugins-manifest && node ./scripts/build-bundles.mjs"
+    "build": "node ./scripts/prebuild-version.mjs && npm run build:plugins && npm run build:manifest && npm run build:sync-plugins-manifest && node ./scripts/build-bundles.mjs",
+    "build:pv": "node ./scripts/build-with-pv.mjs",
+    "bump:patch": "npm run build:pv -- --pv --revision",
+    "bump:minor": "npm run build:pv -- --pv --minor",
+    "bump:major": "npm run build:pv -- --pv --major"
   },
   "devDependencies": {
     "@types/jest": "^30.0.0",

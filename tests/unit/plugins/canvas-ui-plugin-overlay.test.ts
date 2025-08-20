@@ -33,7 +33,48 @@ describe("Canvas UI Plugin - selection overlay and resize handles", () => {
       ops.push({ type: "beginBeat", corrId, meta });
       return txn;
     });
-    (global as any).window.renderxCommunicationSystem = { conductor, stageCrew: { beginBeat }, __ops: ops } as any;
+    (global as any).window.renderxCommunicationSystem = {
+      conductor,
+      stageCrew: { beginBeat },
+      __ops: ops,
+    } as any;
+
+    // Mount selection plugin and route play() to handlers so ctx.stageCrew is passed
+    const selection: any = loadRenderXPlugin(
+      "RenderX/public/plugins/canvas-selection-plugin/index.js"
+    );
+    await conductor.mount(
+      selection.sequence,
+      selection.handlers,
+      selection.sequence.id
+    );
+    jest
+      .spyOn(conductor as any, "play")
+      .mockImplementation((_p: string, seqId: string, payload: any) => {
+        if (seqId !== "Canvas.component-select-symphony") return;
+        const ctx: any = {
+          payload: (conductor as any).__ctxPayload || {},
+          stageCrew: { beginBeat },
+          sequence: selection.sequence,
+        };
+        const res = selection.handlers.handleSelect(
+          {
+            elementId: payload?.elementId,
+            onSelectionChange: payload?.onSelectionChange,
+            position: payload?.position,
+            defaults: payload?.defaults,
+          },
+          ctx
+        );
+        (conductor as any).__ctxPayload = {
+          ...(ctx.payload || {}),
+          ...(res || {}),
+        };
+        selection.handlers.handleFinalize(
+          { elementId: payload?.elementId, clearSelection: false },
+          ctx
+        );
+      });
 
     // React stub
     const created: any[] = [];
@@ -74,15 +115,34 @@ describe("Canvas UI Plugin - selection overlay and resize handles", () => {
 
     // Render CanvasPage with nodes + selectedId overrides
     created.length = 0;
+    plugin.CanvasPage({ nodes: [node], selectedId: null });
+
+    // Click to trigger selection symphony which ensures overlay via handlers
+    const { onElementClick } = loadRenderXPlugin(
+      "RenderX/public/plugins/canvas-ui-plugin/handlers/select.js"
+    );
+    const click = onElementClick(node);
+    click({ stopPropagation() {} });
+
+    // Simulate re-render with selectedId applied by UI state
     plugin.CanvasPage({ nodes: [node], selectedId: node.id });
 
-    // Find overlay element
-    const overlay = created.find(
-      (e) =>
-        e.type === "div" &&
-        typeof e.props?.className === "string" &&
-        e.props.className.includes("rx-resize-overlay")
-    );
+    // Find overlay element (it is rendered as a child of the selected node)
+    const overlay =
+      created.find(
+        (e) =>
+          e.type === "div" &&
+          typeof e.props?.className === "string" &&
+          e.props.className.includes("rx-resize-overlay")
+      ) ||
+      created
+        .flatMap((e) => e.children || [])
+        .find(
+          (e: any) =>
+            e?.type === "div" &&
+            typeof e?.props?.className === "string" &&
+            e.props.className.includes("rx-resize-overlay")
+        );
     expect(overlay).toBeTruthy();
 
     // No inline style on overlay
@@ -108,16 +168,24 @@ describe("Canvas UI Plugin - selection overlay and resize handles", () => {
     );
 
     // CSS: verify StageCrew recorded upsertStyleTag calls for global + instance
-    const opsArr = (global as any).window.renderxCommunicationSystem.__ops as any[];
-    const globalUpsert = opsArr.find((o) => o.type === "upsertStyleTag" && o.id === "overlay-css-global");
+    const opsArr = (global as any).window.renderxCommunicationSystem
+      .__ops as any[];
+    const globalUpsert = opsArr.find(
+      (o) => o.type === "upsertStyleTag" && o.id === "overlay-css-global"
+    );
     expect(globalUpsert).toBeTruthy();
     expect(globalUpsert.cssText).toMatch(/\.rx-resize-overlay\b/);
     expect(globalUpsert.cssText).toMatch(/\.rx-resize-handle\b/);
 
-    const instUpsert = opsArr.find((o) => o.type === "upsertStyleTag" && o.id === `overlay-css-${node.id}`);
+    const instUpsert = opsArr.find(
+      (o) => o.type === "upsertStyleTag" && o.id === `overlay-css-${node.id}`
+    );
     expect(instUpsert).toBeTruthy();
     expect(instUpsert.cssText.replace(/\s+/g, "")).toContain(
-      `.rx-overlay-${node.id}{position:absolute;left:10px;top:20px;width:120px;height:40px;z-index:10;}`.replace(/\s+/g, "")
+      `.rx-overlay-${node.id}{position:absolute;left:10px;top:20px;width:120px;height:40px;z-index:10;}`.replace(
+        /\s+/g,
+        ""
+      )
     );
   });
 

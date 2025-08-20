@@ -11,6 +11,105 @@ describe("UI Drag: component follows cursor precisely", () => {
     const eventBus = TestEnvironment.createEventBus();
     const conductor = TestEnvironment.createMusicalConductor(eventBus);
     global.window = global.window || {};
+
+    // StageCrew DOM-applier + conductor.play routing to canvas-drag-plugin
+    const dragPlugin = loadRenderXPlugin(
+      "RenderX/public/plugins/canvas-drag-plugin/index.js"
+    );
+    const beginBeat = (corrId, meta) => {
+      const txn = {
+        update: (selector, payload) => {
+          try {
+            let el = null;
+            if (selector && selector.startsWith("#")) {
+              const id = selector.slice(1);
+              el =
+                document.getElementById(id) ||
+                (window.__rx_drag &&
+                  window.__rx_drag[id] &&
+                  window.__rx_drag[id].el) ||
+                null;
+            }
+            if (el) {
+              if (payload?.classes?.add)
+                payload.classes.add.forEach((c) => el.classList.add(c));
+              if (payload?.classes?.remove)
+                payload.classes.remove.forEach((c) => el.classList.remove(c));
+              if (payload?.style)
+                Object.entries(payload.style).forEach(([k, v]) => {
+                  el.style[k] = v;
+                });
+              if (payload?.attrs)
+                Object.entries(payload.attrs).forEach(([k, v]) => {
+                  if (k === "class") el.setAttribute("class", String(v || ""));
+                  else el.setAttribute(k, String(v || ""));
+                });
+            }
+          } catch {}
+          return txn;
+        },
+        upsertStyleTag: (id, cssText) => {
+          try {
+            let tag = document.getElementById(id);
+            if (!tag) {
+              tag = document.createElement("style");
+              tag.id = id;
+              document.head.appendChild(tag);
+            }
+            tag.textContent = String(cssText || "");
+          } catch {}
+          return txn;
+        },
+        commit: () => {},
+      };
+      return txn;
+    };
+
+    conductor.play = jest.fn((_pluginId, seqId, payload) => {
+      if (seqId !== "Canvas.component-drag-symphony") return;
+      const ctx = {
+        payload: conductor.__ctxPayload || {},
+        stageCrew: { beginBeat },
+        sequence: dragPlugin.sequence,
+      };
+      const ev = payload?.event;
+      if (ev === "canvas:element:hover:enter") {
+        dragPlugin.handlers.handleHoverEnter(
+          { elementId: payload.elementId },
+          ctx
+        );
+      } else if (ev === "canvas:element:hover:leave") {
+        dragPlugin.handlers.handleHoverLeave(
+          { elementId: payload.elementId },
+          ctx
+        );
+      } else if (ev === "canvas:element:drag:start") {
+        const res = dragPlugin.handlers.handleDragStart(
+          { elementId: payload.elementId, origin: payload.origin },
+          ctx
+        );
+        conductor.__ctxPayload = { ...(ctx.payload || {}), ...(res || {}) };
+      } else if (ev === "canvas:element:moved") {
+        const res = dragPlugin.handlers.handleDragMove(
+          { elementId: payload.elementId, delta: payload.delta },
+          { ...ctx, payload: conductor.__ctxPayload || {} }
+        );
+        conductor.__ctxPayload = {
+          ...(conductor.__ctxPayload || {}),
+          ...(res || {}),
+        };
+      } else if (ev === "canvas:element:drag:end") {
+        dragPlugin.handlers.handleDragEnd(
+          {
+            elementId: payload.elementId,
+            position: payload.position,
+            instanceClass: payload.instanceClass,
+          },
+          { ...ctx, payload: conductor.__ctxPayload || {} }
+        );
+      }
+    });
+
     window.renderxCommunicationSystem = { conductor };
 
     // Record created elements

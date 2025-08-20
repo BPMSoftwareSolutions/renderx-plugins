@@ -2,6 +2,8 @@
  * Canvas Component Drag Plugin (callback-first)
  */
 
+import { updateInstancePositionCSS } from "../canvas-ui-plugin/styles/instanceCss.js";
+
 export const sequence = {
   id: "Canvas.component-drag-symphony",
   name: "Canvas Component Drag Symphony",
@@ -61,20 +63,142 @@ export const sequence = {
 };
 
 export const handlers = {
-  handleDragStart: ({ elementId, origin }, ctx) => ({
-    drag: { elementId, origin },
-  }),
+  handleDragStart: ({ elementId, origin }, ctx) => {
+    if (!elementId) return {};
+    const res = { drag: { elementId, origin } };
+    try {
+      const sc = ctx && ctx.stageCrew;
+      if (sc && typeof sc.beginBeat === "function") {
+        const txn = sc.beginBeat(`drag:start:${elementId}`, {
+          handlerName: "handleDragStart",
+          plugin: "canvas-drag-plugin",
+          sequenceId: ctx?.sequence?.id,
+          nodeId: elementId,
+        });
+        txn.update(`#${elementId}`, {
+          classes: { remove: ["rx-comp-draggable"], add: ["rx-comp-grabbing"] },
+          style: { touchAction: "none", willChange: "transform" },
+        });
+        txn.commit();
+      }
+    } catch {}
+    return res;
+  },
   handleDragMove: ({ elementId, delta, onDragUpdate }, ctx) => {
-    const o = ctx.payload.drag?.origin || { x: 0, y: 0 };
-    const position = { x: o.x + (delta?.dx || 0), y: o.y + (delta?.dy || 0) };
+    if (!elementId) return {};
+    const o = (ctx &&
+      ctx.payload &&
+      ctx.payload.drag &&
+      ctx.payload.drag.origin) || { x: 0, y: 0 };
+    const dx = Math.round(delta?.dx || 0);
+    const dy = Math.round(delta?.dy || 0);
+    const position = { x: o.x + dx, y: o.y + dy };
+    try {
+      const sc = ctx && ctx.stageCrew;
+      if (sc && typeof sc.beginBeat === "function") {
+        const txn = sc.beginBeat(`drag:frame:${elementId}`, {
+          handlerName: "handleDragMove",
+          plugin: "canvas-drag-plugin",
+          sequenceId: ctx?.sequence?.id,
+          nodeId: elementId,
+        });
+        txn.update(`#${elementId}`, {
+          classes: { remove: ["rx-comp-draggable"], add: ["rx-comp-grabbing"] },
+          style: { transform: `translate3d(${dx}px, ${dy}px, 0)` },
+        });
+        txn.commit();
+      }
+    } catch {}
     try {
       onDragUpdate?.({ elementId, position });
     } catch {}
     return { elementId, position };
   },
-  handleDragEnd: ({ elementId, onDragEnd }, ctx) => {
+  handleDragEnd: ({ elementId, position, instanceClass, onDragEnd }, ctx) => {
+    if (!elementId) return {};
     try {
-      onDragEnd?.({ elementId });
+      const sc = ctx && ctx.stageCrew;
+      if (sc && typeof sc.beginBeat === "function") {
+        const cls = String(instanceClass || elementId || "");
+        // First, emit a drag:end cleanup beat to clear inline styles/classes
+        const endTxn = sc.beginBeat(`drag:end:${elementId}`, {
+          handlerName: "handleDragEnd",
+          plugin: "canvas-drag-plugin",
+          sequenceId: ctx?.sequence?.id,
+          nodeId: elementId,
+        });
+        endTxn.update(`#${elementId}`, {
+          classes: { add: ["rx-comp-draggable"], remove: ["rx-comp-grabbing"] },
+          style: { transform: "", willChange: "", touchAction: "" },
+        });
+        endTxn.commit();
+
+        // Then, persist the per-instance absolute position CSS using UI helper (host BeatTxn has no upsertStyleTag)
+        const hasValidPos =
+          position &&
+          typeof position.x === "number" &&
+          typeof position.y === "number";
+        if (hasValidPos) {
+          const x = Math.round(position.x);
+          const y = Math.round(position.y);
+          try {
+            updateInstancePositionCSS(elementId, cls, x, y);
+          } catch (e) {
+            try {
+              ctx?.logger?.error?.(
+                "[dragEnd] failed to update instance CSS",
+                e
+              );
+            } catch {}
+            throw e;
+          }
+        } else {
+          try {
+            ctx?.logger?.info?.("[dragEnd] skip persist — missing position");
+          } catch {}
+        }
+      }
+    } catch {}
+    try {
+      onDragEnd?.({ elementId, position });
+    } catch {}
+    return {};
+  },
+
+  // Hover affordance handlers (StageCrew-only)
+  handleHoverEnter: ({ elementId }, ctx) => {
+    try {
+      const sc = ctx && ctx.stageCrew;
+      if (sc && typeof sc.beginBeat === "function") {
+        const txn = sc.beginBeat(`hover:enter:${elementId}`, {
+          handlerName: "handleHoverEnter",
+          plugin: "canvas-drag-plugin",
+          sequenceId: ctx?.sequence?.id,
+          nodeId: elementId,
+        });
+        txn.update(`#${elementId}`, {
+          classes: { add: ["rx-comp-draggable"], remove: ["rx-comp-grabbing"] },
+        });
+        txn.commit();
+      }
+    } catch {}
+    return {};
+  },
+  handleHoverLeave: ({ elementId }, ctx) => {
+    try {
+      const sc = ctx && ctx.stageCrew;
+      if (sc && typeof sc.beginBeat === "function") {
+        const txn = sc.beginBeat(`hover:leave:${elementId}`, {
+          handlerName: "handleHoverLeave",
+          plugin: "canvas-drag-plugin",
+          sequenceId: ctx?.sequence?.id,
+          nodeId: elementId,
+        });
+        txn.update(`#${elementId}`, {
+          classes: { remove: ["rx-comp-draggable", "rx-comp-grabbing"] },
+        });
+        txn.commit();
+      }
     } catch {}
     return {};
   },

@@ -40,6 +40,23 @@ describe("Canvas UI drag - StageCrew commit contract and overlay scoping", () =>
       return txn;
     });
 
+    // Wire conductor.play to dispatch to canvas-drag-plugin handlers with StageCrew context
+    const dragPlugin: any = loadRenderXPlugin("RenderX/public/plugins/canvas-drag-plugin/index.js");
+    (conductor as any).play = jest.fn((_pluginId: string, seqId: string, payload: any) => {
+      if (seqId !== "Canvas.component-drag-symphony") return;
+      const ctx: any = { payload: (conductor as any).__ctxPayload || {}, stageCrew: { beginBeat }, sequence: dragPlugin.sequence };
+      const ev = payload?.event;
+      if (ev === "canvas:element:drag:start") {
+        const res = dragPlugin.handlers.handleDragStart({ elementId: payload.elementId, origin: payload.origin }, ctx);
+        (conductor as any).__ctxPayload = { ...(ctx.payload || {}), ...(res || {}) };
+      } else if (ev === "canvas:element:moved") {
+        const res = dragPlugin.handlers.handleDragMove({ elementId: payload.elementId, delta: payload.delta }, { ...ctx, payload: (conductor as any).__ctxPayload || {} });
+        (conductor as any).__ctxPayload = { ...(conductor as any).__ctxPayload || {}, ...(res || {}) };
+      } else if (ev === "canvas:element:drag:end") {
+        dragPlugin.handlers.handleDragEnd({ elementId: payload.elementId, position: payload.position, instanceClass: payload.instanceClass }, { ...ctx, payload: (conductor as any).__ctxPayload || {} });
+      }
+    });
+
     (global as any).window.renderxCommunicationSystem = { conductor, stageCrew: { beginBeat }, __ops: ops } as any;
 
     // React stub

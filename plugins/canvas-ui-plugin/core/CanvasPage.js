@@ -7,7 +7,10 @@ import {
 import { attachDragHandlers } from "../handlers/drag.js";
 import { buildOverlayForNode } from "../ui/overlay.js";
 import { renderCanvasNode } from "./renderCanvasNode.js";
-import { updateInstanceSizeCSS, updateInstancePositionCSS } from "../styles/instanceCss.js";
+import {
+  updateInstanceSizeCSS,
+  updateInstancePositionCSS,
+} from "../styles/instanceCss.js";
 
 export function CanvasPage(props = {}) {
   const providedNodes = Array.isArray(props.nodes) ? props.nodes : null;
@@ -15,9 +18,6 @@ export function CanvasPage(props = {}) {
   const React = (typeof window !== "undefined" && window.React) || null;
   if (!React) return null;
   // Ensure overlay global CSS is present synchronously for tests that check head styles immediately
-  try {
-    overlayInjectGlobalCSS();
-  } catch {}
   const { useEffect, useState } = React;
 
   useEffect(() => {
@@ -26,8 +26,6 @@ export function CanvasPage(props = {}) {
       sys?.logger?.info?.("🎨 Canvas UI Plugin (Scaffold): mounted UI");
     } catch {}
     try {
-      // Ensure overlay global CSS is present
-      overlayInjectGlobalCSS();
     } catch {}
     const tryStart = () => {
       try {
@@ -138,23 +136,7 @@ export function CanvasPage(props = {}) {
         if (t && t.parentNode) t.parentNode.removeChild(t);
       } catch {}
     };
-    const setOverlayHidden = (hidden) => {
-      try {
-        if (!selectedId) return;
-        const id = `overlay-visibility-${selectedId}`;
-        let tag = document.getElementById(id);
-        if (hidden) {
-          if (!tag) {
-            tag = document.createElement("style");
-            tag.id = id;
-            document.head.appendChild(tag);
-          }
-          tag.textContent = `.rx-overlay-${selectedId}{display:none;}`;
-        } else if (tag && tag.parentNode) {
-          tag.parentNode.removeChild(tag);
-        }
-      } catch {}
-    };
+    const setOverlayHidden = (hidden) => {};
     const onDragStart = ({ elementId }) => {
       try {
         if (!elementId || elementId !== selectedId) return;
@@ -166,7 +148,7 @@ export function CanvasPage(props = {}) {
         if (!elementId || elementId !== selectedId) return;
         const dx = delta && typeof delta.dx === "number" ? delta.dx : 0;
         const dy = delta && typeof delta.dy === "number" ? delta.dy : 0;
-        applyOverlayTransform(dx, dy);
+        // overlay transform now handled by handlers via StageCrew
       } catch {}
     };
     const onDragEnd = ({ elementId, position }) => {
@@ -182,20 +164,9 @@ export function CanvasPage(props = {}) {
             y: position?.y ?? n?.position?.y ?? 0,
           },
         };
-        try {
-          const system = (typeof window !== "undefined" && window.renderxCommunicationSystem) || null;
-          const stageCrew = system?.stageCrew;
-          overlayEnsureGlobalCSS(stageCrew);
-          overlayEnsureInstanceCSS(stageCrew, nextNode, defaults.defaultWidth, defaults.defaultHeight);
-        } catch {}
-        try {
-          // Also update the instance CSS tag immediately to reflect committed left/top
-          const cls = String(n?.cssClass || n?.id || "").trim();
-          if (cls) updateInstancePositionCSS(elementId, cls, nextNode.position.x, nextNode.position.y);
-        } catch {}
-
-        clearOverlayTransform();
-        setOverlayHidden(false);
+        // overlay ensure and instance position CSS now handled by handlers via StageCrew
+        // clearOverlayTransform(); // handled by overlay handlers
+        // setOverlayHidden(false); // handled by overlay handlers
       } catch {}
     };
 
@@ -226,16 +197,7 @@ export function CanvasPage(props = {}) {
             w.__rx_canvas_ui__.__lastH = box.h;
           }
         } catch {}
-        try {
-          const system = (typeof window !== "undefined" && window.renderxCommunicationSystem) || null;
-          const stageCrew = system?.stageCrew;
-          overlayEnsureInstanceCSS(
-            stageCrew,
-            nextNode,
-            box?.w ?? defaults.defaultWidth,
-            box?.h ?? defaults.defaultHeight
-          );
-        } catch {}
+        // overlay instance CSS updates now handled by handlers via StageCrew
         // Also live-update the actual component instance CSS so the element resizes during drag
         try {
           const cls = String(n?.cssClass || n?.id || "").trim();
@@ -284,22 +246,7 @@ export function CanvasPage(props = {}) {
               typeof finalBox.y === "number" ? finalBox.y : n?.position?.y ?? 0,
           }
         );
-        try {
-          const system = (typeof window !== "undefined" && window.renderxCommunicationSystem) || null;
-          const stageCrew = system?.stageCrew;
-          overlayEnsureInstanceCSS(
-            stageCrew,
-            {
-              id: elementId,
-              position: {
-                x: typeof finalBox.x === "number" ? finalBox.x : n?.position?.x ?? 0,
-                y: typeof finalBox.y === "number" ? finalBox.y : n?.position?.y ?? 0,
-              },
-            },
-            finalBox.w,
-            finalBox.h
-          );
-        } catch {}
+        // overlay instance CSS commit handled by handlers via StageCrew
       } catch {}
     };
     try {

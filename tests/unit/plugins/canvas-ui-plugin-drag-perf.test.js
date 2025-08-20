@@ -48,6 +48,101 @@ describe("Canvas UI drag performance contract", () => {
     el = document.createElement("div");
     document.body.appendChild(el);
 
+    // StageCrew routing for drag plugin across tests
+    const dragPlugin = loadRenderXPlugin(
+      "RenderX/public/plugins/canvas-drag-plugin/index.js"
+    );
+    const beginBeat = (corrId, meta) => {
+      const txn = {
+        update: (selector, payload) => {
+          try {
+            let elem = null;
+            if (selector && selector.startsWith("#")) {
+              const id = selector.slice(1);
+              elem =
+                document.getElementById(id) ||
+                (window.__rx_drag &&
+                  window.__rx_drag[id] &&
+                  window.__rx_drag[id].el) ||
+                null;
+            }
+            if (elem) {
+              if (payload?.classes?.add)
+                payload.classes.add.forEach((c) => elem.classList.add(c));
+              if (payload?.classes?.remove)
+                payload.classes.remove.forEach((c) => elem.classList.remove(c));
+              if (payload?.style)
+                Object.entries(payload.style).forEach(([k, v]) => {
+                  elem.style[k] = v;
+                });
+            }
+          } catch {}
+          return txn;
+        },
+        upsertStyleTag: (id, cssText) => {
+          try {
+            let tag = document.getElementById(id);
+            if (!tag) {
+              tag = document.createElement("style");
+              tag.id = id;
+              document.head.appendChild(tag);
+            }
+            tag.textContent = String(cssText || "");
+          } catch {}
+          return txn;
+        },
+        commit: () => {},
+      };
+      return txn;
+    };
+
+    // route plays
+    window.renderxCommunicationSystem = { conductor };
+    jest.spyOn(conductor, "play").mockImplementation((_p, seqId, payload) => {
+      if (seqId !== "Canvas.component-drag-symphony") return;
+      const ctx = {
+        payload: conductor.__ctxPayload || {},
+        stageCrew: { beginBeat },
+        sequence: dragPlugin.sequence,
+      };
+      const ev = payload?.event;
+      if (ev === "canvas:element:hover:enter") {
+        dragPlugin.handlers.handleHoverEnter(
+          { elementId: payload.elementId },
+          ctx
+        );
+      } else if (ev === "canvas:element:hover:leave") {
+        dragPlugin.handlers.handleHoverLeave(
+          { elementId: payload.elementId },
+          ctx
+        );
+      } else if (ev === "canvas:element:drag:start") {
+        const res = dragPlugin.handlers.handleDragStart(
+          { elementId: payload.elementId, origin: payload.origin },
+          ctx
+        );
+        conductor.__ctxPayload = { ...(ctx.payload || {}), ...(res || {}) };
+      } else if (ev === "canvas:element:moved") {
+        const res = dragPlugin.handlers.handleDragMove(
+          { elementId: payload.elementId, delta: payload.delta },
+          { ...ctx, payload: conductor.__ctxPayload || {} }
+        );
+        conductor.__ctxPayload = {
+          ...(conductor.__ctxPayload || {}),
+          ...(res || {}),
+        };
+      } else if (ev === "canvas:element:drag:end") {
+        dragPlugin.handlers.handleDragEnd(
+          {
+            elementId: payload.elementId,
+            position: payload.position,
+            instanceClass: payload.instanceClass,
+          },
+          { ...ctx, payload: conductor.__ctxPayload || {} }
+        );
+      }
+    });
+
     mod = loadRenderXPlugin(dragHandlersModulePath);
   });
 
@@ -64,6 +159,92 @@ describe("Canvas UI drag performance contract", () => {
 
   test("visual transform is applied only on rAF (no immediate style), and updates reflect latest move per frame", async () => {
     const node = { id: "id-1", position: { x: 10, y: 20 }, cssClass: "id-1" };
+    el.id = node.id;
+
+    // StageCrew routing for drag plugin
+    const dragPlugin = loadRenderXPlugin(
+      "RenderX/public/plugins/canvas-drag-plugin/index.js"
+    );
+    const beginBeat = (corrId, meta) => {
+      const txn = {
+        update: (selector, payload) => {
+          try {
+            let elem = null;
+            if (selector && selector.startsWith("#")) {
+              const id = selector.slice(1);
+              elem =
+                document.getElementById(id) ||
+                (window.__rx_drag &&
+                  window.__rx_drag[id] &&
+                  window.__rx_drag[id].el) ||
+                null;
+            }
+            if (elem) {
+              if (payload?.classes?.add)
+                payload.classes.add.forEach((c) => elem.classList.add(c));
+              if (payload?.classes?.remove)
+                payload.classes.remove.forEach((c) => elem.classList.remove(c));
+              if (payload?.style)
+                Object.entries(payload.style).forEach(([k, v]) => {
+                  elem.style[k] = v;
+                });
+            }
+          } catch {}
+          return txn;
+        },
+        upsertStyleTag: (id, cssText) => {
+          try {
+            let tag = document.getElementById(id);
+            if (!tag) {
+              tag = document.createElement("style");
+              tag.id = id;
+              document.head.appendChild(tag);
+            }
+            tag.textContent = String(cssText || "");
+          } catch {}
+          return txn;
+        },
+        commit: () => {},
+      };
+      return txn;
+    };
+
+    // route plays
+    window.renderxCommunicationSystem = { conductor };
+    jest.spyOn(conductor, "play").mockImplementation((_p, seqId, payload) => {
+      if (seqId !== "Canvas.component-drag-symphony") return;
+      const ctx = {
+        payload: conductor.__ctxPayload || {},
+        stageCrew: { beginBeat },
+        sequence: dragPlugin.sequence,
+      };
+      const ev = payload?.event;
+      if (ev === "canvas:element:drag:start") {
+        const res = dragPlugin.handlers.handleDragStart(
+          { elementId: payload.elementId, origin: payload.origin },
+          ctx
+        );
+        conductor.__ctxPayload = { ...(ctx.payload || {}), ...(res || {}) };
+      } else if (ev === "canvas:element:moved") {
+        const res = dragPlugin.handlers.handleDragMove(
+          { elementId: payload.elementId, delta: payload.delta },
+          { ...ctx, payload: conductor.__ctxPayload || {} }
+        );
+        conductor.__ctxPayload = {
+          ...(conductor.__ctxPayload || {}),
+          ...(res || {}),
+        };
+      } else if (ev === "canvas:element:drag:end") {
+        dragPlugin.handlers.handleDragEnd(
+          {
+            elementId: payload.elementId,
+            position: payload.position,
+            instanceClass: payload.instanceClass,
+          },
+          { ...ctx, payload: conductor.__ctxPayload || {} }
+        );
+      }
+    });
     handlers = mod.attachDragHandlers(node);
 
     // Pointer down starts drag
