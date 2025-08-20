@@ -4,13 +4,14 @@ const OVERLAY_GLOBAL_RULES_LOCAL = [
   ".rx-resize-handle{position:absolute;width:8px;height:8px;border:1px solid #09f;background:#fff;box-sizing:border-box;pointer-events:auto;}",
   // Corner handles: transform-based centering (robust to themed sizes/borders)
   ".rx-nw{left:0;top:0;transform:translate(-50%,-50%);cursor:nwse-resize;}",
-  ".rx-n{left:50%;top:-4px;transform:translateX(-50%);cursor:ns-resize;}",
   ".rx-ne{right:0;top:0;transform:translate(50%,-50%);cursor:nesw-resize;}",
-  ".rx-e{right:-4px;top:50%;transform:translateY(-50%);cursor:ew-resize;}",
   ".rx-se{right:0;bottom:0;transform:translate(50%,50%);cursor:nwse-resize;}",
-  ".rx-s{left:50%;bottom:-4px;transform:translateX(-50%);cursor:ns-resize;}",
   ".rx-sw{left:0;bottom:0;transform:translate(-50%,50%);cursor:nesw-resize;}",
-  ".rx-w{left:-4px;top:50%;transform:translateY(-50%);cursor:ew-resize;}",
+  // Edge handles: transform-based centering on one axis, anchored on the box edge
+  ".rx-n{left:50%;top:0;transform:translate(-50%,-50%);cursor:ns-resize;}",
+  ".rx-e{right:0;top:50%;transform:translate(50%,-50%);cursor:ew-resize;}",
+  ".rx-s{left:50%;bottom:0;transform:translate(-50%,50%);cursor:ns-resize;}",
+  ".rx-w{left:0;top:50%;transform:translate(-50%,-50%);cursor:ew-resize;}",
 ];
 export const OVERLAY_GLOBAL_RULES = OVERLAY_GLOBAL_RULES_LOCAL;
 
