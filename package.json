@@ -1,6 +1,6 @@
 {
   "name": "renderx-plugins",
-  "version": "1.2.13",
+  "version": "1.2.14",
   "private": false,
   "description": "RenderX plugins meta-package with unit tests and build + manifest generation",
   "files": [
