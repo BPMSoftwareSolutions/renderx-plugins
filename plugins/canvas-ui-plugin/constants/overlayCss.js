@@ -2,13 +2,14 @@
 const OVERLAY_GLOBAL_RULES_LOCAL = [
   ".rx-resize-overlay{position:absolute;pointer-events:none;}",
   ".rx-resize-handle{position:absolute;width:8px;height:8px;border:1px solid #09f;background:#fff;box-sizing:border-box;pointer-events:auto;}",
-  ".rx-nw{left:-4px;top:-4px;cursor:nwse-resize;}",
+  // Corner handles: transform-based centering (robust to themed sizes/borders)
+  ".rx-nw{left:0;top:0;transform:translate(-50%,-50%);cursor:nwse-resize;}",
   ".rx-n{left:50%;top:-4px;transform:translateX(-50%);cursor:ns-resize;}",
-  ".rx-ne{right:-4px;top:-4px;cursor:nesw-resize;}",
+  ".rx-ne{right:0;top:0;transform:translate(50%,-50%);cursor:nesw-resize;}",
   ".rx-e{right:-4px;top:50%;transform:translateY(-50%);cursor:ew-resize;}",
-  ".rx-se{right:-4px;bottom:-4px;cursor:nwse-resize;}",
+  ".rx-se{right:0;bottom:0;transform:translate(50%,50%);cursor:nwse-resize;}",
   ".rx-s{left:50%;bottom:-4px;transform:translateX(-50%);cursor:ns-resize;}",
-  ".rx-sw{left:-4px;bottom:-4px;cursor:nesw-resize;}",
+  ".rx-sw{left:0;bottom:0;transform:translate(-50%,50%);cursor:nesw-resize;}",
   ".rx-w{left:-4px;top:50%;transform:translateY(-50%);cursor:ew-resize;}",
 ];
 export const OVERLAY_GLOBAL_RULES = OVERLAY_GLOBAL_RULES_LOCAL;
