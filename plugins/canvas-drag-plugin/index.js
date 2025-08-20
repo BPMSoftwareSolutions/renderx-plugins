@@ -64,6 +64,7 @@ export const sequence = {
 
 export const handlers = {
   handleDragStart: ({ elementId, origin }, ctx) => {
+    if (!elementId) return {};
     const res = { drag: { elementId, origin } };
     try {
       const sc = ctx && ctx.stageCrew;
@@ -84,6 +85,7 @@ export const handlers = {
     return res;
   },
   handleDragMove: ({ elementId, delta, onDragUpdate }, ctx) => {
+    if (!elementId) return {};
     const o = (ctx &&
       ctx.payload &&
       ctx.payload.drag &&
@@ -113,6 +115,7 @@ export const handlers = {
     return { elementId, position };
   },
   handleDragEnd: ({ elementId, position, instanceClass, onDragEnd }, ctx) => {
+    if (!elementId) return {};
     try {
       const sc = ctx && ctx.stageCrew;
       if (sc && typeof sc.beginBeat === "function") {
@@ -131,15 +134,28 @@ export const handlers = {
         endTxn.commit();
 
         // Then, persist the per-instance absolute position CSS using UI helper (host BeatTxn has no upsertStyleTag)
-        const x = Math.round(position?.x || 0);
-        const y = Math.round(position?.y || 0);
-        try {
-          updateInstancePositionCSS(elementId, cls, x, y);
-        } catch (e) {
+        const hasValidPos =
+          position &&
+          typeof position.x === "number" &&
+          typeof position.y === "number";
+        if (hasValidPos) {
+          const x = Math.round(position.x);
+          const y = Math.round(position.y);
           try {
-            ctx?.logger?.error?.("[dragEnd] failed to update instance CSS", e);
+            updateInstancePositionCSS(elementId, cls, x, y);
+          } catch (e) {
+            try {
+              ctx?.logger?.error?.(
+                "[dragEnd] failed to update instance CSS",
+                e
+              );
+            } catch {}
+            throw e;
+          }
+        } else {
+          try {
+            ctx?.logger?.info?.("[dragEnd] skip persist — missing position");
           } catch {}
-          throw e;
         }
       }
     } catch {}
