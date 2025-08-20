@@ -1,17 +1,17 @@
 // Canonical overlay CSS constants
 const OVERLAY_GLOBAL_RULES_LOCAL = [
   ".rx-resize-overlay{position:absolute;pointer-events:none;}",
-  ".rx-resize-handle{position:absolute;width:8px;height:8px;border:1px solid #09f;background:#fff;box-sizing:border-box;pointer-events:auto;}",
+  ".rx-resize-overlay .rx-resize-handle{position:absolute;width:8px;height:8px;border:1px solid #09f;background:#fff;box-sizing:border-box;pointer-events:auto;}",
   // Corner handles: transform-based centering (robust to themed sizes/borders)
-  ".rx-nw{left:0;top:0;transform:translate(-50%,-50%);cursor:nwse-resize;}",
-  ".rx-ne{right:0;top:0;transform:translate(50%,-50%);cursor:nesw-resize;}",
-  ".rx-se{right:0;bottom:0;transform:translate(50%,50%);cursor:nwse-resize;}",
-  ".rx-sw{left:0;bottom:0;transform:translate(-50%,50%);cursor:nesw-resize;}",
+  ".rx-resize-overlay .rx-resize-handle.rx-nw{left:0;top:0;transform:translate(-50%,-50%);cursor:nwse-resize;}",
+  ".rx-resize-overlay .rx-resize-handle.rx-ne{right:0;top:0;transform:translate(50%,-50%);cursor:nesw-resize;}",
+  ".rx-resize-overlay .rx-resize-handle.rx-se{right:0;bottom:0;transform:translate(50%,50%);cursor:nwse-resize;}",
+  ".rx-resize-overlay .rx-resize-handle.rx-sw{left:0;bottom:0;transform:translate(-50%,50%);cursor:nesw-resize;}",
   // Edge handles: transform-based centering on one axis, anchored on the box edge
-  ".rx-n{left:50%;top:0;transform:translate(-50%,-50%);cursor:ns-resize;}",
-  ".rx-e{right:0;top:50%;transform:translate(50%,-50%);cursor:ew-resize;}",
-  ".rx-s{left:50%;bottom:0;transform:translate(-50%,50%);cursor:ns-resize;}",
-  ".rx-w{left:0;top:50%;transform:translate(-50%,-50%);cursor:ew-resize;}",
+  ".rx-resize-overlay .rx-resize-handle.rx-n{left:50%;top:0;transform:translate(-50%,-50%);cursor:ns-resize;}",
+  ".rx-resize-overlay .rx-resize-handle.rx-e{right:0;top:50%;transform:translate(50%,-50%);cursor:ew-resize;}",
+  ".rx-resize-overlay .rx-resize-handle.rx-s{left:50%;bottom:0;transform:translate(-50%,50%);cursor:ns-resize;}",
+  ".rx-resize-overlay .rx-resize-handle.rx-w{left:0;top:50%;transform:translate(-50%,-50%);cursor:ew-resize;}",
 ];
 export const OVERLAY_GLOBAL_RULES = OVERLAY_GLOBAL_RULES_LOCAL;
 
