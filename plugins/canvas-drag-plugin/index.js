@@ -2,6 +2,8 @@
  * Canvas Component Drag Plugin (callback-first)
  */
 
+import { updateInstancePositionCSS } from "../canvas-ui-plugin/styles/instanceCss.js";
+
 export const sequence = {
   id: "Canvas.component-drag-symphony",
   name: "Canvas Component Drag Symphony",
@@ -128,18 +130,17 @@ export const handlers = {
         });
         endTxn.commit();
 
-        // Then, upsert the per-instance absolute position CSS in a separate beat
+        // Then, persist the per-instance absolute position CSS using UI helper (host BeatTxn has no upsertStyleTag)
         const x = Math.round(position?.x || 0);
         const y = Math.round(position?.y || 0);
-        const cssText = `.${cls}{position:absolute;left:${x}px;top:${y}px;box-sizing:border-box;display:block;}`;
-        const posTxn = sc.beginBeat(`instance:pos:${elementId}`, {
-          handlerName: "handleDragEnd",
-          plugin: "canvas-drag-plugin",
-          sequenceId: ctx?.sequence?.id,
-          nodeId: elementId,
-        });
-        posTxn.upsertStyleTag(`component-instance-css-${elementId}`, cssText);
-        posTxn.commit();
+        try {
+          updateInstancePositionCSS(elementId, cls, x, y);
+        } catch (e) {
+          try {
+            ctx?.logger?.error?.("[dragEnd] failed to update instance CSS", e);
+          } catch {}
+          throw e;
+        }
       }
     } catch {}
     try {
