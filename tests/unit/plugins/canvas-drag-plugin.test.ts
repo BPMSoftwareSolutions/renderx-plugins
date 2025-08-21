@@ -62,8 +62,13 @@ describe("RenderX Canvas Drag Plugin", () => {
     test("handleDragEnd calls onDragEnd if provided", () => {
       const onDragEnd = jest.fn();
       const ctx: any = base();
-      const res = plugin.handlers.handleDragEnd({ onDragEnd }, ctx);
-      expect(onDragEnd).toHaveBeenCalled();
+      const position = { x: 100, y: 200 };
+      const res = plugin.handlers.handleDragEnd({
+        elementId: "test-element",
+        position,
+        onDragEnd
+      }, ctx);
+      expect(onDragEnd).toHaveBeenCalledWith({ elementId: "test-element", position });
       expect(res).toEqual({});
     });
   });
@@ -118,17 +123,17 @@ describe("RenderX Canvas Drag Plugin", () => {
       const beginBeat = jest.fn((corrId: string, meta: any) => {
         const txn: any = {
           update: jest.fn((selector: string, payload: any) => { ops.push({ type: "update", selector, payload }); return txn; }),
+          remove: jest.fn((selector: string) => { ops.push({ type: "remove", selector }); return txn; }),
+          create: jest.fn((tagName: string, options: any) => {
+            ops.push({ type: "create", tagName, options });
+            return { appendTo: jest.fn((parent: string) => ops.push({ type: "appendTo", parent })) };
+          }),
           commit: jest.fn((options?: any) => { ops.push({ type: "commit", options }); return undefined; }),
         };
         ops.push({ type: "beginBeat", corrId, meta });
         return txn;
       });
       const ctx: any = { payload: {}, stageCrew: { beginBeat }, sequence: plugin.sequence };
-
-      // Spy on UI helper which is responsible for persisting style tag
-      const cssModPath = "RenderX/public/plugins/canvas-ui-plugin/index.js";
-      const cssMod: any = loadRenderXPlugin(cssModPath);
-      const spy = jest.spyOn(cssMod, "updateInstancePositionCSS");
 
       plugin.handlers.handleDragEnd({ elementId: "id1", position: { x: 17, y: 29 }, instanceClass: "id1" }, ctx);
 
@@ -137,9 +142,16 @@ describe("RenderX Canvas Drag Plugin", () => {
       expect(endIdx).toBeGreaterThanOrEqual(0);
       expect(ops.slice(endIdx + 1).some((o) => o.type === "commit")).toBe(true);
 
-      // Ensure UI helper persisted instance CSS (not via StageCrew)
-      expect(spy).toHaveBeenCalledWith("id1", "id1", 17, 29);
-      spy.mockRestore();
+      // Ensure instance position CSS beat was created
+      const instancePosIdx = ops.findIndex((o) => o.type === "beginBeat" && /instance-position-id1/.test(o.corrId));
+      expect(instancePosIdx).toBeGreaterThanOrEqual(0);
+
+      // Ensure instance position CSS operations were performed
+      const createOps = ops.filter((o) => o.type === "create" && o.tagName === "style");
+      expect(createOps.length).toBeGreaterThan(0);
+
+      const updateOps = ops.filter((o) => o.type === "update" && o.selector === "#component-instance-css-id1");
+      expect(updateOps.length).toBeGreaterThan(0);
     });
 
 });

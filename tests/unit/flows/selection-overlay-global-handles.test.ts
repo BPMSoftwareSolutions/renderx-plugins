@@ -15,6 +15,41 @@ describe("Selection overlay global CSS contains handle rules (not fallback)", ()
     const ops: any[] = [];
     const beginBeat = jest.fn((corrId: string, meta: any) => {
       const txn: any = {
+        create: jest.fn((tagName: string, options: any) => {
+          const element = document.createElement(tagName);
+          if (options?.attrs) {
+            Object.entries(options.attrs).forEach(([key, value]) => {
+              element.setAttribute(key, value as string);
+            });
+          }
+          ops.push({ type: "create", tagName, options, element });
+          return {
+            appendTo: jest.fn((parent: string) => {
+              if (parent === "head") {
+                document.head.appendChild(element);
+              }
+              ops.push({ type: "appendTo", parent });
+            })
+          };
+        }),
+        update: jest.fn((selector: string, options: any) => {
+          if (options?.text) {
+            const element = document.querySelector(selector);
+            if (element) {
+              element.textContent = options.text;
+            }
+          }
+          ops.push({ type: "update", selector, options });
+          return txn;
+        }),
+        remove: jest.fn((selector: string) => {
+          const element = document.querySelector(selector);
+          if (element) {
+            element.remove();
+          }
+          ops.push({ type: "remove", selector });
+          return txn;
+        }),
         upsertStyleTag: jest.fn((id: string, cssText: string) => {
           const tag = document.getElementById(id) || document.createElement("style");
           tag.id = id;
@@ -23,7 +58,6 @@ describe("Selection overlay global CSS contains handle rules (not fallback)", ()
           ops.push({ type: "upsertStyleTag", id, cssText });
           return txn;
         }),
-        update: jest.fn(() => txn),
         commit: jest.fn(() => ops.push({ type: "commit" })),
       };
       ops.push({ type: "beginBeat", corrId, meta });
@@ -31,6 +65,24 @@ describe("Selection overlay global CSS contains handle rules (not fallback)", ()
     });
     (global as any).window = (global as any).window || {};
     (global as any).window.renderxCommunicationSystem = { conductor, stageCrew: { beginBeat }, __ops: ops } as any;
+
+    // Wire conductor.play to dispatch to selection plugin handlers with StageCrew context
+    jest.spyOn(conductor as any, "play").mockImplementation((_pluginId: string, seqId: string, payload: any) => {
+      if (seqId !== "Canvas.component-select-symphony") return;
+      const ctx: any = {
+        payload: (conductor as any).__ctxPayload || {},
+        stageCrew: { beginBeat },
+        sequence: selection.sequence
+      };
+      const res = selection.handlers.handleSelect({
+        elementId: payload?.elementId,
+        onSelectionChange: payload?.onSelectionChange,
+        position: payload?.position,
+        defaults: payload?.defaults,
+      }, ctx);
+      (conductor as any).__ctxPayload = { ...(ctx.payload || {}), ...(res || {}) };
+      selection.handlers.handleFinalize({ elementId: payload?.elementId, clearSelection: false }, ctx);
+    });
 
     // React stub
     const created: any[] = [];
