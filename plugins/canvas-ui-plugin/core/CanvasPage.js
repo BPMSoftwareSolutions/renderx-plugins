@@ -5,6 +5,7 @@ import { buildOverlayForNode } from "../ui/overlay.js";
 import { renderCanvasNode } from "./renderCanvasNode.js";
 import {
   updateInstanceSizeCSS,
+  updateInstanceSizeCSSViaStageCrew,
 } from "../styles/instanceCss.js";
 
 export function CanvasPage(props = {}) {
@@ -107,28 +108,40 @@ export function CanvasPage(props = {}) {
   }, []);
 
   useEffect(() => {
+    // Overlay transforms now handled by Canvas.overlay-transform-symphony via StageCrew
     const applyOverlayTransform = (dx, dy) => {
       try {
         if (!selectedId) return;
-        const styleId = `overlay-transform-${selectedId}`;
-        let tag = document.getElementById(styleId);
-        if (!tag) {
-          tag = document.createElement("style");
-          tag.id = styleId;
-          document.head.appendChild(tag);
+        const system = (window && window.renderxCommunicationSystem) || null;
+        const conductor = system && system.conductor;
+        if (conductor && typeof conductor.play === "function") {
+          conductor.play(
+            "Canvas.overlay-transform-symphony",
+            "Canvas.overlay-transform-symphony",
+            {
+              elementId: selectedId,
+              delta: { dx, dy },
+              event: "canvas:overlay:transform:apply",
+            }
+          );
         }
-        const cls = `.rx-overlay-${selectedId}{transform:translate(${
-          Math.round(dx) || 0
-        }px,${Math.round(dy) || 0}px);}`;
-        tag.textContent = cls;
       } catch {}
     };
     const clearOverlayTransform = () => {
       try {
         if (!selectedId) return;
-        const id = `overlay-transform-${selectedId}`;
-        const t = document.getElementById(id);
-        if (t && t.parentNode) t.parentNode.removeChild(t);
+        const system = (window && window.renderxCommunicationSystem) || null;
+        const conductor = system && system.conductor;
+        if (conductor && typeof conductor.play === "function") {
+          conductor.play(
+            "Canvas.overlay-transform-symphony",
+            "Canvas.overlay-transform-symphony",
+            {
+              elementId: selectedId,
+              event: "canvas:overlay:transform:clear",
+            }
+          );
+        }
       } catch {}
     };
     const setOverlayHidden = (hidden) => {};
@@ -192,17 +205,36 @@ export function CanvasPage(props = {}) {
             w.__rx_canvas_ui__.__lastH = box.h;
           }
         } catch {}
-        // overlay instance CSS updates now handled by handlers via StageCrew
-        // Also live-update the actual component instance CSS so the element resizes during drag
+        // Instance CSS updates now handled via StageCrew through resize symphony
+        // Trigger resize symphony to handle live updates
         try {
-          const cls = String(n?.cssClass || n?.id || "").trim();
-          if (cls) {
-            updateInstanceSizeCSS(
-              elementId,
-              cls,
-              box?.w ?? defaults.defaultWidth ?? 0,
-              box?.h ?? defaults.defaultHeight ?? 0,
-              { x: posX, y: posY }
+          const system = (window && window.renderxCommunicationSystem) || null;
+          const conductor = system && system.conductor;
+          if (conductor && typeof conductor.play === "function") {
+            conductor.play(
+              "Canvas.component-resize-symphony",
+              "Canvas.component-resize-symphony",
+              {
+                elementId,
+                box,
+                event: "canvas:element:resized",
+                onResizeUpdate: ({ elementId: id, box: resizeBox }) => {
+                  // This callback is for UI state updates only
+                  try {
+                    const cls = String(n?.cssClass || n?.id || "").trim();
+                    if (cls && resizeBox) {
+                      // Use deprecated version for now during migration
+                      updateInstanceSizeCSS(
+                        id,
+                        cls,
+                        resizeBox?.w ?? defaults.defaultWidth ?? 0,
+                        resizeBox?.h ?? defaults.defaultHeight ?? 0,
+                        { x: posX, y: posY }
+                      );
+                    }
+                  } catch {}
+                },
+              }
             );
           }
         } catch {}
@@ -229,18 +261,38 @@ export function CanvasPage(props = {}) {
           }
         } catch {}
         if (!finalBox) return;
-        updateInstanceSizeCSS(
-          elementId,
-          cls,
-          finalBox.w ?? 0,
-          finalBox.h ?? 0,
-          {
-            x:
-              typeof finalBox.x === "number" ? finalBox.x : n?.position?.x ?? 0,
-            y:
-              typeof finalBox.y === "number" ? finalBox.y : n?.position?.y ?? 0,
+
+        // Trigger resize end symphony to handle final CSS commit via StageCrew
+        try {
+          const system = (window && window.renderxCommunicationSystem) || null;
+          const conductor = system && system.conductor;
+          if (conductor && typeof conductor.play === "function") {
+            conductor.play(
+              "Canvas.component-resize-symphony",
+              "Canvas.component-resize-symphony",
+              {
+                elementId,
+                box: finalBox,
+                event: "canvas:element:resize:end",
+                onResizeEnd: () => {
+                  // Final commit callback - use deprecated version during migration
+                  try {
+                    updateInstanceSizeCSS(
+                      elementId,
+                      cls,
+                      finalBox.w ?? 0,
+                      finalBox.h ?? 0,
+                      {
+                        x: typeof finalBox.x === "number" ? finalBox.x : n?.position?.x ?? 0,
+                        y: typeof finalBox.y === "number" ? finalBox.y : n?.position?.y ?? 0,
+                      }
+                    );
+                  } catch {}
+                },
+              }
+            );
           }
-        );
+        } catch {}
         // overlay instance CSS commit handled by handlers via StageCrew
       } catch {}
     };
@@ -386,6 +438,8 @@ export function CanvasPage(props = {}) {
                 onComponentCreated: (node) => {
                   try {
                     if (!node) return;
+                    // Component creation now handled via Canvas.component-create-symphony
+                    // This callback just updates local UI state
                     setNodes((prev) => {
                       const next = Array.isArray(prev) ? prev.slice() : [];
                       next.push(node);

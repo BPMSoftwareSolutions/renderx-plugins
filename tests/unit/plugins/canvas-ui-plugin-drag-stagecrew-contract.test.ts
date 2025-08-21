@@ -33,7 +33,6 @@ describe("Canvas UI drag - StageCrew commit contract and overlay scoping", () =>
     const beginBeat = jest.fn((corrId: string, meta: any) => {
       const txn: any = {
         update: jest.fn((selector: string, payload: any) => { ops.push({ type: "update", selector, payload }); return txn; }),
-        upsertStyleTag: jest.fn((id: string, cssText: string) => { ops.push({ type: "upsertStyleTag", id, cssText }); return txn; }),
         commit: jest.fn((options?: any) => { ops.push({ type: "commit", options }); return undefined; }),
       };
       ops.push({ type: "beginBeat", corrId, meta });
@@ -77,9 +76,11 @@ describe("Canvas UI drag - StageCrew commit contract and overlay scoping", () =>
     plugin.CanvasPage({ nodes: [node], selectedId: node.id });
 
     // Assert overlay instance CSS was upserted via StageCrew and is scoped to instance (not full canvas)
-    const overlayUpsert = ops.find((o) => o.type === "upsertStyleTag" && o.id === `overlay-css-${node.id}`);
-    expect(overlayUpsert).toBeTruthy();
-    const overlayCss = String(overlayUpsert?.cssText || "").replace(/\s+/g, "");
+    // Overlay CSS now applied via overlayInjectInstanceCSS (creates link rel=stylesheet)
+    const overlayLink = Array.from(document.querySelectorAll('link[rel="stylesheet"]'))
+      .find((el: any) => el.id === `overlay-css-${node.id}`) as HTMLLinkElement | undefined;
+    expect(overlayLink).toBeTruthy();
+    const overlayCss = decodeURIComponent(String(overlayLink?.href || '').replace(/^data:text\/css;charset=utf-8,/, '')).replace(/\s+/g, "");
     expect(overlayCss).toContain(`.rx-overlay-${node.id}{`.replace(/\s+/g, ""));
     expect(overlayCss).toContain(`width:100px`.replace(/\s+/g, ""));
     expect(overlayCss).toContain(`height:30px`.replace(/\s+/g, ""));

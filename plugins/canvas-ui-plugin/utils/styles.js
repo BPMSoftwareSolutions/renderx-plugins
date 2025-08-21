@@ -89,10 +89,12 @@ function buildOverlayInstanceCssTextSafe(node, width, height) {
 
 export function overlayInjectGlobalCSS(ctx) {
   try {
+    const sc = ctx?.stageCrew || ctx; // allow passing StageCrew directly for tests
+    if (!sc || typeof sc.beginBeat !== "function") throw new Error("StageCrew required");
     const id = "overlay-css-global";
-    if (document.getElementById(id)) return; // insert-once semantics
+    if (typeof document !== "undefined" && document.getElementById(id)) return; // insert-once semantics
     const cssText = buildOverlayGlobalCssTextSafe();
-    const txn = ctx.stageCrew.beginBeat("overlay-css-global", { handlerName: "overlayCSS" });
+    const txn = sc.beginBeat("overlay-css-global", { handlerName: "overlayCSS" });
     txn.create("style", { attrs: { id } }).appendTo("head");
     txn.update(`#${id}`, { text: cssText });
     txn.commit();

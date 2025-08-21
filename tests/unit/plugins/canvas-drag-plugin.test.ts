@@ -74,7 +74,6 @@ describe("RenderX Canvas Drag Plugin", () => {
       const beginBeat = jest.fn((corrId: string, meta: any) => {
         const txn: any = {
           update: jest.fn((selector: string, payload: any) => { ops.push({ type: "update", selector, payload }); return txn; }),
-          upsertStyleTag: jest.fn((id: string, cssText: string) => { ops.push({ type: "upsertStyleTag", id, cssText }); return txn; }),
           commit: jest.fn((options?: any) => { ops.push({ type: "commit", options }); return undefined; }),
         };
         ops.push({ type: "beginBeat", corrId, meta });
@@ -113,28 +112,34 @@ describe("RenderX Canvas Drag Plugin", () => {
       expect(ops.slice(frameIdx + 1).some((o) => o.type === "commit")).toBe(true);
     });
 
-    test("handleDragEnd clears transform, restores classes, and upserts instance position CSS", () => {
+    test("handleDragEnd clears transform, restores classes, and commits instance position CSS via UI helper", () => {
       const plugin: any = loadRenderXPlugin(pluginPath);
       const ops: any[] = [];
       const beginBeat = jest.fn((corrId: string, meta: any) => {
         const txn: any = {
           update: jest.fn((selector: string, payload: any) => { ops.push({ type: "update", selector, payload }); return txn; }),
-          upsertStyleTag: jest.fn((id: string, cssText: string) => { ops.push({ type: "upsertStyleTag", id, cssText }); return txn; }),
           commit: jest.fn((options?: any) => { ops.push({ type: "commit", options }); return undefined; }),
         };
         ops.push({ type: "beginBeat", corrId, meta });
         return txn;
       });
       const ctx: any = { payload: {}, stageCrew: { beginBeat }, sequence: plugin.sequence };
+
+      // Spy on UI helper which is responsible for persisting style tag
+      const cssModPath = "RenderX/public/plugins/canvas-ui-plugin/index.js";
+      const cssMod: any = loadRenderXPlugin(cssModPath);
+      const spy = jest.spyOn(cssMod, "updateInstancePositionCSS");
+
       plugin.handlers.handleDragEnd({ elementId: "id1", position: { x: 17, y: 29 }, instanceClass: "id1" }, ctx);
-      const posIdx = ops.findIndex((o) => o.type === "beginBeat" && o.corrId === "instance:pos:id1");
-      expect(posIdx).toBeGreaterThanOrEqual(0);
-      const upsert = ops.slice(posIdx + 1).find((o) => o.type === "upsertStyleTag");
-      expect(upsert).toBeTruthy();
-      expect(upsert.id).toBe("component-instance-css-id1");
-      expect(String(upsert.cssText || "")).toContain("left:17px");
-      expect(String(upsert.cssText || "")).toContain("top:29px");
-      expect(ops.slice(posIdx + 1).some((o) => o.type === "commit")).toBe(true);
+
+      // Ensure the StageCrew end beat committed
+      const endIdx = ops.findIndex((o) => o.type === "beginBeat" && /drag:end:id1/.test(o.corrId));
+      expect(endIdx).toBeGreaterThanOrEqual(0);
+      expect(ops.slice(endIdx + 1).some((o) => o.type === "commit")).toBe(true);
+
+      // Ensure UI helper persisted instance CSS (not via StageCrew)
+      expect(spy).toHaveBeenCalledWith("id1", "id1", 17, 29);
+      spy.mockRestore();
     });
 
 });
