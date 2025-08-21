@@ -1,15 +1,10 @@
 import { handleCanvasDrop } from "../handlers/drop.js";
 import { makeRxCompClass } from "../utils/idUtils.js";
-import {
-  overlayEnsureGlobalCSS,
-  overlayEnsureInstanceCSS,
-} from "../utils/styles.js";
 import { attachDragHandlers } from "../handlers/drag.js";
 import { buildOverlayForNode } from "../ui/overlay.js";
 import { renderCanvasNode } from "./renderCanvasNode.js";
 import {
   updateInstanceSizeCSS,
-  updateInstancePositionCSS,
 } from "../styles/instanceCss.js";
 
 export function CanvasPage(props = {}) {

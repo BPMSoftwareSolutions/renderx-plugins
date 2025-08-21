@@ -1,7 +1,3 @@
-import {
-  overlayEnsureGlobalCSS,
-  overlayEnsureInstanceCSS,
-} from "../utils/styles.js";
 import { ResizeCoordinator } from "../utils/ResizeCoordinator.js";
 
 export function buildOverlayForNode(React, n, key, selectedId) {
