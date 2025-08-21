@@ -32,6 +32,14 @@ describe("Selection overlay bounds via StageCrew", () => {
           ops.push({ type: "update", selector, payload });
           return txn;
         }),
+        create: jest.fn((tagName: string, options: any) => {
+          ops.push({ type: "create", tagName, options });
+          return { appendTo: jest.fn((parent: string) => ops.push({ type: "appendTo", parent })) };
+        }),
+        remove: jest.fn((selector: string) => {
+          ops.push({ type: "remove", selector });
+          return txn;
+        }),
         upsertStyleTag: jest.fn((id: string, cssText: string) => {
           ops.push({ type: "style", id, cssText });
           return txn;
@@ -134,14 +142,19 @@ describe("Selection overlay bounds via StageCrew", () => {
     const clickHandler = onElementClick(node);
     clickHandler({ stopPropagation() {} });
 
-    // Inspect StageCrew style ensure
+    // Inspect StageCrew link element creation for overlay CSS
     const opsArr = (global as any).window.renderxCommunicationSystem
       .__ops as any[];
-    const inst = opsArr.find(
-      (o) => o.type === "style" && o.id === `overlay-css-${node.id}`
+    const linkCreate = opsArr.find(
+      (o) => o.type === "create" && o.tagName === "link" && o.options?.attrs?.id === `overlay-css-${node.id}`
     );
-    expect(inst).toBeTruthy();
-    const css = String(inst.cssText || "").replace(/\s+/g, "");
+    expect(linkCreate).toBeTruthy();
+    expect(linkCreate.options.attrs.rel).toBe("stylesheet");
+
+    // Decode the CSS from the data URL
+    const href = linkCreate.options.attrs.href;
+    expect(href).toMatch(/^data:text\/css;charset=utf-8,/);
+    const css = decodeURIComponent(href.replace(/^data:text\/css;charset=utf-8,/, '')).replace(/\s+/g, "");
     expect(css).toContain(
       `.rx-overlay-${node.id}{position:absolute;left:25px;top:35px;width:110px;height:32px;z-index:10;}`.replace(
         /\s+/g,

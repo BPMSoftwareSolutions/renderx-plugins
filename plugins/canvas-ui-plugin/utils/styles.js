@@ -11,36 +11,35 @@ export function injectRawCSS(css) {
   } catch {}
 }
 
+// DEPRECATED: Component geometry is now owned by sequence data + StageCrew operations.
+// This function is neutralized to prevent position reset bugs.
+// Only overlay CSS should be managed via StageCrew transactions.
 export function injectInstanceCSS(node, width, height) {
-  try {
-    if (!node) return;
-    const id =
-      "component-instance-css-" + String(node.id || node.cssClass || "");
-    if (document.getElementById(id)) return;
-    const cls = String(node.cssClass || node.id || "").trim();
-    if (!cls) return;
-    const left =
-      (node.position && node.position.x) != null ? node.position.x : 0;
-    const top =
-      (node.position && node.position.y) != null ? node.position.y : 0;
-    const lines = [
-      `.${cls}{position:absolute;left:${left}px;top:${top}px;box-sizing:border-box;display:block;}`,
-    ];
-    if (width != null)
-      lines.push(
-        `.${cls}{width:${typeof width === "number" ? width + "px" : width};}`
-      );
-    if (height != null)
-      lines.push(
-        `.${cls}{height:${
-          typeof height === "number" ? height + "px" : height
-        };}`
-      );
-    const tag = document.createElement("style");
-    tag.id = id;
-    tag.textContent = lines.join("\n");
-    document.head.appendChild(tag);
-  } catch {}
+  // NO-OP: Geometry injection has been removed to prevent position reset regressions.
+  //
+  // CONTEXT: This function previously injected CSS rules like:
+  // `.${cls}{position:absolute;left:${left}px;top:${top}px;...}`
+  //
+  // PROBLEM: This caused components to jump to (0,0) or stale positions when:
+  // - node.position was missing or stale
+  // - Multiple components shared the same class
+  // - CSS injection happened during selection/overlay operations
+  //
+  // SOLUTION: Component geometry is now managed exclusively through:
+  // - Sequence data (node.position)
+  // - StageCrew transactions for overlay CSS only
+  // - No direct CSS injection for component positioning
+  //
+  // This function is kept as a no-op for backward compatibility until all callers are removed.
+
+  console.warn(
+    "injectInstanceCSS is deprecated and neutralized. " +
+    "Component geometry should be managed via sequence data and StageCrew overlay operations only. " +
+    `Called with node: ${node?.id || node?.cssClass}, width: ${width}, height: ${height}`
+  );
+
+  // Early return - no CSS injection performed
+  return;
 }
 
 // Overlay CSS helpers
@@ -89,10 +88,12 @@ function buildOverlayInstanceCssTextSafe(node, width, height) {
 
 export function overlayInjectGlobalCSS(ctx) {
   try {
+    const sc = ctx?.stageCrew || ctx; // allow passing StageCrew directly for tests
+    if (!sc || typeof sc.beginBeat !== "function") throw new Error("StageCrew required");
     const id = "overlay-css-global";
-    if (document.getElementById(id)) return; // insert-once semantics
+    if (typeof document !== "undefined" && document.getElementById(id)) return; // insert-once semantics
     const cssText = buildOverlayGlobalCssTextSafe();
-    const txn = ctx.stageCrew.beginBeat("overlay-css-global", { handlerName: "overlayCSS" });
+    const txn = sc.beginBeat("overlay-css-global", { handlerName: "overlayCSS" });
     txn.create("style", { attrs: { id } }).appendTo("head");
     txn.update(`#${id}`, { text: cssText });
     txn.commit();

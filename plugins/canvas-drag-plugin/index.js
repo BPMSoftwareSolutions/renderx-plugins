@@ -2,7 +2,7 @@
  * Canvas Component Drag Plugin (callback-first)
  */
 
-import { updateInstancePositionCSS } from "../canvas-ui-plugin/styles/instanceCss.js";
+import { updateInstancePositionCSSViaStageCrew } from "../canvas-ui-plugin/styles/instanceCss.js";
 
 export const sequence = {
   id: "Canvas.component-drag-symphony",
@@ -142,7 +142,7 @@ export const handlers = {
           const x = Math.round(position.x);
           const y = Math.round(position.y);
           try {
-            updateInstancePositionCSS(elementId, cls, x, y);
+            updateInstancePositionCSSViaStageCrew(ctx, elementId, cls, x, y);
           } catch (e) {
             try {
               ctx?.logger?.error?.(

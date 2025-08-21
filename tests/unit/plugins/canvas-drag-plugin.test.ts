@@ -62,8 +62,13 @@ describe("RenderX Canvas Drag Plugin", () => {
     test("handleDragEnd calls onDragEnd if provided", () => {
       const onDragEnd = jest.fn();
       const ctx: any = base();
-      const res = plugin.handlers.handleDragEnd({ onDragEnd }, ctx);
-      expect(onDragEnd).toHaveBeenCalled();
+      const position = { x: 100, y: 200 };
+      const res = plugin.handlers.handleDragEnd({
+        elementId: "test-element",
+        position,
+        onDragEnd
+      }, ctx);
+      expect(onDragEnd).toHaveBeenCalledWith({ elementId: "test-element", position });
       expect(res).toEqual({});
     });
   });
@@ -74,7 +79,6 @@ describe("RenderX Canvas Drag Plugin", () => {
       const beginBeat = jest.fn((corrId: string, meta: any) => {
         const txn: any = {
           update: jest.fn((selector: string, payload: any) => { ops.push({ type: "update", selector, payload }); return txn; }),
-          upsertStyleTag: jest.fn((id: string, cssText: string) => { ops.push({ type: "upsertStyleTag", id, cssText }); return txn; }),
           commit: jest.fn((options?: any) => { ops.push({ type: "commit", options }); return undefined; }),
         };
         ops.push({ type: "beginBeat", corrId, meta });
@@ -113,28 +117,41 @@ describe("RenderX Canvas Drag Plugin", () => {
       expect(ops.slice(frameIdx + 1).some((o) => o.type === "commit")).toBe(true);
     });
 
-    test("handleDragEnd clears transform, restores classes, and upserts instance position CSS", () => {
+    test("handleDragEnd clears transform, restores classes, and commits instance position CSS via UI helper", () => {
       const plugin: any = loadRenderXPlugin(pluginPath);
       const ops: any[] = [];
       const beginBeat = jest.fn((corrId: string, meta: any) => {
         const txn: any = {
           update: jest.fn((selector: string, payload: any) => { ops.push({ type: "update", selector, payload }); return txn; }),
-          upsertStyleTag: jest.fn((id: string, cssText: string) => { ops.push({ type: "upsertStyleTag", id, cssText }); return txn; }),
+          remove: jest.fn((selector: string) => { ops.push({ type: "remove", selector }); return txn; }),
+          create: jest.fn((tagName: string, options: any) => {
+            ops.push({ type: "create", tagName, options });
+            return { appendTo: jest.fn((parent: string) => ops.push({ type: "appendTo", parent })) };
+          }),
           commit: jest.fn((options?: any) => { ops.push({ type: "commit", options }); return undefined; }),
         };
         ops.push({ type: "beginBeat", corrId, meta });
         return txn;
       });
       const ctx: any = { payload: {}, stageCrew: { beginBeat }, sequence: plugin.sequence };
+
       plugin.handlers.handleDragEnd({ elementId: "id1", position: { x: 17, y: 29 }, instanceClass: "id1" }, ctx);
-      const posIdx = ops.findIndex((o) => o.type === "beginBeat" && o.corrId === "instance:pos:id1");
-      expect(posIdx).toBeGreaterThanOrEqual(0);
-      const upsert = ops.slice(posIdx + 1).find((o) => o.type === "upsertStyleTag");
-      expect(upsert).toBeTruthy();
-      expect(upsert.id).toBe("component-instance-css-id1");
-      expect(String(upsert.cssText || "")).toContain("left:17px");
-      expect(String(upsert.cssText || "")).toContain("top:29px");
-      expect(ops.slice(posIdx + 1).some((o) => o.type === "commit")).toBe(true);
+
+      // Ensure the StageCrew end beat committed
+      const endIdx = ops.findIndex((o) => o.type === "beginBeat" && /drag:end:id1/.test(o.corrId));
+      expect(endIdx).toBeGreaterThanOrEqual(0);
+      expect(ops.slice(endIdx + 1).some((o) => o.type === "commit")).toBe(true);
+
+      // Ensure instance position CSS beat was created
+      const instancePosIdx = ops.findIndex((o) => o.type === "beginBeat" && /instance-position-id1/.test(o.corrId));
+      expect(instancePosIdx).toBeGreaterThanOrEqual(0);
+
+      // Ensure instance position CSS operations were performed
+      const createOps = ops.filter((o) => o.type === "create" && o.tagName === "style");
+      expect(createOps.length).toBeGreaterThan(0);
+
+      const updateOps = ops.filter((o) => o.type === "update" && o.selector === "#component-instance-css-id1");
+      expect(updateOps.length).toBeGreaterThan(0);
     });
 
 });

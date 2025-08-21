@@ -34,6 +34,14 @@ describe("Selection overlay ensure via handlers", () => {
           ops.push({ type: "update", selector, payload });
           return txn;
         }),
+        create: jest.fn((tagName: string, options: any) => {
+          ops.push({ type: "create", tagName, options });
+          return { appendTo: jest.fn((parent: string) => ops.push({ type: "appendTo", parent })) };
+        }),
+        remove: jest.fn((selector: string) => {
+          ops.push({ type: "remove", selector });
+          return txn;
+        }),
         upsertStyleTag: jest.fn((id: string, cssText: string) => {
           ops.push({ type: "upsertStyleTag", id, cssText });
           return txn;
@@ -134,16 +142,23 @@ describe("Selection overlay ensure via handlers", () => {
     // Assertions
     const arr = (global as any).window.renderxCommunicationSystem
       .__ops as any[];
-    const globalUpsert = arr.find(
-      (o) => o.type === "upsertStyleTag" && o.id === "overlay-css-global"
-    );
-    expect(globalUpsert).toBeTruthy();
 
-    const instUpsert = arr.find(
-      (o) => o.type === "upsertStyleTag" && o.id === `overlay-css-${node.id}`
+    // Check for global overlay CSS creation (style element)
+    const globalCreate = arr.find(
+      (o) => o.type === "create" && o.tagName === "style" && o.options?.attrs?.id === "overlay-css-global"
     );
-    expect(instUpsert).toBeTruthy();
-    const css = String(instUpsert?.cssText || "").replace(/\s+/g, "");
+    expect(globalCreate).toBeTruthy();
+
+    // Check for instance overlay CSS creation (link element)
+    const instCreate = arr.find(
+      (o) => o.type === "create" && o.tagName === "link" && o.options?.attrs?.id === `overlay-css-${node.id}`
+    );
+    expect(instCreate).toBeTruthy();
+    expect(instCreate.options.attrs.rel).toBe("stylesheet");
+
+    // Decode CSS from data URL
+    const href = instCreate.options.attrs.href;
+    const css = decodeURIComponent(href.replace(/^data:text\/css;charset=utf-8,/, '')).replace(/\s+/g, "");
     expect(css).toContain(`.rx-overlay-${node.id}{`.replace(/\s+/g, ""));
 
     const selectBegin = arr.find(

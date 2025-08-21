@@ -167,21 +167,38 @@ describe("Canvas UI Plugin - selection overlay and resize handles", () => {
       ).toBe(true)
     );
 
-    // CSS: verify StageCrew recorded upsertStyleTag calls for global + instance
+    // CSS: verify StageCrew recorded create + update operations for global CSS (new API)
     const opsArr = (global as any).window.renderxCommunicationSystem
       .__ops as any[];
-    const globalUpsert = opsArr.find(
-      (o) => o.type === "upsertStyleTag" && o.id === "overlay-css-global"
-    );
-    expect(globalUpsert).toBeTruthy();
-    expect(globalUpsert.cssText).toMatch(/\.rx-resize-overlay\b/);
-    expect(globalUpsert.cssText).toMatch(/\.rx-resize-handle\b/);
 
-    const instUpsert = opsArr.find(
-      (o) => o.type === "upsertStyleTag" && o.id === `overlay-css-${node.id}`
+    // Debug: Log all operations to see what's actually happening
+    console.log("All StageCrew operations:", JSON.stringify(opsArr, null, 2));
+
+    // Global CSS should be created via create + update operations
+    const globalCreate = opsArr.find(
+      (o) => o.type === "create" && o.tagName === "style" && o.options?.attrs?.id === "overlay-css-global"
     );
-    expect(instUpsert).toBeTruthy();
-    expect(instUpsert.cssText.replace(/\s+/g, "")).toContain(
+    expect(globalCreate).toBeTruthy();
+
+    const globalUpdate = opsArr.find(
+      (o) => o.type === "update" && o.selector === "#overlay-css-global" && o.payload?.text
+    );
+    expect(globalUpdate).toBeTruthy();
+    expect(globalUpdate.payload.text).toMatch(/\.rx-resize-overlay\b/);
+    expect(globalUpdate.payload.text).toMatch(/\.rx-resize-handle\b/);
+
+    // Instance CSS should be created via create link operation (new API)
+    const instCreate = opsArr.find(
+      (o) => o.type === "create" && o.tagName === "link" && o.options?.attrs?.id === `overlay-css-${node.id}`
+    );
+    expect(instCreate).toBeTruthy();
+    expect(instCreate.options.attrs.rel).toBe("stylesheet");
+    expect(instCreate.options.attrs.href).toMatch(/^data:text\/css/);
+
+    // Decode and verify the CSS content
+    const href = instCreate.options.attrs.href;
+    const cssText = decodeURIComponent(href.replace(/^data:text\/css[^,]*,/, ''));
+    expect(cssText.replace(/\s+/g, "")).toContain(
       `.rx-overlay-${node.id}{position:absolute;left:10px;top:20px;width:120px;height:40px;z-index:10;}`.replace(
         /\s+/g,
         ""
