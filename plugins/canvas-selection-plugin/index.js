@@ -71,7 +71,8 @@ export const handlers = {
         });
         txn.update(`#${elementId}`, { classes: { add: ["rx-comp-selected"] } });
         txn.commit();
-        // Ensure overlay CSS (global + instance) via StageCrew
+
+          // Ensure overlay CSS (global + instance) via StageCrew
         // Compute geometry strictly from event payload; do not rely on ctx.payload here
         const effDefaults =
           defaults || ctx?.component?.integration?.canvasIntegration || {};
@@ -85,27 +86,9 @@ export const handlers = {
             ? effDefaults.defaultHeight
             : 0;
 
-        // Upsert global CSS; do not swallow errors
+        // Update global CSS; do not swallow errors
         try {
-          const txnG = sc.beginBeat(`overlay:global`, {
-            handlerName: "overlayEnsure",
-            plugin: "canvas-selection-plugin",
-            sequenceId: ctx?.sequence?.id,
-          });
-          if (typeof txnG.upsertStyleTag === "function") {
-            txnG.upsertStyleTag(
-              "overlay-css-global",
-              buildOverlayGlobalCssText()
-            );
-            txnG.commit();
-          } else {
-            try {
-              ctx?.logger?.info?.(
-                "[overlayEnsure] StageCrew missing upsertStyleTag; using UI fallback"
-              );
-            } catch {}
-            overlayInjectGlobalCSS();
-          }
+          overlayInjectGlobalCSS(ctx);
         } catch (err) {
           try {
             ctx?.logger?.error?.("[overlayEnsure] global failed", err);
@@ -115,28 +98,7 @@ export const handlers = {
 
         // Upsert per-instance CSS; do not swallow errors
         try {
-          const txnI = sc.beginBeat(`overlay:${elementId}`, {
-            handlerName: "overlayEnsure",
-            plugin: "canvas-selection-plugin",
-            sequenceId: ctx?.sequence?.id,
-            nodeId: elementId,
-          });
-          const cssInstance = buildOverlayInstanceCssText(
-            { id: elementId, position: pos },
-            w,
-            h
-          );
-          if (typeof txnI.upsertStyleTag === "function") {
-            txnI.upsertStyleTag(`overlay-css-${elementId}`, cssInstance);
-            txnI.commit();
-          } else {
-            try {
-              ctx?.logger?.info?.(
-                "[overlayEnsure] StageCrew missing upsertStyleTag; using UI fallback (instance)"
-              );
-            } catch {}
-            overlayInjectInstanceCSS({ id: elementId, position: pos }, w, h);
-          }
+          overlayInjectInstanceCSS(ctx, { id: elementId, position: pos }, w, h);
         } catch (err) {
           try {
             ctx?.logger?.error?.("[overlayEnsure] instance failed", err);

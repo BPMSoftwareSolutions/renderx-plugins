@@ -87,29 +87,29 @@ function buildOverlayInstanceCssTextSafe(node, width, height) {
   return `.${cls}{position:absolute;left:${left}px;top:${top}px;width:${w};height:${h};z-index:10;}`;
 }
 
-export function overlayInjectGlobalCSS() {
+export function overlayInjectGlobalCSS(ctx) {
   try {
     const id = "overlay-css-global";
-    if (document.getElementById(id)) return;
-    const tag = document.createElement("style");
-    tag.id = id;
-    tag.textContent = buildOverlayGlobalCssTextSafe();
-    document.head.appendChild(tag);
+    if (document.getElementById(id)) return; // insert-once semantics
+    const cssText = buildOverlayGlobalCssTextSafe();
+    const txn = ctx.stageCrew.beginBeat("overlay-css-global", { handlerName: "overlayCSS" });
+    txn.create("style", { attrs: { id } }).appendTo("head");
+    txn.update(`#${id}`, { text: cssText });
+    txn.commit();
   } catch {}
 }
 
-export function overlayInjectInstanceCSS(node, width, height) {
+export function overlayInjectInstanceCSS(ctx, node, width, height) {
   try {
     if (!node) return;
     const id = "overlay-css-" + String(node.id || "");
     const cssText = buildOverlayInstanceCssTextSafe(node, width, height);
-    let tag = document.getElementById(id);
-    if (!tag) {
-      tag = document.createElement("style");
-      tag.id = id;
-      document.head.appendChild(tag);
-    }
-    tag.textContent = cssText;
+    const href = "data:text/css;charset=utf-8," + encodeURIComponent(cssText);
+
+    const txn = ctx.stageCrew.beginBeat(`${id}`, { handlerName: "overlayCSS" });
+    txn.remove(`#${id}`);
+    txn.create("link", { attrs: { id, rel: "stylesheet", href } }).appendTo("head");
+    txn.commit({ batch: true });
   } catch {}
 }
 
