@@ -1,0 +1,15 @@
+{
+  "pluginId": "CanvasLineResizeEndPlugin",
+  "id": "canvas-line-resize-end-symphony",
+  "name": "Canvas Line Resize End",
+  "movements": [
+    {
+      "id": "resize-line-end",
+      "name": "Resize Line End",
+      "beats": [
+        { "beat": 1, "event": "canvas:component:resize:line:end", "title": "Line Resize End", "dynamics": "mf", "handler": "endLineResize", "timing": "immediate", "kind": "stage-crew" }
+      ]
+    }
+  ]
+}
+

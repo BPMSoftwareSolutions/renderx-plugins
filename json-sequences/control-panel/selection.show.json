@@ -1,0 +1,31 @@
+{
+  "pluginId": "ControlPanelPlugin",
+  "id": "control-panel-selection-show-symphony",
+  "name": "Control Panel Selection Show",
+  "movements": [
+    {
+      "id": "selection",
+      "name": "Selection",
+      "beats": [
+        {
+          "beat": 1,
+          "event": "control:panel:selection:derive",
+          "title": "Derive Selection Model",
+          "dynamics": "mf",
+          "handler": "deriveSelectionModel",
+          "timing": "immediate",
+          "kind": "stage-crew"
+        },
+        {
+          "beat": 2,
+          "event": "control:panel:selection:notify",
+          "title": "Notify UI",
+          "dynamics": "mf",
+          "handler": "notifyUi",
+          "timing": "immediate",
+          "kind": "pure"
+        }
+      ]
+    }
+  ]
+}

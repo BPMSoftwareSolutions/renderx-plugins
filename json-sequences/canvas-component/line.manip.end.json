@@ -1,0 +1,15 @@
+{
+  "pluginId": "CanvasLineManipEndPlugin",
+  "id": "canvas-line-manip-end-symphony",
+  "name": "Canvas Line Manip End",
+  "movements": [
+    {
+      "id": "manip-line-end",
+      "name": "Manip Line End",
+      "beats": [
+        { "beat": 1, "event": "canvas:component:manip:line:end", "title": "Line Manip End", "dynamics": "mf", "handler": "endLineManip", "timing": "immediate", "kind": "stage-crew" }
+      ]
+    }
+  ]
+}
+

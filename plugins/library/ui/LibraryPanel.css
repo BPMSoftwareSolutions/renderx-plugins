@@ -1,0 +1,94 @@
+/* LibraryPanel Component Styles */
+
+.library-sidebar {
+  width: 320px;
+  background: var(--panel-bg);
+  backdrop-filter: blur(10px);
+  border-right: 1px solid var(--panel-border);
+  display: flex;
+  flex-direction: column;
+  box-shadow: 2px 0 20px var(--panel-shadow);
+  height: 100%;
+}
+
+.library-sidebar-header {
+  padding: 20px;
+  background: var(--panel-header-bg);
+  color: var(--panel-header-color);
+  text-align: center;
+}
+
+.library-sidebar-title {
+  font-size: 18px;
+  font-weight: 600;
+  margin-bottom: 8px;
+  margin: 0;
+}
+
+.library-sidebar-subtitle {
+  font-size: 12px;
+  opacity: 0.9;
+  margin: 0;
+}
+
+.library-component-library {
+  flex: 1;
+  padding: 20px;
+  overflow-y: auto;
+}
+
+.library-component-category {
+  margin-bottom: 24px;
+}
+
+.library-category-title {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--muted-text);
+  margin-bottom: 12px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.library-component-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+}
+
+.library-component-item {
+  cursor: grab;
+  background: var(--panel-bg);
+  border: 2px solid var(--border-color);
+  border-radius: 12px;
+  padding: 16px;
+  transition: all 0.3s ease;
+  text-align: center;
+  position: relative;
+  overflow: hidden;
+}
+
+.library-component-item:hover {
+  border-color: var(--accent-border);
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px var(--panel-shadow);
+}
+
+.library-component-icon {
+  font-size: 24px;
+  margin-bottom: 8px;
+  display: block;
+}
+
+.library-component-name {
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--panel-header-color);
+  margin-bottom: 4px;
+}
+
+.library-component-description {
+  font-size: 10px;
+  color: var(--muted-text);
+  line-height: 1.3;
+}

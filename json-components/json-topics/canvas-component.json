@@ -1,0 +1,385 @@
+{
+  "version": "1.0.0",
+  "topics": {
+    "canvas.component.create.requested": {
+      "routes": [
+        {
+          "pluginId": "CanvasComponentPlugin",
+          "sequenceId": "canvas-component-create-symphony"
+        }
+      ],
+      "payloadSchema": {
+        "type": "object",
+        "properties": {
+          "component": { "type": "object" },
+          "position": {
+            "type": "object",
+            "properties": {
+              "x": { "type": "number" },
+              "y": { "type": "number" }
+            },
+            "required": ["x", "y"]
+          },
+          "containerId": { "type": "string" },
+          "correlationId": { "type": "string" },
+          "onComponentCreated": { "type": "object" },
+          "onDragStart": { "type": "object" },
+          "onDragMove": { "type": "object" },
+          "onDragEnd": { "type": "object" },
+          "onSelected": { "type": "object" }
+        },
+        "required": ["component", "position"]
+      },
+      "visibility": "public",
+      "correlationKeys": ["correlationId"],
+      "notes": "Canvas component creation requested; routes to create sequence."
+    },
+    "canvas.component.created": {
+      "routes": [],
+      "payloadSchema": {
+        "type": "object",
+        "properties": {
+          "id": { "type": "string" },
+          "correlationId": { "type": "string" }
+        },
+        "required": ["id", "correlationId"]
+      },
+      "visibility": "public",
+      "correlationKeys": ["correlationId"],
+      "notes": "Emitted when a canvas component has been created."
+    },
+    "canvas.component.drag.start": {
+      "routes": [],
+      "payloadSchema": {
+        "type": "object",
+        "properties": {
+          "id": { "type": "string" },
+          "correlationId": { "type": "string" }
+        }
+      },
+      "visibility": "internal",
+      "correlationKeys": ["correlationId"],
+      "notes": "Drag start signal; useful for subscribers; no routing."
+    },
+    "canvas.component.drag.move": {
+      "routes": [
+        {
+          "pluginId": "CanvasComponentDragPlugin",
+          "sequenceId": "canvas-component-drag-symphony"
+        }
+      ],
+      "payloadSchema": {
+        "type": "object",
+        "properties": {
+          "id": { "type": "string" },
+          "position": {
+            "type": "object",
+            "properties": {
+              "x": { "type": "number" },
+              "y": { "type": "number" }
+            },
+            "required": ["x", "y"]
+          },
+          "event": { "type": "string" },
+          "correlationId": { "type": "string" }
+        },
+        "required": ["id", "position"]
+      },
+      "visibility": "public",
+      "correlationKeys": ["correlationId"],
+      "perf": { "throttleMs": 16 },
+      "notes": "Canvas component dragging movement updates; throttled to animation frame cadence."
+    },
+    "canvas.component.drag.end": {
+      "routes": [],
+      "payloadSchema": {
+        "type": "object",
+        "properties": {
+          "id": { "type": "string" },
+          "position": {
+            "type": "object",
+            "properties": {
+              "x": { "type": "number" },
+              "y": { "type": "number" }
+            }
+          },
+          "correlationId": { "type": "string" }
+        }
+      },
+      "visibility": "public",
+      "correlationKeys": ["correlationId"],
+      "notes": "Drag ended; subscribers may trigger post-drag behavior (e.g., render)."
+    },
+    "canvas.component.selection.changed": {
+      "routes": [
+        {
+          "pluginId": "ControlPanelPlugin",
+          "sequenceId": "control-panel-selection-show-symphony"
+        }
+      ],
+      "payloadSchema": {
+        "type": "object",
+        "properties": {
+          "id": { "type": "string" }
+        },
+        "required": ["id"]
+      },
+      "visibility": "public",
+      "notes": "Selection changed; routes to control panel selection show."
+    },
+    "canvas.component.import.requested": {
+      "routes": [
+        {
+          "pluginId": "CanvasComponentImportPlugin",
+          "sequenceId": "canvas-component-import-symphony"
+        }
+      ],
+      "payloadSchema": { "type": "object" },
+      "visibility": "public",
+      "notes": "User initiated canvas import; routes to import sequence."
+    },
+    "canvas.component.import.started": {
+      "routes": [],
+      "payloadSchema": {
+        "type": "object",
+        "properties": {
+          "correlationId": { "type": "string" },
+          "fileName": { "type": "string" },
+          "size": { "type": "number" }
+        },
+        "required": ["correlationId"]
+      },
+      "visibility": "public",
+      "correlationKeys": ["correlationId"],
+      "notes": "Import started; subscribers may show progress UI."
+    },
+    "canvas.component.import.completed": {
+      "routes": [],
+      "payloadSchema": {
+        "type": "object",
+        "properties": {
+          "correlationId": { "type": "string" },
+          "components": { "type": "number" }
+        },
+        "required": ["correlationId"]
+      },
+      "visibility": "public",
+      "correlationKeys": ["correlationId"],
+      "notes": "Import completed; subscribers may hide progress and refresh views."
+    },
+    "canvas.component.resize.start": {
+      "routes": [
+        {
+          "pluginId": "CanvasComponentResizeStartPlugin",
+          "sequenceId": "canvas-component-resize-start-symphony"
+        }
+      ],
+      "payloadSchema": {
+        "type": "object",
+        "properties": {
+          "id": { "type": "string" },
+          "dir": { "type": "string" },
+          "startLeft": { "type": "number" },
+          "startTop": { "type": "number" },
+          "startWidth": { "type": "number" },
+          "startHeight": { "type": "number" },
+          "phase": { "type": "string" }
+        },
+        "required": ["id"]
+      },
+      "visibility": "public",
+      "notes": "Resize started; routes to resize start sequence."
+    },
+    "canvas.component.resize.move": {
+      "routes": [
+        {
+          "pluginId": "CanvasComponentResizeMovePlugin",
+          "sequenceId": "canvas-component-resize-move-symphony"
+        }
+      ],
+      "payloadSchema": {
+        "type": "object",
+        "properties": {
+          "id": { "type": "string" },
+          "dir": { "type": "string" },
+          "startLeft": { "type": "number" },
+          "startTop": { "type": "number" },
+          "startWidth": { "type": "number" },
+          "startHeight": { "type": "number" },
+          "dx": { "type": "number" },
+          "dy": { "type": "number" },
+          "phase": { "type": "string" }
+        },
+        "required": ["id"]
+      },
+      "visibility": "public",
+      "perfGuards": {
+        "throttle": { "intervalMs": 16 }
+      },
+      "notes": "Resize move; routes to resize move sequence with throttling for performance."
+    },
+    "canvas.component.resize.end": {
+      "routes": [
+        {
+          "pluginId": "CanvasComponentResizeEndPlugin",
+          "sequenceId": "canvas-component-resize-end-symphony"
+        }
+      ],
+      "payloadSchema": {
+        "type": "object",
+        "properties": {
+          "id": { "type": "string" },
+          "dir": { "type": "string" },
+          "startLeft": { "type": "number" },
+          "startTop": { "type": "number" },
+          "startWidth": { "type": "number" },
+          "startHeight": { "type": "number" },
+          "phase": { "type": "string" }
+        },
+        "required": ["id"]
+      },
+      "visibility": "public",
+      "notes": "Resize ended; routes to resize end sequence."
+    },
+    "canvas.component.update.requested": {
+      "routes": [
+        {
+          "pluginId": "CanvasComponentPlugin",
+          "sequenceId": "canvas-component-update-symphony"
+        }
+      ],
+      "payloadSchema": {
+        "type": "object",
+        "properties": {
+          "id": { "type": "string" },
+          "attribute": { "type": "string" },
+          "value": {}
+        },
+        "required": ["id", "attribute"]
+      },
+      "visibility": "public",
+      "perfGuards": {
+        "throttle": { "intervalMs": 100 }
+      },
+      "notes": "Canvas component update requested; routes to update sequence with throttling."
+    },
+    "canvas.component.resize.line.start": {
+      "routes": [
+        {
+          "pluginId": "CanvasLineResizeStartPlugin",
+          "sequenceId": "canvas-line-resize-start-symphony"
+        }
+      ],
+      "payloadSchema": {
+        "type": "object",
+        "properties": {
+          "id": { "type": "string" },
+          "handle": { "type": "string" },
+          "dx": { "type": "number" },
+          "dy": { "type": "number" },
+          "phase": { "type": "string" }
+        },
+        "required": ["id", "handle", "phase"]
+      },
+      "visibility": "public",
+      "notes": "Line resize started; routes to line resize start sequence."
+    },
+    "canvas.component.resize.line.move": {
+      "routes": [
+        {
+          "pluginId": "CanvasLineResizeMovePlugin",
+          "sequenceId": "canvas-line-resize-move-symphony"
+        }
+      ],
+      "payloadSchema": {
+        "type": "object",
+        "properties": {
+          "id": { "type": "string" },
+          "handle": { "type": "string" },
+          "dx": { "type": "number" },
+          "dy": { "type": "number" },
+          "phase": { "type": "string" }
+        },
+        "required": ["id", "handle", "dx", "dy", "phase"]
+      },
+      "visibility": "public",
+      "perfGuards": {
+        "throttle": { "intervalMs": 16 }
+      },
+      "notes": "Line resize move; routes to line resize move sequence with throttling for performance."
+    },
+    "canvas.component.resize.line.end": {
+      "routes": [
+        {
+          "pluginId": "CanvasLineResizeEndPlugin",
+          "sequenceId": "canvas-line-resize-end-symphony"
+        }
+      ],
+      "payloadSchema": {
+        "type": "object",
+        "properties": {
+          "id": { "type": "string" },
+          "handle": { "type": "string" },
+          "dx": { "type": "number" },
+          "dy": { "type": "number" },
+          "phase": { "type": "string" }
+        },
+        "required": ["id", "handle", "phase"]
+      },
+      "visibility": "public",
+      "notes": "Line resize ended; routes to line resize end sequence."
+    },
+    "canvas.component.select.svg-node.requested": {
+      "routes": [
+        {
+          "pluginId": "CanvasComponentSvgNodeSelectionPlugin",
+          "sequenceId": "canvas-component-select-svg-node-symphony"
+        }
+      ],
+      "payloadSchema": {
+        "type": "object",
+        "properties": {
+          "id": { "type": "string" },
+          "path": { "type": "string" }
+        },
+        "required": ["id", "path"]
+      },
+      "visibility": "public",
+      "notes": "Control Panel SvgTreeView click → highlight sub-element in canvas"
+    },
+    "canvas.component.select.svg-node.changed": {
+      "routes": [],
+      "payloadSchema": {
+        "type": "object",
+        "properties": {
+          "id": { "type": "string" },
+          "path": { "type": "string" }
+        },
+        "required": ["id", "path"]
+      },
+      "visibility": "public",
+      "notes": "Notify-only: emitted by canvas after applying sub-node selection so UI (control panel) can sync selection state"
+    },
+    "canvas.component.update.svg-node.requested": {
+      "routes": [
+        {
+          "pluginId": "CanvasComponentSvgNodeUpdatePlugin",
+          "sequenceId": "canvas-component-update-svg-node-symphony"
+        }
+      ],
+      "payloadSchema": {
+        "type": "object",
+        "properties": {
+          "id": { "type": "string" },
+          "path": { "type": "string" },
+          "attribute": { "type": "string" },
+          "value": {}
+        },
+        "required": ["id", "path", "attribute"]
+      },
+      "visibility": "public",
+      "notes": "Update an attribute on an SVG sub-node within a canvas component; routes to SVG node update sequence."
+    }
+  },
+  "definitions": {}
+}

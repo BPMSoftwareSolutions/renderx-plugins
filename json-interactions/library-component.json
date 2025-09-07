@@ -1,0 +1,8 @@
+{
+  "plugin": "LibraryComponentPlugin",
+  "routes": {
+    "library.component.drag.start": { "pluginId": "LibraryComponentPlugin", "sequenceId": "library-component-drag-symphony" },
+    "library.component.drop": { "pluginId": "LibraryComponentDropPlugin", "sequenceId": "library-component-drop-symphony" }
+  }
+}
+

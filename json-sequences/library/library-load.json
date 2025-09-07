@@ -1,0 +1,16 @@
+{
+  "pluginId": "LibraryPlugin",
+  "id": "library-load-symphony",
+  "name": "Library Load",
+  "movements": [
+    {
+      "id": "load",
+      "name": "Load",
+      "beats": [
+        { "beat": 1, "event": "library:components:load", "title": "Load Components", "dynamics": "mf", "handler": "loadComponents", "timing": "immediate", "kind": "pure" },
+        { "beat": 2, "event": "library:components:notify-ui", "title": "Notify UI", "dynamics": "mf", "handler": "notifyUi", "timing": "immediate", "kind": "pure" }
+      ]
+    }
+  ]
+}
+

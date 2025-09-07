@@ -1,0 +1,87 @@
+{
+  "version": "1.0.0",
+  "topics": {
+    "library.component.drag.start.requested": {
+      "routes": [
+        {
+          "pluginId": "LibraryComponentPlugin",
+          "sequenceId": "library-component-drag-symphony"
+        }
+      ],
+      "payloadSchema": {
+        "type": "object",
+        "properties": {
+          "event": { "type": "string" },
+          "domEvent": { "type": "object" },
+          "component": { "type": "object" }
+        },
+        "required": ["event", "domEvent", "component"]
+      },
+      "visibility": "public",
+      "notes": "Library component drag start requested; routes to drag start sequence."
+    },
+    "library.component.drop.requested": {
+      "routes": [
+        {
+          "pluginId": "LibraryComponentDropPlugin",
+          "sequenceId": "library-component-drop-symphony"
+        }
+      ],
+      "payloadSchema": {
+        "type": "object",
+        "properties": {
+          "component": { "type": "object" },
+          "position": {
+            "type": "object",
+            "properties": {
+              "x": { "type": "number" },
+              "y": { "type": "number" }
+            },
+            "required": ["x", "y"]
+          },
+          "containerId": { "type": "string" },
+          "onComponentCreated": { "type": "object" },
+          "onDragStart": { "type": "object" },
+          "onDragMove": { "type": "object" },
+          "onDragEnd": { "type": "object" },
+          "onSelected": { "type": "object" }
+        },
+        "required": ["component", "position"]
+      },
+      "visibility": "public",
+      "notes": "Library component drop requested; routes to drop sequence."
+    },
+    "library.container.drop.requested": {
+      "routes": [
+        {
+          "pluginId": "LibraryComponentDropPlugin",
+          "sequenceId": "library-component-container-drop-symphony"
+        }
+      ],
+      "payloadSchema": {
+        "type": "object",
+        "properties": {
+          "component": { "type": "object" },
+          "position": {
+            "type": "object",
+            "properties": {
+              "x": { "type": "number" },
+              "y": { "type": "number" }
+            },
+            "required": ["x", "y"]
+          },
+          "containerId": { "type": "string" },
+          "onComponentCreated": { "type": "object" },
+          "onDragStart": { "type": "object" },
+          "onDragMove": { "type": "object" },
+          "onDragEnd": { "type": "object" },
+          "onSelected": { "type": "object" }
+        },
+        "required": ["component", "position", "containerId"]
+      },
+      "visibility": "public",
+      "notes": "Library container drop requested; routes to container drop sequence."
+    }
+  },
+  "definitions": {}
+}

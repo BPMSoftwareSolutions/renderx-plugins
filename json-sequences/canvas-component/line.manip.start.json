@@ -1,0 +1,15 @@
+{
+  "pluginId": "CanvasLineManipStartPlugin",
+  "id": "canvas-line-manip-start-symphony",
+  "name": "Canvas Line Manip Start",
+  "movements": [
+    {
+      "id": "manip-line-start",
+      "name": "Manip Line Start",
+      "beats": [
+        { "beat": 1, "event": "canvas:component:manip:line:start", "title": "Line Manip Start", "dynamics": "mf", "handler": "startLineManip", "timing": "immediate", "kind": "stage-crew" }
+      ]
+    }
+  ]
+}
+

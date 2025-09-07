@@ -1,0 +1,86 @@
+{
+  "metadata": {
+    "type": "line",
+    "name": "Line",
+    "version": "1.0.0",
+    "author": "RenderX Team",
+    "description": "Line component rendered via CSS variables controlling endpoints/angle/length",
+    "category": "basic",
+    "tags": ["line", "shape", "connector"],
+    "replaces": "line"
+  },
+  "ui": {
+    "template": "<svg class=\"rx-comp rx-line\"></svg>",
+    "styles": {
+      "css": ".rx-line .segment { stroke: var(--stroke, #111827); stroke-width: var(--thickness, 2); }",
+      "variables": {
+        "stroke": "#111827",
+        "thickness": 2
+      },
+      "library": {
+        "variables": {
+          "stroke": "#1f2937",
+          "thickness": 2
+        },
+        "css": ".rx-lib .rx-line { opacity: 0.95; }"
+      }
+    },
+    "icon": { "mode": "emoji", "value": "📏", "position": "start" },
+    "tools": {
+      "resize": {
+        "enabled": true,
+        "handles": ["nw", "n", "ne", "e", "se", "s", "sw", "w"],
+        "constraints": {
+          "min": {
+            "w": 50,
+            "h": 5
+          },
+          "max": { "h": 5 }
+        }
+      }
+    }
+  },
+  "integration": {
+    "properties": {
+      "schema": {
+        "stroke": { "type": "string", "default": "#111827" },
+        "thickness": { "type": "number", "default": 2 }
+      },
+      "defaultValues": { "stroke": "#111827", "thickness": 2 }
+    },
+    "canvasIntegration": {
+      "resizable": true,
+      "draggable": true,
+      "selectable": true,
+      "defaultWidth": 120,
+      "defaultHeight": 60,
+      "allowChildElements": false
+    }
+  },
+  "interactions": {
+    "canvas.component.create": {
+      "pluginId": "CanvasComponentPlugin",
+      "sequenceId": "canvas-component-create-symphony"
+    },
+    "canvas.component.select": {
+      "pluginId": "CanvasComponentSelectionPlugin",
+      "sequenceId": "canvas-component-select-symphony"
+    },
+    "canvas.component.drag.move": {
+      "pluginId": "CanvasComponentDragPlugin",
+      "sequenceId": "canvas-component-drag-symphony"
+    },
+    "canvas.component.resize.start": {
+      "pluginId": "CanvasComponentResizeStartPlugin",
+      "sequenceId": "canvas-component-resize-start-symphony"
+    },
+    "canvas.component.resize.move": {
+      "pluginId": "CanvasComponentResizeMovePlugin",
+      "sequenceId": "canvas-component-resize-move-symphony"
+    },
+    "canvas.component.resize.end": {
+      "pluginId": "CanvasComponentResizeEndPlugin",
+      "sequenceId": "canvas-component-resize-end-symphony"
+    }
+  }
+}

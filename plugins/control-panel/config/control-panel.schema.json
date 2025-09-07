@@ -1,0 +1,129 @@
+{
+  "version": "1.0.0",
+  "description": "Control Panel Configuration Schema - defines how properties are rendered",
+  "defaultSections": [
+    {
+      "id": "content",
+      "title": "📝 CONTENT",
+      "icon": "📝",
+      "order": 1,
+      "collapsible": true,
+      "defaultExpanded": true
+    },
+    {
+      "id": "layout",
+      "title": "📐 LAYOUT",
+      "icon": "📐",
+      "order": 2,
+      "collapsible": true,
+      "defaultExpanded": true
+    },
+    {
+      "id": "styling",
+      "title": "🎨 STYLING",
+      "icon": "🎨",
+      "order": 3,
+      "collapsible": true,
+      "defaultExpanded": true
+    },
+    {
+      "id": "behavior",
+      "title": "⚡ BEHAVIOR",
+      "icon": "⚡",
+      "order": 4,
+      "collapsible": true,
+      "defaultExpanded": false
+    },
+    {
+      "id": "classes",
+      "title": "🏷️ CSS CLASSES",
+      "icon": "🏷️",
+      "order": 5,
+      "collapsible": true,
+      "defaultExpanded": false,
+      "special": "classes"
+    }
+  ],
+  "fieldTypes": {
+    "text": {
+      "component": "TextInput",
+      "validation": ["string"],
+      "props": {
+        "placeholder": "Enter text..."
+      }
+    },
+    "number": {
+      "component": "NumberInput", 
+      "validation": ["number"],
+      "props": {
+        "min": 0,
+        "step": 1
+      }
+    },
+    "select": {
+      "component": "SelectInput",
+      "validation": ["enum"],
+      "props": {
+        "placeholder": "Choose option..."
+      }
+    },
+    "checkbox": {
+      "component": "CheckboxInput",
+      "validation": ["boolean"]
+    },
+    "color": {
+      "component": "ColorInput",
+      "validation": ["string", "color"],
+      "props": {
+        "format": "hex"
+      }
+    },
+    "range": {
+      "component": "RangeInput",
+      "validation": ["number"],
+      "props": {
+        "min": 0,
+        "max": 100,
+        "step": 1
+      }
+    },
+    "textarea": {
+      "component": "TextareaInput",
+      "validation": ["string"],
+      "props": {
+        "rows": 3,
+        "placeholder": "Enter text..."
+      }
+    },
+    "file": {
+      "component": "FileInput",
+      "validation": ["string"],
+      "props": {
+        "accept": "image/*"
+      }
+    }
+  },
+  "componentTypeOverrides": {
+    "button": {
+      "sections": {
+        "content": {
+          "fields": ["content", "variant", "size", "disabled"]
+        },
+        "styling": {
+          "fields": ["bg-color", "text-color", "border-radius", "font-size"]
+        }
+      }
+    },
+    "input": {
+      "sections": {
+        "content": {
+          "fields": ["placeholder", "value", "type", "required", "disabled"]
+        },
+        "validation": {
+          "title": "🔍 Validation",
+          "fields": ["minLength", "maxLength", "pattern"]
+        }
+      }
+    }
+  }
+}

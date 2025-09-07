@@ -1,0 +1,144 @@
+{
+  "metadata": {
+    "type": "heading",
+    "name": "Heading",
+    "version": "1.0.0",
+    "author": "RenderX Team",
+    "description": "Heading component with multiple levels and typography controls - JSON replacement for built-in heading",
+    "category": "basic",
+    "tags": ["heading", "typography", "text", "ui"],
+    "replaces": "heading"
+  },
+  "ui": {
+    "template": "<h2 class=\"rx-heading rx-heading--{{variant}} rx-heading--level-{{level}}\">{{content}}</h2>",
+    "styles": {
+      "css": ".rx-heading { color: var(--text-color); font-family: var(--font-family); font-weight: var(--font-weight); line-height: var(--line-height); margin: var(--margin); text-align: var(--text-align); } .rx-heading--default { --text-color: #1a1a1a; --font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; --font-weight: 600; --line-height: 1.2; --margin: 0; --text-align: left; } .rx-heading--center { --text-align: center; } .rx-heading--right { --text-align: right; } .rx-heading--level-h1 { font-size: 2.5rem; } .rx-heading--level-h2 { font-size: 2rem; } .rx-heading--level-h3 { font-size: 1.75rem; } .rx-heading--level-h4 { font-size: 1.5rem; } .rx-heading--level-h5 { font-size: 1.25rem; } .rx-heading--level-h6 { font-size: 1rem; }",
+      "variables": {
+        "text-color": "#1a1a1a",
+        "font-family": "-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif",
+        "font-weight": "600",
+        "line-height": "1.2",
+        "margin": "0",
+        "text-align": "left"
+      },
+      "library": {
+        "variables": {
+          "font-size": "18px",
+          "font-weight": "600",
+          "padding": "8px 12px",
+          "border-radius": "6px",
+          "rx-icon-size": "20px",
+          "rx-icon-gap": "8px",
+          "heading-bg": "linear-gradient(135deg, #6366f1, #8b5cf6)",
+          "heading-color": "#ffffff",
+          "heading-hover-bg": "linear-gradient(135deg, #5b21b6, #7c3aed)"
+        },
+        "css": ".rx-lib .rx-heading { display: inline-flex; align-items: center; gap: var(--rx-icon-gap, 8px); font-size: var(--font-size, 18px); font-weight: var(--font-weight, 600); padding: var(--padding, 8px 12px); border-radius: var(--border-radius, 6px); border: none; background: var(--heading-bg); color: var(--heading-color); letter-spacing: 0.3px; cursor: pointer; transition: transform 0.2s ease, box-shadow 0.3s ease, background 0.3s ease; box-shadow: 0 2px 6px rgba(0,0,0,0.15); } .rx-lib .rx-heading[data-icon]::before { content: attr(data-icon); font-size: var(--rx-icon-size, 20px); line-height: 1; opacity: 0.9; } .rx-lib .rx-heading:hover { transform: translateY(-2px) scale(1.02); box-shadow: 0 4px 12px rgba(0,0,0,0.2); background: var(--heading-hover-bg); }"
+      }
+    },
+    "icon": {
+      "mode": "emoji",
+      "value": "📝",
+      "position": "start"
+    },
+    "tools": {
+      "drag": { "enabled": true },
+      "resize": {
+        "enabled": true,
+        "handles": ["nw", "n", "ne", "e", "se", "s", "sw", "w"],
+        "constraints": { "min": { "w": 50, "h": 20 } }
+      }
+    }
+  },
+  "integration": {
+    "properties": {
+      "schema": {
+        "content": {
+          "type": "string",
+          "default": "Heading Text",
+          "description": "Heading text content",
+          "required": true
+        },
+        "level": {
+          "type": "string",
+          "default": "h2",
+          "description": "Heading level (h1-h6)",
+          "enum": ["h1", "h2", "h3", "h4", "h5", "h6"]
+        },
+        "variant": {
+          "type": "string",
+          "default": "default",
+          "description": "Heading style variant",
+          "enum": ["default", "center", "right"]
+        },
+        "color": {
+          "type": "string",
+          "default": "#1a1a1a",
+          "description": "Text color",
+          "format": "color"
+        },
+        "fontSize": {
+          "type": "string",
+          "default": "auto",
+          "description": "Custom font size (overrides level default)"
+        }
+      },
+      "defaultValues": {
+        "content": "Heading Text",
+        "level": "h2",
+        "variant": "default",
+        "color": "#1a1a1a",
+        "fontSize": "auto"
+      }
+    },
+    "canvasIntegration": {
+      "resizable": true,
+      "draggable": true,
+      "selectable": true,
+      "minWidth": 50,
+      "minHeight": 20,
+      "maxWidth": 800,
+      "maxHeight": 200,
+      "defaultWidth": 200,
+      "defaultHeight": 50,
+      "snapToGrid": true,
+      "allowChildElements": false
+    },
+    "events": {
+      "click": {
+        "description": "Triggered when the heading is clicked",
+        "parameters": ["event", "elementData"]
+      },
+      "dblclick": {
+        "description": "Triggered when the heading is double-clicked for editing",
+        "parameters": ["event", "elementData"]
+      }
+    }
+  },
+  "interactions": {
+    "canvas.component.create": {
+      "pluginId": "CanvasComponentPlugin",
+      "sequenceId": "canvas-component-create-symphony"
+    },
+    "canvas.component.select": {
+      "pluginId": "CanvasComponentSelectionPlugin",
+      "sequenceId": "canvas-component-select-symphony"
+    },
+    "canvas.component.drag.move": {
+      "pluginId": "CanvasComponentDragPlugin",
+      "sequenceId": "canvas-component-drag-symphony"
+    },
+    "canvas.component.resize.start": {
+      "pluginId": "CanvasComponentResizeStartPlugin",
+      "sequenceId": "canvas-component-resize-start-symphony"
+    },
+    "canvas.component.resize.move": {
+      "pluginId": "CanvasComponentResizeMovePlugin",
+      "sequenceId": "canvas-component-resize-move-symphony"
+    },
+    "canvas.component.resize.end": {
+      "pluginId": "CanvasComponentResizeEndPlugin",
+      "sequenceId": "canvas-component-resize-end-symphony"
+    }
+  }
+}

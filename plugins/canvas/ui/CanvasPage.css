@@ -1,0 +1,125 @@
+/* CanvasPage Component Styles */
+
+.canvas-area {
+  flex: 1;
+  background: var(--bg);
+  position: relative;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+}
+
+.canvas-header {
+  background: var(--panel-bg);
+  padding: 12px 24px;
+  border-bottom: 1px solid var(--panel-border);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.canvas-title {
+  font-size: 16px;
+  font-weight: 600;
+  color: var(--text-color);
+}
+
+.canvas-controls {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.canvas-control {
+  background: var(--control-bg);
+  border: 1px solid var(--border-color);
+  border-radius: 6px;
+  padding: 6px 12px;
+  font-size: 12px;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.canvas-control:hover {
+  background: var(--control-hover-bg);
+  border-color: var(--border-color);
+}
+
+.canvas-control.active {
+  background: var(--accent-bg);
+  color: var(--btn-color);
+  border-color: var(--accent-border);
+}
+
+.canvas-divider {
+  width: 1px;
+  height: 20px;
+  background: var(--divider);
+  margin: 0 4px;
+}
+
+.zoom-controls {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  background: var(--control-bg);
+  border: 1px solid var(--border-color);
+  border-radius: 6px;
+  padding: 4px;
+}
+
+.zoom-btn {
+  background: none;
+  border: none;
+  padding: 4px 8px;
+  cursor: pointer;
+  border-radius: 4px;
+  font-size: 12px;
+}
+
+.zoom-btn:hover {
+  background: var(--control-hover-bg);
+}
+
+.zoom-level {
+  font-size: 11px;
+  color: var(--muted-text);
+  min-width: 35px;
+  text-align: center;
+}
+
+.canvas-content {
+  flex: 1;
+  position: relative;
+  padding: 20px;
+  overflow: auto;
+}
+
+.canvas-grid {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-image: radial-gradient(
+    circle,
+    var(--canvas-grid-dot) 1px,
+    transparent 1px
+  );
+  background-size: 20px 20px;
+  opacity: 0.5;
+}
+
+.drop-indicator {
+  position: absolute;
+  border: 2px dashed var(--accent-bg);
+  border-radius: 8px;
+  background: var(--accent-weak-bg);
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 0.2s ease;
+}
+
+.drop-indicator.active {
+  opacity: 1;
+}

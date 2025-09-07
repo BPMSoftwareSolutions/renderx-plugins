@@ -1,0 +1,116 @@
+/* Header Component Styles */
+
+.header-container {
+  height: 100%;
+  background: transparent;
+  display: flex;
+  align-items: center;
+}
+
+.header-title {
+  font-size: 16px;
+  font-weight: 600;
+  color: #1f2937;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+}
+
+/* Dark mode header title */
+[data-theme="dark"] .header-title {
+  color: #f8fafc;
+}
+
+.header-controls {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
+  gap: 8px;
+  width: 100%;
+}
+
+/* Light mode header buttons */
+.header-button {
+  padding: 8px 16px;
+  font-size: 12px;
+  font-weight: 500;
+  border: 1px solid #e2e8f0;
+  border-radius: 6px;
+  background: rgba(0, 0, 0, 0.05);
+  color: #1f2937;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  backdrop-filter: blur(10px);
+}
+
+.header-button:hover {
+  background: rgba(0, 0, 0, 0.1);
+  transform: translateY(-1px);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.header-button:active {
+  transform: translateY(0);
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.05);
+}
+
+/* Dark mode header buttons */
+[data-theme="dark"] .header-button {
+  border-color: var(--panel-border);
+  background: rgba(255, 255, 255, 0.1);
+  color: #f8fafc;
+}
+
+[data-theme="dark"] .header-button:hover {
+  background: rgba(255, 255, 255, 0.15);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+}
+
+.header-theme-toggle {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  height: 100%;
+  width: 100%;
+}
+
+/* Light mode theme button - shows "Dark" to switch TO dark mode */
+.header-theme-button {
+  padding: 8px 16px;
+  font-size: 12px;
+  font-weight: 500;
+  border: 1px solid #374151;
+  border-radius: 6px;
+  background: #1f2937;
+  color: white;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  backdrop-filter: blur(10px);
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.header-theme-button:hover {
+  background: #111827;
+  transform: translateY(-1px);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+}
+
+.header-theme-button:active {
+  transform: translateY(0);
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.1);
+}
+
+/* Dark mode theme button - shows "Light" to switch TO light mode */
+[data-theme="dark"] .header-theme-button {
+  background: #f59e0b;
+  color: #1f2937;
+  border-color: var(--panel-border);
+}
+
+[data-theme="dark"] .header-theme-button:hover {
+  background: #f97316;
+}

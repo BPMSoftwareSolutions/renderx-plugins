@@ -1,0 +1,31 @@
+{
+  "pluginId": "ControlPanelPlugin",
+  "id": "control-panel-css-create-symphony",
+  "name": "Control Panel CSS Create",
+  "movements": [
+    {
+      "id": "createCssClass",
+      "name": "Create CSS Class",
+      "beats": [
+        {
+          "beat": 1,
+          "event": "control:panel:css:create",
+          "title": "Create CSS Class",
+          "dynamics": "mf",
+          "handler": "createCssClass",
+          "timing": "immediate",
+          "kind": "stage-crew"
+        },
+        {
+          "beat": 2,
+          "event": "control:panel:css:notify",
+          "title": "Notify UI",
+          "dynamics": "mf",
+          "handler": "notifyUi",
+          "timing": "immediate",
+          "kind": "pure"
+        }
+      ]
+    }
+  ]
+}

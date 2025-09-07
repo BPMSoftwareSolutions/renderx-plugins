@@ -1,0 +1,16 @@
+{
+  "pluginId": "CanvasComponentDragPlugin",
+  "id": "canvas-component-drag-symphony",
+  "name": "Canvas Component Drag",
+  "movements": [
+    {
+      "id": "drag-move",
+      "name": "Drag Move",
+      "beats": [
+        { "beat": 1, "event": "canvas:component:drag:move", "title": "Update Position", "dynamics": "mf", "handler": "updatePosition", "timing": "immediate", "kind": "stage-crew" },
+        { "beat": 2, "event": "canvas:component:drag:forward", "title": "Forward to Control Panel", "dynamics": "mf", "handler": "forwardToControlPanel", "timing": "immediate", "kind": "pure" }
+      ]
+    }
+  ]
+}
+

@@ -1,0 +1,31 @@
+{
+  "pluginId": "ControlPanelPlugin",
+  "id": "control-panel-classes-add-symphony",
+  "name": "Control Panel Classes Add",
+  "movements": [
+    {
+      "id": "addClass",
+      "name": "Add Class",
+      "beats": [
+        {
+          "beat": 1,
+          "event": "control:panel:classes:add",
+          "title": "Add CSS Class",
+          "dynamics": "mf",
+          "handler": "addClass",
+          "timing": "immediate",
+          "kind": "stage-crew"
+        },
+        {
+          "beat": 2,
+          "event": "control:panel:classes:notify",
+          "title": "Notify UI",
+          "dynamics": "mf",
+          "handler": "notifyUi",
+          "timing": "immediate",
+          "kind": "pure"
+        }
+      ]
+    }
+  ]
+}

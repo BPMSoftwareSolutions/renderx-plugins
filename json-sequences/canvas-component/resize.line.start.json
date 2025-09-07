@@ -1,0 +1,15 @@
+{
+  "pluginId": "CanvasLineResizeStartPlugin",
+  "id": "canvas-line-resize-start-symphony",
+  "name": "Canvas Line Resize Start",
+  "movements": [
+    {
+      "id": "resize-line-start",
+      "name": "Resize Line Start",
+      "beats": [
+        { "beat": 1, "event": "canvas:component:resize:line:start", "title": "Line Resize Start", "dynamics": "mf", "handler": "startLineResize", "timing": "immediate", "kind": "stage-crew" }
+      ]
+    }
+  ]
+}
+

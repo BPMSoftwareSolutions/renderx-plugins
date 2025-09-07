@@ -1,0 +1,23 @@
+{
+  "pluginId": "ControlPanelPlugin",
+  "id": "control-panel-ui-section-toggle-symphony",
+  "name": "Control Panel UI Section Toggle",
+  "movements": [
+    {
+      "id": "section-toggle",
+      "name": "Section Toggle",
+      "beats": [
+        {
+          "beat": 1,
+          "event": "control:panel:ui:section:toggle",
+          "title": "Toggle Section",
+          "dynamics": "mf",
+          "handler": "toggleSection",
+          "timing": "immediate",
+          "kind": "stage-crew"
+        }
+      ]
+    }
+  ]
+}
+

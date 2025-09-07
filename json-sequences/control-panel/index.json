@@ -1,0 +1,57 @@
+{
+  "version": "1.0.0",
+  "sequences": [
+    {
+      "file": "selection.show.json",
+      "handlersPath": "/plugins/control-panel/symphonies/selection/selection.symphony.ts"
+    },
+    {
+      "file": "classes.add.json",
+      "handlersPath": "/plugins/control-panel/symphonies/classes/classes.symphony.ts"
+    },
+    {
+      "file": "classes.remove.json",
+      "handlersPath": "/plugins/control-panel/symphonies/classes/classes.symphony.ts"
+    },
+    {
+      "file": "update.json",
+      "handlersPath": "/plugins/control-panel/symphonies/update/update.symphony.ts"
+    },
+    {
+      "file": "css.create.json",
+      "handlersPath": "/plugins/control-panel/symphonies/css-management/css-management.symphony.ts"
+    },
+    {
+      "file": "css.edit.json",
+      "handlersPath": "/plugins/control-panel/symphonies/css-management/css-management.symphony.ts"
+    },
+    {
+      "file": "css.delete.json",
+      "handlersPath": "/plugins/control-panel/symphonies/css-management/css-management.symphony.ts"
+    },
+    {
+      "file": "ui.init.json",
+      "handlersPath": "/plugins/control-panel/symphonies/ui/ui.symphony.ts"
+    },
+    {
+      "file": "ui.init.batched.json",
+      "handlersPath": "/plugins/control-panel/symphonies/ui/ui.symphony.ts"
+    },
+    {
+      "file": "ui.render.json",
+      "handlersPath": "/plugins/control-panel/symphonies/ui/ui.symphony.ts"
+    },
+    {
+      "file": "ui.field.change.json",
+      "handlersPath": "/plugins/control-panel/symphonies/ui/ui.symphony.ts"
+    },
+    {
+      "file": "ui.field.validate.json",
+      "handlersPath": "/plugins/control-panel/symphonies/ui/ui.symphony.ts"
+    },
+    {
+      "file": "ui.section.toggle.json",
+      "handlersPath": "/plugins/control-panel/symphonies/ui/ui.symphony.ts"
+    }
+  ]
+}

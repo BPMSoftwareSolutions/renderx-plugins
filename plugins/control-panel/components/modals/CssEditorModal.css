@@ -1,0 +1,291 @@
+/* CSS Editor Modal Styles */
+
+.css-editor-modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.6);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 9999; /* Higher z-index to appear above everything */
+  backdrop-filter: blur(8px);
+  animation: fadeIn 0.2s ease-out;
+  padding: 20px; /* Add padding for better spacing */
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+.css-editor-modal {
+  background: white;
+  border-radius: 16px;
+  width: 900px;
+  max-width: 95vw;
+  height: 700px;
+  max-height: 90vh;
+  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  animation: slideIn 0.3s ease-out;
+}
+
+@keyframes slideIn {
+  from { 
+    opacity: 0;
+    transform: scale(0.95) translateY(-20px);
+  }
+  to { 
+    opacity: 1;
+    transform: scale(1) translateY(0);
+  }
+}
+
+.css-editor-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 20px 24px;
+  background: linear-gradient(135deg, #6366f1, #8b5cf6);
+  color: white;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.css-editor-title {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 16px;
+  font-weight: 600;
+}
+
+.css-editor-icon {
+  font-size: 18px;
+}
+
+.css-editor-close {
+  background: none;
+  border: none;
+  color: white;
+  font-size: 24px;
+  cursor: pointer;
+  padding: 4px;
+  border-radius: 4px;
+  transition: background-color 0.2s;
+  line-height: 1;
+  width: 32px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.css-editor-close:hover {
+  background: rgba(255, 255, 255, 0.1);
+}
+
+.css-editor-class-name {
+  padding: 16px 24px;
+  background: #f8fafc;
+  border-bottom: 1px solid #e2e8f0;
+}
+
+.css-class-selector {
+  font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
+  font-size: 14px;
+  font-weight: 600;
+  color: #1e293b;
+  background: #e2e8f0;
+  padding: 4px 8px;
+  border-radius: 4px;
+}
+
+.css-editor-content {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  min-height: 450px;
+  overflow: hidden;
+}
+
+.css-editor-container {
+  flex: 1;
+  display: flex;
+  background: #1e293b;
+  color: #e2e8f0;
+  font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
+  font-size: 14px;
+  line-height: 1.5;
+  overflow: hidden;
+}
+
+.line-numbers {
+  background: #0f172a;
+  color: #64748b;
+  padding: 16px 8px;
+  text-align: right;
+  user-select: none;
+  border-right: 1px solid #334155;
+  min-width: 50px;
+  overflow: hidden;
+}
+
+.line-number {
+  height: 21px; /* Match line-height of textarea */
+  font-size: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+}
+
+.css-editor-textarea {
+  flex: 1;
+  background: transparent;
+  border: none;
+  color: #e2e8f0;
+  font-family: inherit;
+  font-size: inherit;
+  line-height: inherit;
+  padding: 16px;
+  resize: none;
+  outline: none;
+  white-space: pre;
+  overflow-wrap: normal;
+  overflow-x: auto;
+  overflow-y: auto;
+  tab-size: 2;
+}
+
+.css-editor-textarea::placeholder {
+  color: #64748b;
+  font-style: italic;
+}
+
+.css-editor-textarea:focus {
+  outline: none;
+}
+
+.css-editor-footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 16px 24px;
+  background: #f8fafc;
+  border-top: 1px solid #e2e8f0;
+}
+
+.css-editor-info {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  font-size: 12px;
+  color: #64748b;
+}
+
+.css-editor-hint {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.css-editor-changes {
+  color: #f59e0b;
+  font-weight: 500;
+}
+
+.css-editor-actions {
+  display: flex;
+  gap: 8px;
+}
+
+.css-editor-btn {
+  padding: 8px 16px;
+  border-radius: 6px;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s;
+  border: 1px solid transparent;
+}
+
+.css-editor-btn-cancel {
+  background: white;
+  color: #64748b;
+  border-color: #d1d5db;
+}
+
+.css-editor-btn-cancel:hover {
+  background: #f8fafc;
+  border-color: #9ca3af;
+}
+
+.css-editor-btn-save {
+  background: #3b82f6;
+  color: white;
+  border-color: #2563eb;
+}
+
+.css-editor-btn-save:hover:not(:disabled) {
+  background: #2563eb;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 8px rgba(59, 130, 246, 0.3);
+}
+
+.css-editor-btn-save:disabled {
+  background: #9ca3af;
+  color: #d1d5db;
+  cursor: not-allowed;
+  border-color: #9ca3af;
+}
+
+/* Responsive design */
+@media (max-width: 1024px) {
+  .css-editor-modal {
+    width: 95vw;
+    height: 85vh;
+  }
+}
+
+@media (max-width: 768px) {
+  .css-editor-modal-overlay {
+    padding: 10px;
+  }
+
+  .css-editor-modal {
+    width: 100%;
+    height: 90vh;
+    border-radius: 12px;
+  }
+
+  .css-editor-header {
+    padding: 16px 20px;
+  }
+
+  .css-editor-title {
+    font-size: 14px;
+  }
+
+  .css-editor-class-name {
+    padding: 12px 20px;
+  }
+
+  .css-editor-footer {
+    padding: 12px 20px;
+    flex-direction: column;
+    gap: 12px;
+    align-items: stretch;
+  }
+
+  .css-editor-actions {
+    justify-content: stretch;
+  }
+
+  .css-editor-btn {
+    flex: 1;
+  }
+}

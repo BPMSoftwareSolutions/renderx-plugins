@@ -1,40 +1,32 @@
 {
   "name": "renderx-plugins",
-  "version": "1.2.22",
-  "private": false,
-  "description": "RenderX plugins meta-package with unit tests and build + manifest generation",
+  "version": "2.0.4",
+  "public": true,
+  "type": "module",
   "files": [
-    "plugins/",
-    "json-components/"
+    "dist/artifacts/**/*"
   ],
-  "license": "MIT",
-  "type": "commonjs",
+  "main": "dist/artifacts/manifest-set.json",
   "scripts": {
-    "dev": "node ./scripts/dev-server.cjs",
-    "test": "jest --passWithNoTests",
-    "test:ci": "jest --ci",
-    "e2e": "playwright test",
-    "prebuild": "node ./scripts/prebuild-version.mjs",
-    "build:plugins": "node ./scripts/build-plugins.mjs",
-    "build:manifest": "node ./scripts/generate-manifest.mjs",
-    "build:sync-plugins-manifest": "node ./scripts/update-plugins-manifest.mjs",
-    "build": "node ./scripts/prebuild-version.mjs && npm run build:plugins && npm run build:manifest && npm run build:sync-plugins-manifest && node ./scripts/build-bundles.mjs",
-    "build:pv": "node ./scripts/build-with-pv.mjs",
-    "bump:patch": "npm run build:pv -- --pv --revision",
-    "bump:minor": "npm run build:pv -- --pv --minor",
-    "bump:major": "npm run build:pv -- --pv --major"
+    "build:packages": "node scripts/build-packages.cjs",
+    "artifacts:build": "npm run build:packages && node scripts/build-artifacts.js --srcRoot=. --outDir=dist/artifacts --integrity",
+    "artifacts:build:signed": "npm run build:packages && node scripts/build-artifacts.js --srcRoot=. --outDir=dist/artifacts --integrity --sign",
+    "artifacts:validate": "node scripts/validate-artifacts.js",
+    "artifacts:validate:strict": "cross-env RENDERX_VALIDATION_STRICT=1 node scripts/validate-artifacts.js",
+    "artifacts:verify:signature": "node scripts/verify-artifact-signature.js",
+    "artifacts:pack": "node scripts/pack-artifacts.js --dir=dist/artifacts --out=dist/packages",
+    "public-api:hash": "node scripts/hash-public-api.js",
+    "public-api:check": "node scripts/hash-public-api.js --check",
+    "artifacts:ci": "npm run artifacts:build:signed && npm run artifacts:validate:strict && npm run artifacts:verify:signature && npm run public-api:check && npm run artifacts:pack",
+    "build:plugin-entries": "node scripts/build-plugin-entries.cjs",
+    "build": "npm run build:packages && npm run build:plugin-entries",
+    "prepare": "npm run artifacts:build"
   },
   "devDependencies": {
-    "@types/jest": "^30.0.0",
-    "@types/node": "^24.2.1",
+    "@renderx/manifest-tools": "file:packages/manifest-tools",
+    "@renderx/schema-contract": "file:packages/schema-contract",
+    "cross-env": "^10.0.0",
     "esbuild": "^0.25.9",
-    "jest": "^29.7.0",
-    "jest-environment-jsdom": "^29.7.0",
-    "jest-extended": "^3.2.4",
-    "jsdom": "^26.1.0",
-    "@playwright/test": "^1.40.0",
-    "playwright": "^1.40.0",
-    "ts-jest": "^29.4.1",
-    "typescript": "^5.9.2"
+    "eslint": "^9.33.0"
   }
 }

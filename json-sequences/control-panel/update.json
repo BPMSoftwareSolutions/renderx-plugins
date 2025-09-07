@@ -1,0 +1,31 @@
+{
+  "pluginId": "ControlPanelPlugin",
+  "id": "control-panel-update-symphony",
+  "name": "Control Panel Update",
+  "movements": [
+    {
+      "id": "update",
+      "name": "Update",
+      "beats": [
+        {
+          "beat": 1,
+          "event": "control:panel:update:derive",
+          "title": "Update From Element",
+          "dynamics": "mf",
+          "handler": "updateFromElement",
+          "timing": "immediate",
+          "kind": "stage-crew"
+        },
+        {
+          "beat": 2,
+          "event": "control:panel:update:notify",
+          "title": "Notify UI",
+          "dynamics": "mf",
+          "handler": "notifyUi",
+          "timing": "immediate",
+          "kind": "pure"
+        }
+      ]
+    }
+  ]
+}

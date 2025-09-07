@@ -1,0 +1,41 @@
+{
+  "pluginId": "ControlPanelPlugin",
+  "id": "control-panel-ui-render-symphony",
+  "name": "Control Panel UI Render",
+  "movements": [
+    {
+      "id": "render",
+      "name": "Render",
+      "beats": [
+        {
+          "beat": 1,
+          "event": "control:panel:ui:fields:generate",
+          "title": "Generate Fields",
+          "dynamics": "mf",
+          "handler": "generateFields",
+          "timing": "immediate",
+          "kind": "stage-crew"
+        },
+        {
+          "beat": 2,
+          "event": "control:panel:ui:sections:generate",
+          "title": "Generate Sections",
+          "dynamics": "mf",
+          "handler": "generateSections",
+          "timing": "immediate",
+          "kind": "stage-crew"
+        },
+        {
+          "beat": 3,
+          "event": "control:panel:ui:render",
+          "title": "Render View",
+          "dynamics": "mf",
+          "handler": "renderView",
+          "timing": "immediate",
+          "kind": "stage-crew"
+        }
+      ]
+    }
+  ]
+}
+

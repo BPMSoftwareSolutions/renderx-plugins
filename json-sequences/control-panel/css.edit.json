@@ -1,0 +1,31 @@
+{
+  "pluginId": "ControlPanelPlugin",
+  "id": "control-panel-css-edit-symphony",
+  "name": "Control Panel CSS Edit",
+  "movements": [
+    {
+      "id": "updateCssClass",
+      "name": "Update CSS Class",
+      "beats": [
+        {
+          "beat": 1,
+          "event": "control:panel:css:update",
+          "title": "Update CSS Class",
+          "dynamics": "mf",
+          "handler": "updateCssClass",
+          "timing": "immediate",
+          "kind": "stage-crew"
+        },
+        {
+          "beat": 2,
+          "event": "control:panel:css:notify",
+          "title": "Notify UI",
+          "dynamics": "mf",
+          "handler": "notifyUi",
+          "timing": "immediate",
+          "kind": "pure"
+        }
+      ]
+    }
+  ]
+}

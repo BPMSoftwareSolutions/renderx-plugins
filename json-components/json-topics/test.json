@@ -1,0 +1,27 @@
+{
+  "version": "1.0.0",
+  "topics": {
+    "test.route": {
+      "routes": [
+        {
+          "pluginId": "P1",
+          "sequenceId": "S1"
+        }
+      ],
+      "payloadSchema": {
+        "type": "object"
+      },
+      "visibility": "internal",
+      "notes": "Test topic for routing tests"
+    },
+    "test.notify": {
+      "routes": [],
+      "payloadSchema": {
+        "type": "object"
+      },
+      "visibility": "internal",
+      "notes": "Test topic for notification-only tests"
+    }
+  },
+  "definitions": {}
+}

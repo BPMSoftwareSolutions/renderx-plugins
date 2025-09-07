@@ -1,0 +1,31 @@
+{
+  "pluginId": "CanvasComponentPlugin",
+  "id": "canvas-component-update-symphony",
+  "name": "Canvas Component Update",
+  "movements": [
+    {
+      "id": "update",
+      "name": "Update",
+      "beats": [
+        {
+          "beat": 1,
+          "event": "canvas:component:update:attribute",
+          "title": "Update Attribute",
+          "dynamics": "mf",
+          "handler": "updateAttribute",
+          "timing": "immediate",
+          "kind": "stage-crew"
+        },
+        {
+          "beat": 2,
+          "event": "canvas:component:update:refresh",
+          "title": "Refresh Control Panel",
+          "dynamics": "mf",
+          "handler": "refreshControlPanel",
+          "timing": "immediate",
+          "kind": "pure"
+        }
+      ]
+    }
+  ]
+}

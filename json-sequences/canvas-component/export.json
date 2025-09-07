@@ -1,0 +1,67 @@
+{
+  "pluginId": "CanvasComponentExportPlugin",
+  "id": "canvas-component-export-symphony",
+  "name": "Canvas Component Export",
+  "movements": [
+    {
+      "id": "export",
+      "name": "Export",
+      "beats": [
+        {
+          "beat": 1,
+          "event": "canvas:component:query-all",
+          "title": "Query All Components",
+          "dynamics": "mf",
+          "handler": "queryAllComponents",
+          "timing": "immediate",
+          "kind": "io"
+        },
+        {
+          "beat": 2,
+          "event": "canvas:component:discover-components",
+          "title": "Discover Components from DOM",
+          "dynamics": "mf",
+          "handler": "discoverComponentsFromDom",
+          "timing": "immediate",
+          "kind": "stage-crew"
+        },
+        {
+          "beat": 3,
+          "event": "canvas:component:collect-css",
+          "title": "Collect CSS Classes",
+          "dynamics": "mf",
+          "handler": "collectCssClasses",
+          "timing": "immediate",
+          "kind": "stage-crew"
+        },
+        {
+          "beat": 3,
+          "event": "canvas:component:collect-layout",
+          "title": "Collect Layout Data",
+          "dynamics": "mf",
+          "handler": "collectLayoutData",
+          "timing": "immediate",
+          "kind": "stage-crew"
+        },
+        {
+          "beat": 4,
+          "event": "canvas:component:build-ui-file",
+          "title": "Build UI File Content",
+          "dynamics": "mf",
+          "handler": "buildUiFileContent",
+          "timing": "immediate",
+          "kind": "pure"
+        },
+        {
+          "beat": 5,
+          "event": "canvas:component:download-file",
+          "title": "Download UI File",
+          "dynamics": "mf",
+          "handler": "downloadUiFile",
+          "timing": "immediate",
+          "kind": "stage-crew"
+        }
+      ]
+    }
+  ]
+}

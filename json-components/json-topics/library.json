@@ -1,0 +1,22 @@
+{
+  "version": "1.0.0",
+  "topics": {
+    "library.load.requested": {
+      "routes": [
+        {
+          "pluginId": "LibraryPlugin",
+          "sequenceId": "library-load-symphony"
+        }
+      ],
+      "payloadSchema": {
+        "type": "object",
+        "properties": {
+          "onComponentsLoaded": { "type": "object" }
+        }
+      },
+      "visibility": "public",
+      "notes": "Library load requested; routes to library load sequence."
+    }
+  },
+  "definitions": {}
+}

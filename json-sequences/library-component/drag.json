@@ -1,0 +1,15 @@
+{
+  "pluginId": "LibraryComponentPlugin",
+  "id": "library-component-drag-symphony",
+  "name": "Library Component Drag",
+  "movements": [
+    {
+      "id": "drag",
+      "name": "Drag",
+      "beats": [
+        { "beat": 1, "event": "library:component:drag:start", "title": "Start Drag", "dynamics": "mf", "handler": "onDragStart", "timing": "immediate", "kind": "pure" }
+      ]
+    }
+  ]
+}
+

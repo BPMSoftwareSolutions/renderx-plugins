@@ -1,0 +1,22 @@
+{
+  "pluginId": "LibraryComponentDropPlugin",
+  "id": "library-component-drop-symphony",
+  "name": "Library Component Drop",
+  "movements": [
+    {
+      "id": "drop",
+      "name": "Drop",
+      "beats": [
+        {
+          "beat": 1,
+          "event": "library:component:drop",
+          "title": "Publish Create Requested",
+          "dynamics": "mf",
+          "handler": "publishCreateRequested",
+          "timing": "immediate",
+          "kind": "pure"
+        }
+      ]
+    }
+  ]
+}

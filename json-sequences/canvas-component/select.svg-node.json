@@ -1,0 +1,23 @@
+{
+  "pluginId": "CanvasComponentSvgNodeSelectionPlugin",
+  "id": "canvas-component-select-svg-node-symphony",
+  "name": "Canvas Component Select SVG Node",
+  "movements": [
+    {
+      "id": "select-svg-node",
+      "name": "Select SVG Node",
+      "beats": [
+        {
+          "beat": 1,
+          "event": "canvas:component:select:svg-node",
+          "title": "Show Sub-node Selection",
+          "dynamics": "mf",
+          "handler": "showSvgNodeOverlay",
+          "timing": "immediate",
+          "kind": "stage-crew"
+        }
+      ]
+    }
+  ]
+}
+

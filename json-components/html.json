@@ -1,0 +1,64 @@
+{
+  "metadata": {
+    "type": "html",
+    "name": "HTML",
+    "version": "1.0.1",
+    "author": "RenderX Team",
+    "description": "Rich HTML component for sanitized pasted markup blocks.",
+    "category": "basic",
+    "tags": ["html", "rich", "markup", "content"],
+    "replaces": "html"
+  },
+  "ui": {
+    "template": "<div class=\"rx-html\">{{markup}}</div>",
+    "styles": {
+      "css": ".rx-html { display: block; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; font-size: 14px; line-height: 1.4; color: #222; word-wrap: break-word; overflow-wrap: anywhere; } .rx-html h1, .rx-html h2, .rx-html h3, .rx-html h4, .rx-html h5, .rx-html h6 { font-weight: 600; line-height: 1.25; margin: 0.6em 0 0.4em; } .rx-html p { margin: 0 0 0.75em; } .rx-html ul, .rx-html ol { padding-left: 1.4em; margin: 0 0 0.75em; } .rx-html code, .rx-html pre { font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, 'Liberation Mono', monospace; font-size: 0.9em; background: #f5f5f5; padding: 2px 4px; border-radius: 4px; } .rx-html pre { padding: 8px 10px; overflow: auto; } .rx-html a { color: #0d62ff; text-decoration: underline; } .rx-html blockquote { margin: 0 0 0.75em; padding: 0.5em 0.75em; border-left: 4px solid #ccc; background: #fafafa; }",
+      "variables": {},
+      "library": {
+        "variables": {},
+        "css": ".rx-lib .rx-html { background: linear-gradient(135deg,#6366f1,#4f46e5); color: #fff; padding: 10px 12px; border-radius: 8px; box-shadow: 0 2px 6px rgba(0,0,0,0.15); } .rx-lib .rx-html a { color: #fff; }"
+      }
+    },
+    "icon": { "mode": "emoji", "value": "🧩", "position": "start" },
+    "tools": {
+      "drag": { "enabled": true },
+      "resize": {
+        "enabled": true,
+        "handles": ["e", "s", "se"],
+        "constraints": { "min": { "w": 120, "h": 40 } }
+      }
+    }
+  },
+  "integration": {
+    "properties": {
+      "schema": {
+        "markup": {
+          "type": "string",
+          "default": "<p><strong>Edit me</strong>: Paste HTML here (sanitized).</p>",
+          "description": "HTML markup content (sanitized)",
+          "required": true,
+          "ui": {
+            "control": "code",
+            "rows": 8,
+            "placeholder": "Paste HTML (supports headings, tables, forms, SVG, etc.)"
+          }
+        }
+      },
+      "defaultValues": {
+        "markup": "<p><strong>Edit me</strong>: Paste HTML here (sanitized).</p>"
+      }
+    },
+    "canvasIntegration": {
+      "resizable": true,
+      "draggable": true,
+      "selectable": true,
+      "minWidth": 120,
+      "minHeight": 40,
+      "defaultWidth": 320,
+      "defaultHeight": 120,
+      "allowChildElements": false
+    },
+    "events": {}
+  },
+  "interactions": {}
+}

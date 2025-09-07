@@ -1,0 +1,31 @@
+{
+  "pluginId": "ControlPanelPlugin",
+  "id": "control-panel-classes-remove-symphony",
+  "name": "Control Panel Classes Remove",
+  "movements": [
+    {
+      "id": "removeClass",
+      "name": "Remove Class",
+      "beats": [
+        {
+          "beat": 1,
+          "event": "control:panel:classes:remove",
+          "title": "Remove CSS Class",
+          "dynamics": "mf",
+          "handler": "removeClass",
+          "timing": "immediate",
+          "kind": "stage-crew"
+        },
+        {
+          "beat": 2,
+          "event": "control:panel:classes:notify",
+          "title": "Notify UI",
+          "dynamics": "mf",
+          "handler": "notifyUi",
+          "timing": "immediate",
+          "kind": "pure"
+        }
+      ]
+    }
+  ]
+}

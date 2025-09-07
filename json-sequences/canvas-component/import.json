@@ -1,0 +1,58 @@
+{
+  "pluginId": "CanvasComponentImportPlugin",
+  "id": "canvas-component-import-symphony",
+  "name": "Canvas Component Import",
+  "movements": [
+    {
+      "id": "import",
+      "name": "Import",
+      "beats": [
+        {
+          "beat": 1,
+          "event": "canvas:component:ui:open",
+          "title": "Open UI File",
+          "handler": "openUiFile",
+          "timing": "immediate",
+          "dynamics": "mf",
+          "kind": "stage-crew"
+        },
+        {
+          "beat": 2,
+          "event": "canvas:component:ui:parse",
+          "title": "Parse UI File",
+          "handler": "parseUiFile",
+          "timing": "immediate",
+          "dynamics": "mf",
+          "kind": "pure"
+        },
+        {
+          "beat": 3,
+          "event": "canvas:component:css:inject",
+          "title": "Inject CSS Classes",
+          "handler": "injectCssClasses",
+          "timing": "immediate",
+          "dynamics": "mf",
+          "kind": "stage-crew"
+        },
+        {
+          "beat": 4,
+          "event": "canvas:component:nodes:create",
+          "title": "Create Components Sequentially",
+          "handler": "createComponentsSequentially",
+          "timing": "immediate",
+          "dynamics": "mf",
+          "kind": "stage-crew"
+        },
+        {
+          "beat": 5,
+          "event": "canvas:component:hierarchy:apply",
+          "title": "Apply Hierarchy & Order",
+          "handler": "applyHierarchyAndOrder",
+          "timing": "immediate",
+          "dynamics": "mf",
+          "kind": "stage-crew"
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,25 @@
+{
+  "version": "1.0.0",
+  "layout": {
+    "kind": "grid",
+    "columns": ["320px", "1fr", "360px"],
+    "rows": ["48px", "1fr"],
+    "areas": [
+      ["headerLeft", "headerCenter", "headerRight"],
+      ["library", "canvas", "controlPanel"]
+    ],
+    "gap": { "column": "0", "row": "0" }
+  },
+  "slots": [
+    { "name": "headerLeft", "constraints": { "minHeight": 40 } },
+    { "name": "headerCenter", "constraints": { "minHeight": 40 } },
+    { "name": "headerRight", "constraints": { "minHeight": 40 } },
+    { "name": "library", "constraints": { "minWidth": 280 } },
+    {
+      "name": "canvas",
+      "constraints": { "minWidth": 480 },
+      "capabilities": { "droppable": true }
+    },
+    { "name": "controlPanel", "constraints": { "minWidth": 320 } }
+  ]
+}

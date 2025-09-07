@@ -1,0 +1,15 @@
+{
+  "pluginId": "CanvasLineResizeMovePlugin",
+  "id": "canvas-line-resize-move-symphony",
+  "name": "Canvas Line Resize Move",
+  "movements": [
+    {
+      "id": "resize-line-move",
+      "name": "Resize Line Move",
+      "beats": [
+        { "beat": 1, "event": "canvas:component:resize:line:move", "title": "Line Resize Move", "dynamics": "mf", "handler": "updateLine", "timing": "immediate", "kind": "stage-crew" }
+      ]
+    }
+  ]
+}
+

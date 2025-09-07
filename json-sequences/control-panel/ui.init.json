@@ -1,0 +1,68 @@
+{
+  "pluginId": "ControlPanelPlugin",
+  "id": "control-panel-ui-init-symphony",
+  "name": "Control Panel UI Init",
+  "movements": [
+    {
+      "id": "init",
+      "name": "Init",
+      "beats": [
+        {
+          "beat": 1,
+          "event": "control:panel:ui:init:config",
+          "title": "Init Config",
+          "dynamics": "mf",
+          "handler": "initConfig",
+          "timing": "immediate",
+          "kind": "stage-crew"
+        },
+        {
+          "beat": 2,
+          "event": "control:panel:ui:init:resolver",
+          "title": "Init Resolver",
+          "dynamics": "mf",
+          "handler": "initResolver",
+          "timing": "immediate",
+          "kind": "stage-crew"
+        },
+        {
+          "beat": 3,
+          "event": "control:panel:ui:init:schemas",
+          "title": "Load Schemas",
+          "dynamics": "mf",
+          "handler": "loadSchemas",
+          "timing": "immediate",
+          "kind": "stage-crew"
+        },
+        {
+          "beat": 4,
+          "event": "control:panel:ui:init:observers",
+          "title": "Register Observers",
+          "dynamics": "mf",
+          "handler": "registerObservers",
+          "timing": "immediate",
+          "kind": "stage-crew"
+        },
+        {
+          "beat": 5,
+          "event": "control:panel:ui:init:notify",
+          "title": "Notify Ready",
+          "dynamics": "mf",
+          "handler": "notifyReady",
+          "timing": "immediate",
+          "kind": "pure"
+        },
+        {
+          "beat": 6,
+          "event": "control:panel:ui:init:movement",
+          "title": "Init Movement",
+          "dynamics": "mf",
+          "handler": "initMovement",
+          "timing": "immediate",
+          "kind": "pure"
+        }
+      ]
+    }
+  ]
+}
+

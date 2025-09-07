@@ -1,0 +1,23 @@
+{
+  "pluginId": "HeaderThemePlugin",
+  "id": "header-ui-theme-toggle-symphony",
+  "name": "Header UI Theme Toggle",
+  "movements": [
+    {
+      "id": "toggle",
+      "name": "Toggle Theme",
+      "beats": [
+        {
+          "beat": 1,
+          "event": "app:ui:theme:toggle",
+          "title": "Toggle Theme",
+          "dynamics": "mf",
+          "handler": "toggleTheme",
+          "timing": "immediate",
+          "kind": "stage-crew"
+        }
+      ]
+    }
+  ]
+}
+

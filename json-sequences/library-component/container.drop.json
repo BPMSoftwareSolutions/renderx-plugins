@@ -1,0 +1,22 @@
+{
+  "pluginId": "LibraryComponentDropPlugin",
+  "id": "library-component-container-drop-symphony",
+  "name": "Library Component Container Drop",
+  "movements": [
+    {
+      "id": "drop",
+      "name": "Drop",
+      "beats": [
+        {
+          "beat": 1,
+          "event": "library:container:drop",
+          "title": "Publish Create Requested (Container)",
+          "dynamics": "mf",
+          "handler": "publishCreateRequested",
+          "timing": "immediate",
+          "kind": "pure"
+        }
+      ]
+    }
+  ]
+}

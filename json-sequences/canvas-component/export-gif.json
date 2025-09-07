@@ -1,0 +1,22 @@
+{
+  "pluginId": "CanvasComponentExportGifPlugin",
+  "id": "canvas-component-export-gif-symphony",
+  "name": "Canvas Component Export GIF",
+  "movements": [
+    {
+      "id": "export-gif",
+      "name": "Export GIF",
+      "beats": [
+        {
+          "beat": 1,
+          "event": "canvas:component:export-gif:rasterize-and-encode",
+          "title": "Rasterize SVG and Encode GIF",
+          "dynamics": "mf",
+          "handler": "exportSvgToGif",
+          "timing": "immediate",
+          "kind": "stage-crew"
+        }
+      ]
+    }
+  ]
+}

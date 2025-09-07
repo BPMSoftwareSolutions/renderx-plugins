@@ -1,0 +1,50 @@
+{
+  "pluginId": "ControlPanelPlugin",
+  "id": "control-panel-ui-field-change-symphony",
+  "name": "Control Panel UI Field Change",
+  "movements": [
+    {
+      "id": "field-change",
+      "name": "Field Change",
+      "beats": [
+        {
+          "beat": 1,
+          "event": "control:panel:ui:field:prepare",
+          "title": "Prepare Field",
+          "dynamics": "mf",
+          "handler": "prepareField",
+          "timing": "immediate",
+          "kind": "stage-crew"
+        },
+        {
+          "beat": 2,
+          "event": "control:panel:ui:field:dispatch",
+          "title": "Dispatch Field",
+          "dynamics": "mf",
+          "handler": "dispatchField",
+          "timing": "immediate",
+          "kind": "stage-crew"
+        },
+        {
+          "beat": 3,
+          "event": "control:panel:ui:field:dirty",
+          "title": "Set Dirty",
+          "dynamics": "mf",
+          "handler": "setDirty",
+          "timing": "immediate",
+          "kind": "stage-crew"
+        },
+        {
+          "beat": 4,
+          "event": "control:panel:ui:field:await-refresh",
+          "title": "Await Refresh",
+          "dynamics": "mf",
+          "handler": "awaitRefresh",
+          "timing": "immediate",
+          "kind": "stage-crew"
+        }
+      ]
+    }
+  ]
+}
+

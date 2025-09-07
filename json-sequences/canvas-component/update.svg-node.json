@@ -1,0 +1,31 @@
+{
+  "pluginId": "CanvasComponentSvgNodeUpdatePlugin",
+  "id": "canvas-component-update-svg-node-symphony",
+  "name": "Canvas Component Update SVG Node",
+  "movements": [
+    {
+      "id": "update-svg-node",
+      "name": "Update SVG Node Attribute",
+      "beats": [
+        {
+          "beat": 1,
+          "event": "canvas:component:update:svg-node:attribute",
+          "title": "Update SVG Node Attribute",
+          "dynamics": "mf",
+          "handler": "updateSvgNodeAttribute",
+          "timing": "immediate",
+          "kind": "stage-crew"
+        },
+        {
+          "beat": 2,
+          "event": "canvas:component:update:svg-node:refresh",
+          "title": "Refresh Control Panel",
+          "dynamics": "mf",
+          "handler": "refreshControlPanel",
+          "timing": "immediate",
+          "kind": "pure"
+        }
+      ]
+    }
+  ]
+}

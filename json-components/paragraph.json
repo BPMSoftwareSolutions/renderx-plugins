@@ -1,0 +1,149 @@
+{
+  "metadata": {
+    "type": "paragraph",
+    "name": "Paragraph",
+    "version": "1.0.0",
+    "author": "RenderX Team",
+    "description": "Paragraph component with rich text content and formatting options - JSON replacement for built-in paragraph",
+    "category": "basic",
+    "tags": ["paragraph", "text", "content", "ui"],
+    "replaces": "paragraph"
+  },
+  "ui": {
+    "template": "<p class=\"rx-paragraph rx-paragraph--{{variant}}\">{{content}}</p>",
+    "styles": {
+      "css": ".rx-paragraph { color: var(--text-color); font-family: var(--font-family); font-size: var(--font-size); font-weight: var(--font-weight); line-height: var(--line-height); margin: var(--margin); text-align: var(--text-align); word-wrap: break-word; } .rx-paragraph--default { --text-color: #333333; --font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; --font-size: 14px; --font-weight: 400; --line-height: 1.5; --margin: 0; --text-align: left; } .rx-paragraph--center { --text-align: center; } .rx-paragraph--right { --text-align: right; } .rx-paragraph--justify { --text-align: justify; } .rx-paragraph--small { --font-size: 12px; } .rx-paragraph--large { --font-size: 16px; } .rx-paragraph--bold { --font-weight: 600; } .rx-paragraph--light { --font-weight: 300; }",
+      "variables": {
+        "text-color": "#333333",
+        "font-family": "-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif",
+        "font-size": "14px",
+        "font-weight": "400",
+        "line-height": "1.5",
+        "margin": "0",
+        "text-align": "left"
+      },
+      "library": {
+        "variables": {
+          "font-size": "14px",
+          "font-weight": "400",
+          "padding": "8px 12px",
+          "border-radius": "6px",
+          "rx-icon-size": "16px",
+          "rx-icon-gap": "8px",
+          "paragraph-bg": "linear-gradient(135deg, #64748b, #475569)",
+          "paragraph-color": "#ffffff",
+          "paragraph-hover-bg": "linear-gradient(135deg, #475569, #334155)"
+        },
+        "css": ".rx-lib .rx-paragraph { display: inline-flex; align-items: center; gap: var(--rx-icon-gap, 8px); font-size: var(--font-size, 14px); font-weight: var(--font-weight, 400); padding: var(--padding, 8px 12px); border-radius: var(--border-radius, 6px); border: none; background: var(--paragraph-bg); color: var(--paragraph-color); letter-spacing: 0.3px; cursor: pointer; transition: transform 0.2s ease, box-shadow 0.3s ease, background 0.3s ease; box-shadow: 0 2px 6px rgba(0,0,0,0.15); } .rx-lib .rx-paragraph[data-icon]::before { content: attr(data-icon); font-size: var(--rx-icon-size, 16px); line-height: 1; opacity: 0.9; } .rx-lib .rx-paragraph:hover { transform: translateY(-2px) scale(1.02); box-shadow: 0 4px 12px rgba(0,0,0,0.2); background: var(--paragraph-hover-bg); }"
+      }
+    },
+    "icon": {
+      "mode": "emoji",
+      "value": "📄",
+      "position": "start"
+    },
+    "tools": {
+      "drag": { "enabled": true },
+      "resize": {
+        "enabled": true,
+        "handles": ["nw", "n", "ne", "e", "se", "s", "sw", "w"],
+        "constraints": { "min": { "w": 100, "h": 30 } }
+      }
+    }
+  },
+  "integration": {
+    "properties": {
+      "schema": {
+        "content": {
+          "type": "string",
+          "default": "This is a paragraph of text. You can edit this content in the Control Panel.",
+          "description": "Paragraph text content",
+          "required": true
+        },
+        "variant": {
+          "type": "string",
+          "default": "default",
+          "description": "Paragraph style variant",
+          "enum": ["default", "center", "right", "justify", "small", "large", "bold", "light"]
+        },
+        "color": {
+          "type": "string",
+          "default": "#333333",
+          "description": "Text color",
+          "format": "color"
+        },
+        "fontSize": {
+          "type": "number",
+          "default": 14,
+          "description": "Font size in pixels",
+          "min": 8,
+          "max": 72
+        },
+        "lineHeight": {
+          "type": "number",
+          "default": 1.5,
+          "description": "Line height multiplier",
+          "min": 1,
+          "max": 3,
+          "step": 0.1
+        }
+      },
+      "defaultValues": {
+        "content": "This is a paragraph of text. You can edit this content in the Control Panel.",
+        "variant": "default",
+        "color": "#333333",
+        "fontSize": 14,
+        "lineHeight": 1.5
+      }
+    },
+    "canvasIntegration": {
+      "resizable": true,
+      "draggable": true,
+      "selectable": true,
+      "minWidth": 100,
+      "minHeight": 30,
+      "maxWidth": 800,
+      "maxHeight": 600,
+      "defaultWidth": 300,
+      "defaultHeight": 60,
+      "snapToGrid": true,
+      "allowChildElements": false
+    },
+    "events": {
+      "click": {
+        "description": "Triggered when the paragraph is clicked",
+        "parameters": ["event", "elementData"]
+      },
+      "dblclick": {
+        "description": "Triggered when the paragraph is double-clicked for editing",
+        "parameters": ["event", "elementData"]
+      }
+    }
+  },
+  "interactions": {
+    "canvas.component.create": {
+      "pluginId": "CanvasComponentPlugin",
+      "sequenceId": "canvas-component-create-symphony"
+    },
+    "canvas.component.select": {
+      "pluginId": "CanvasComponentSelectionPlugin",
+      "sequenceId": "canvas-component-select-symphony"
+    },
+    "canvas.component.drag.move": {
+      "pluginId": "CanvasComponentDragPlugin",
+      "sequenceId": "canvas-component-drag-symphony"
+    },
+    "canvas.component.resize.start": {
+      "pluginId": "CanvasComponentResizeStartPlugin",
+      "sequenceId": "canvas-component-resize-start-symphony"
+    },
+    "canvas.component.resize.move": {
+      "pluginId": "CanvasComponentResizeMovePlugin",
+      "sequenceId": "canvas-component-resize-move-symphony"
+    },
+    "canvas.component.resize.end": {
+      "pluginId": "CanvasComponentResizeEndPlugin",
+      "sequenceId": "canvas-component-resize-end-symphony"
+    }
+  }
+}

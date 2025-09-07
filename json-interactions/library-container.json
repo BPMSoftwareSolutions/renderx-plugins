@@ -1,0 +1,10 @@
+{
+  "plugin": "LibraryComponentDropPlugin",
+  "routes": {
+    "library.container.drop": {
+      "pluginId": "LibraryComponentDropPlugin",
+      "sequenceId": "library-component-container-drop-symphony"
+    }
+  }
+}
+

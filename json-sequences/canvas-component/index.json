@@ -1,0 +1,69 @@
+{
+  "version": "1.0.0",
+  "sequences": [
+    {
+      "file": "create.json",
+      "handlersPath": "/plugins/canvas-component/symphonies/create/create.symphony.ts"
+    },
+    {
+      "file": "select.json",
+      "handlersPath": "/plugins/canvas-component/symphonies/select/select.symphony.ts"
+    },
+    {
+      "file": "select.svg-node.json",
+      "handlersPath": "/plugins/canvas-component/symphonies/select/select.svg-node.symphony.ts"
+    },
+    {
+      "file": "drag.json",
+      "handlersPath": "/plugins/canvas-component/symphonies/drag/drag.symphony.ts"
+    },
+    {
+      "file": "resize.start.json",
+      "handlersPath": "/plugins/canvas-component/symphonies/resize/resize.start.symphony.ts"
+    },
+    {
+      "file": "resize.move.json",
+      "handlersPath": "/plugins/canvas-component/symphonies/resize/resize.move.symphony.ts"
+    },
+    {
+      "file": "resize.end.json",
+      "handlersPath": "/plugins/canvas-component/symphonies/resize/resize.end.symphony.ts"
+    },
+    {
+      "file": "import.json",
+      "handlersPath": "/plugins/canvas-component/symphonies/import/import.symphony.ts"
+    },
+    {
+      "file": "export.json",
+      "handlersPath": "/plugins/canvas-component/symphonies/export/export.symphony.ts"
+    },
+    {
+      "file": "export-gif.json",
+      "handlersPath": "/plugins/canvas-component/symphonies/export/export.gif.symphony.ts"
+    },
+    {
+      "file": "export-mp4.json",
+      "handlersPath": "/plugins/canvas-component/symphonies/export/export.mp4.symphony.ts"
+    },
+    {
+      "file": "resize.line.start.json",
+      "handlersPath": "/plugins/canvas-component/symphonies/resize-line/resize.line.start.symphony.ts"
+    },
+    {
+      "file": "resize.line.move.json",
+      "handlersPath": "/plugins/canvas-component/symphonies/resize-line/resize.line.move.symphony.ts"
+    },
+    {
+      "file": "resize.line.end.json",
+      "handlersPath": "/plugins/canvas-component/symphonies/resize-line/resize.line.end.symphony.ts"
+    },
+    {
+      "file": "update.json",
+      "handlersPath": "/plugins/canvas-component/symphonies/update/update.symphony.ts"
+    },
+    {
+      "file": "update.svg-node.json",
+      "handlersPath": "/plugins/canvas-component/symphonies/update/update.svg-node.symphony.ts"
+    }
+  ]
+}

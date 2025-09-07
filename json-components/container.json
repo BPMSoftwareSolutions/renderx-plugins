@@ -1,0 +1,70 @@
+{
+  "metadata": {
+    "type": "container",
+    "name": "Container",
+    "version": "1.0.0",
+    "author": "RenderX Team",
+    "description": "Container that can hold child components and provides relative positioning context",
+    "category": "layout",
+    "tags": ["container", "layout", "group"],
+    "replaces": "div"
+  },
+  "ui": {
+    "template": "<div class=\"rx-comp rx-container\"></div>",
+    "styles": {
+      "css": ".rx-container { position: relative; background: var(--bg, #fafafa); border: 1px dashed #9ca3af; border-radius: 8px; }",
+      "variables": {
+        "bg": "#fafafa"
+      },
+      "library": {
+        "css": ".rx-lib .rx-container { background: var(--bg, #f5f7fb); border-color: #cbd5e1; width: var(--preview-width, 200px); height: var(--preview-height, 140px); }",
+        "variables": {
+          "bg": "#f5f7fb",
+          "preview-width": "200px",
+          "preview-height": "140px"
+        }
+      }
+    },
+    "icon": { "mode": "emoji", "value": "🧱", "position": "start" }
+  },
+  "integration": {
+    "properties": {
+      "schema": {},
+      "defaultValues": {}
+    },
+    "canvasIntegration": {
+      "resizable": true,
+      "draggable": true,
+      "selectable": true,
+      "defaultWidth": 320,
+      "defaultHeight": 220,
+      "allowChildElements": true
+    }
+  },
+  "interactions": {
+    "canvas.component.create": {
+      "pluginId": "CanvasComponentPlugin",
+      "sequenceId": "canvas-component-create-symphony"
+    },
+    "canvas.component.select": {
+      "pluginId": "CanvasComponentSelectionPlugin",
+      "sequenceId": "canvas-component-select-symphony"
+    },
+    "canvas.component.drag.move": {
+      "pluginId": "CanvasComponentDragPlugin",
+      "sequenceId": "canvas-component-drag-symphony"
+    },
+    "canvas.component.resize.start": {
+      "pluginId": "CanvasComponentResizeStartPlugin",
+      "sequenceId": "canvas-component-resize-start-symphony"
+    },
+    "canvas.component.resize.move": {
+      "pluginId": "CanvasComponentResizeMovePlugin",
+      "sequenceId": "canvas-component-resize-move-symphony"
+    },
+    "canvas.component.resize.end": {
+      "pluginId": "CanvasComponentResizeEndPlugin",
+      "sequenceId": "canvas-component-resize-end-symphony"
+    }
+  }
+}

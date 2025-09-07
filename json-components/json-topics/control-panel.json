@@ -1,0 +1,231 @@
+{
+  "version": "1.0.0",
+  "topics": {
+    "control.panel.update.requested": {
+      "routes": [
+        {
+          "pluginId": "ControlPanelPlugin",
+          "sequenceId": "control-panel-update-symphony"
+        }
+      ],
+      "payloadSchema": {
+        "type": "object",
+        "properties": {
+          "id": { "type": "string" },
+          "source": { "type": "string" },
+          "position": {
+            "type": "object",
+            "properties": {
+              "x": { "type": "number" },
+              "y": { "type": "number" }
+            }
+          },
+          "size": {
+            "type": "object",
+            "properties": {
+              "width": { "type": "number" },
+              "height": { "type": "number" }
+            }
+          }
+        },
+        "required": ["id"]
+      },
+      "visibility": "public",
+      "perfGuards": {
+        "throttle": { "intervalMs": 16 }
+      },
+      "notes": "Control panel update requested; routes to update sequence with throttling."
+    },
+    "control.panel.ui.render.requested": {
+      "routes": [
+        {
+          "pluginId": "ControlPanelPlugin",
+          "sequenceId": "control-panel-ui-render-symphony"
+        }
+      ],
+      "payloadSchema": {
+        "type": "object",
+        "properties": {
+          "selectedElement": { "type": "object" }
+        }
+      },
+      "visibility": "public",
+      "perfGuards": {
+        "throttle": { "intervalMs": 16 }
+      },
+      "notes": "Control panel UI render requested; routes to render sequence with throttling for performance."
+    },
+    "control.panel.ui.field.change.requested": {
+      "routes": [
+        {
+          "pluginId": "ControlPanelPlugin",
+          "sequenceId": "control-panel-ui-field-change-symphony"
+        }
+      ],
+      "payloadSchema": {
+        "type": "object",
+        "properties": {
+          "fieldKey": { "type": "string" },
+          "value": {},
+          "selectedElement": { "type": "object" }
+        },
+        "required": ["fieldKey", "selectedElement"]
+      },
+      "visibility": "public",
+      "perfGuards": {
+        "throttle": { "intervalMs": 100 }
+      },
+      "perf": { "debounceMs": 250 },
+      "notes": "Control panel field change requested; routes to field change sequence with throttling."
+    },
+    "control.panel.ui.field.validate.requested": {
+      "routes": [
+        {
+          "pluginId": "ControlPanelPlugin",
+          "sequenceId": "control-panel-ui-field-validate-symphony"
+        }
+      ],
+      "payloadSchema": {
+        "type": "object",
+        "properties": {
+          "fieldKey": { "type": "string" },
+          "value": {},
+          "selectedElement": { "type": "object" }
+        },
+        "required": ["fieldKey", "selectedElement"]
+      },
+      "visibility": "public",
+      "perfGuards": {
+        "throttle": { "intervalMs": 200 }
+      },
+      "notes": "Control panel field validation requested; routes to validation sequence with throttling."
+    },
+    "control.panel.ui.section.toggle.requested": {
+      "routes": [
+        {
+          "pluginId": "ControlPanelPlugin",
+          "sequenceId": "control-panel-ui-section-toggle-symphony"
+        }
+      ],
+      "payloadSchema": {
+        "type": "object",
+        "properties": {
+          "sectionId": { "type": "string" }
+        },
+        "required": ["sectionId"]
+      },
+      "visibility": "public",
+      "notes": "Control panel section toggle requested; routes to section toggle sequence."
+    },
+    "control.panel.classes.add.requested": {
+      "routes": [
+        {
+          "pluginId": "ControlPanelPlugin",
+          "sequenceId": "control-panel-classes-add-symphony"
+        }
+      ],
+      "payloadSchema": {
+        "type": "object",
+        "properties": {
+          "id": { "type": "string" },
+          "className": { "type": "string" }
+        },
+        "required": ["id", "className"]
+      },
+      "visibility": "public",
+      "notes": "Control panel add class requested; routes to add class sequence."
+    },
+    "control.panel.classes.remove.requested": {
+      "routes": [
+        {
+          "pluginId": "ControlPanelPlugin",
+          "sequenceId": "control-panel-classes-remove-symphony"
+        }
+      ],
+      "payloadSchema": {
+        "type": "object",
+        "properties": {
+          "id": { "type": "string" },
+          "className": { "type": "string" }
+        },
+        "required": ["id", "className"]
+      },
+      "visibility": "public",
+      "notes": "Control panel remove class requested; routes to remove class sequence."
+    },
+    "control.panel.css.create.requested": {
+      "routes": [
+        {
+          "pluginId": "ControlPanelPlugin",
+          "sequenceId": "control-panel-css-create-symphony"
+        }
+      ],
+      "payloadSchema": {
+        "type": "object",
+        "properties": {
+          "id": { "type": "string" },
+          "className": { "type": "string" },
+          "content": { "type": "string" }
+        },
+        "required": ["id", "className", "content"]
+      },
+      "visibility": "public",
+      "notes": "Control panel create CSS class requested; routes to CSS create sequence."
+    },
+    "control.panel.css.edit.requested": {
+      "routes": [
+        {
+          "pluginId": "ControlPanelPlugin",
+          "sequenceId": "control-panel-css-edit-symphony"
+        }
+      ],
+      "payloadSchema": {
+        "type": "object",
+        "properties": {
+          "id": { "type": "string" },
+          "className": { "type": "string" },
+          "content": { "type": "string" }
+        },
+        "required": ["id", "className", "content"]
+      },
+      "visibility": "public",
+      "notes": "Control panel edit CSS class requested; routes to CSS edit sequence."
+    },
+    "control.panel.css.delete.requested": {
+      "routes": [
+        {
+          "pluginId": "ControlPanelPlugin",
+          "sequenceId": "control-panel-css-delete-symphony"
+        }
+      ],
+      "payloadSchema": {
+        "type": "object",
+        "properties": {
+          "id": { "type": "string" },
+          "className": { "type": "string" }
+        },
+        "required": ["id", "className"]
+      },
+      "visibility": "public",
+      "notes": "Control panel delete CSS class requested; routes to CSS delete sequence."
+    },
+    "control.panel.selection.show.requested": {
+      "routes": [
+        {
+          "pluginId": "ControlPanelPlugin",
+          "sequenceId": "control-panel-selection-show-symphony"
+        }
+      ],
+      "payloadSchema": {
+        "type": "object",
+        "properties": {
+          "id": { "type": "string" }
+        },
+        "required": ["id"]
+      },
+      "visibility": "public",
+      "notes": "Control panel selection show requested; routes to selection show sequence."
+    }
+  },
+  "definitions": {}
+}

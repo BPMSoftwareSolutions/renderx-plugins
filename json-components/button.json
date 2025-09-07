@@ -21,7 +21,25 @@
         "padding": "8px 16px",
         "border-radius": "4px",
         "font-size": "14px"
+      },
+      "library": {
+        "variables": {
+          "font-size": "14px",
+          "padding": "8px 16px",
+          "border-radius": "8px",
+          "rx-icon-size": "16px",
+          "rx-icon-gap": "8px",
+          "btn-bg": "linear-gradient(135deg, #4f46e5, #3b82f6)",
+          "btn-color": "#ffffff",
+          "btn-hover-bg": "linear-gradient(135deg, #4338ca, #3730a3)"
+        },
+        "css": ".rx-lib .rx-button { display: inline-flex; align-items: center; gap: var(--rx-icon-gap, 8px); font-size: var(--font-size, 14px); padding: var(--padding, 8px 16px); border-radius: var(--border-radius, 8px); border: none; background: var(--btn-bg); color: var(--btn-color); font-weight: 600; letter-spacing: 0.3px; cursor: pointer; transition: transform 0.2s ease, box-shadow 0.3s ease, background 0.3s ease; box-shadow: 0 2px 6px rgba(0,0,0,0.15); } .rx-lib .rx-button[data-icon]::before { content: attr(data-icon); font-size: var(--rx-icon-size, 16px); line-height: 1; opacity: 0.9; } .rx-lib .rx-button[data-icon-pos='end'] { flex-direction: row-reverse; } .rx-lib .rx-button[data-icon-pos='end']::before { margin-left: var(--rx-icon-gap, 8px); margin-right: 0; } .rx-lib .rx-button:hover { transform: translateY(-2px) scale(1.02); box-shadow: 0 4px 12px rgba(0,0,0,0.2); background: var(--btn-hover-bg); } .rx-lib .rx-button:active { transform: scale(0.97); box-shadow: 0 2px 4px rgba(0,0,0,0.25) inset; } .rx-lib .rx-button:focus { outline: none; box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.5); }"
       }
+    },
+    "icon": {
+      "mode": "emoji",
+      "value": "🔘",
+      "position": "start"
     },
     "tools": {
       "drag": { "enabled": true },
@@ -94,105 +112,30 @@
       }
     }
   },
-  "musicalSequences": {
-    "componentInteraction": {
-      "sequenceName": "JSON Button Component Interaction Symphony No. 1",
-      "description": "Handles user interactions with the JSON button component",
-      "key": "A Major",
-      "tempo": 120,
-      "movements": [
-        {
-          "name": "User Interaction Movement",
-          "measures": [
-            {
-              "beat": 1,
-              "event": "COMPONENT_INTERACTION_START",
-              "dynamics": "forte"
-            },
-            {
-              "beat": 2,
-              "event": "COMPONENT_STATE_VALIDATION",
-              "dynamics": "mezzo-forte"
-            },
-            {
-              "beat": 3,
-              "event": "COMPONENT_VISUAL_UPDATE",
-              "dynamics": "mezzo-piano"
-            },
-            {
-              "beat": 4,
-              "event": "COMPONENT_INTERACTION_COMPLETE",
-              "dynamics": "piano"
-            }
-          ]
-        }
-      ]
+  "interactions": {
+    "canvas.component.create": {
+      "pluginId": "CanvasComponentPlugin",
+      "sequenceId": "canvas-component-create-symphony"
     },
-    "resizeOperation": {
-      "sequenceName": "JSON Button Resize Symphony No. 2",
-      "description": "Handles resizing operations for the JSON button",
-      "key": "D Major",
-      "tempo": 100,
-      "movements": [
-        {
-          "name": "Resize Operation Movement",
-          "measures": [
-            {
-              "beat": 1,
-              "event": "COMPONENT_RESIZE_START",
-              "dynamics": "forte"
-            },
-            {
-              "beat": 2,
-              "event": "COMPONENT_RESIZE_VALIDATE",
-              "dynamics": "mezzo-forte"
-            },
-            {
-              "beat": 3,
-              "event": "COMPONENT_RESIZE_UPDATE",
-              "dynamics": "mezzo-piano"
-            },
-            {
-              "beat": 4,
-              "event": "COMPONENT_RESIZE_COMPLETE",
-              "dynamics": "piano"
-            }
-          ]
-        }
-      ]
+    "canvas.component.select": {
+      "pluginId": "CanvasComponentSelectionPlugin",
+      "sequenceId": "canvas-component-select-symphony"
     },
-    "positionUpdate": {
-      "sequenceName": "JSON Button Position Update Symphony No. 3",
-      "description": "Handles position updates for the JSON button",
-      "key": "C Major",
-      "tempo": 110,
-      "movements": [
-        {
-          "name": "Position Update Movement",
-          "measures": [
-            {
-              "beat": 1,
-              "event": "COMPONENT_POSITION_START",
-              "dynamics": "forte"
-            },
-            {
-              "beat": 2,
-              "event": "COMPONENT_POSITION_VALIDATE",
-              "dynamics": "mezzo-forte"
-            },
-            {
-              "beat": 3,
-              "event": "COMPONENT_POSITION_UPDATE",
-              "dynamics": "mezzo-piano"
-            },
-            {
-              "beat": 4,
-              "event": "COMPONENT_POSITION_COMPLETE",
-              "dynamics": "piano"
-            }
-          ]
-        }
-      ]
+    "canvas.component.drag.move": {
+      "pluginId": "CanvasComponentDragPlugin",
+      "sequenceId": "canvas-component-drag-symphony"
+    },
+    "canvas.component.resize.start": {
+      "pluginId": "CanvasComponentResizeStartPlugin",
+      "sequenceId": "canvas-component-resize-start-symphony"
+    },
+    "canvas.component.resize.move": {
+      "pluginId": "CanvasComponentResizeMovePlugin",
+      "sequenceId": "canvas-component-resize-move-symphony"
+    },
+    "canvas.component.resize.end": {
+      "pluginId": "CanvasComponentResizeEndPlugin",
+      "sequenceId": "canvas-component-resize-end-symphony"
     }
   }
 }

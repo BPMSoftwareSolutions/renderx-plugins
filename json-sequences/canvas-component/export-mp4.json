@@ -1,0 +1,22 @@
+{
+  "pluginId": "CanvasComponentExportMp4Plugin",
+  "id": "canvas-component-export-mp4-symphony",
+  "name": "Canvas Component Export MP4",
+  "movements": [
+    {
+      "id": "export-mp4",
+      "name": "Export MP4",
+      "beats": [
+        {
+          "beat": 1,
+          "event": "canvas:component:export-mp4:rasterize-and-encode",
+          "title": "Rasterize SVG and Encode MP4",
+          "dynamics": "mf",
+          "handler": "exportSvgToMp4",
+          "timing": "immediate",
+          "kind": "stage-crew"
+        }
+      ]
+    }
+  ]
+}
