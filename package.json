@@ -1,16 +1,23 @@
 {
   "name": "renderx-plugins",
-  "version": "2.0.4",
+  "version": "2.0.5",
   "public": true,
   "type": "module",
   "files": [
-    "dist/artifacts/**/*"
+    "dist/artifacts/**/*",
+    "dist/types.d.ts"
   ],
   "main": "dist/artifacts/manifest-set.json",
+  "exports": {
+    ".": "./dist/artifacts/manifest-set.json",
+    "./plugin-manifest": "./dist/artifacts/plugins/plugin-manifest.json"
+  },
+  "types": "./dist/types.d.ts",
   "scripts": {
     "build:packages": "node scripts/build-packages.cjs",
-    "artifacts:build": "npm run build:packages && node scripts/build-artifacts.js --srcRoot=. --outDir=dist/artifacts --integrity",
-    "artifacts:build:signed": "npm run build:packages && node scripts/build-artifacts.js --srcRoot=. --outDir=dist/artifacts --integrity --sign",
+    "post-fix:manifest": "node scripts/post-fix-manifest.cjs",
+    "artifacts:build": "npm run build:packages && npm run build:plugin-entries && node scripts/build-artifacts.js --srcRoot=. --outDir=dist/artifacts --integrity && npm run post-fix:manifest",
+    "artifacts:build:signed": "npm run build:packages && npm run build:plugin-entries && node scripts/build-artifacts.js --srcRoot=. --outDir=dist/artifacts --integrity --sign && npm run post-fix:manifest",
     "artifacts:validate": "node scripts/validate-artifacts.js",
     "artifacts:validate:strict": "cross-env RENDERX_VALIDATION_STRICT=1 node scripts/validate-artifacts.js",
     "artifacts:verify:signature": "node scripts/verify-artifact-signature.js",
